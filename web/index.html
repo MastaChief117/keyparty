@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Gateway Dashboard</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
+.container{max-width:1200px;margin:0 auto;padding:20px}
+header{display:flex;justify-content:space-between;align-items:center;padding:20px 0;border-bottom:1px solid #1e293b;margin-bottom:20px}
+header h1{font-size:24px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header-right{display:flex;gap:10px;align-items:center}
+.btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-size:14px;font-weight:500;transition:all 0.2s}
+.btn-primary{background:#3b82f6;color:white}
+.btn-primary:hover{background:#2563eb}
+.btn-danger{background:#ef4444;color:white}
+.btn-danger:hover{background:#dc2626}
+.btn-secondary{background:#334155;color:#e2e8f0}
+.btn-secondary:hover{background:#475569}
+.btn-success{background:#22c55e;color:white}
+.btn-success:hover{background:#16a34a}
+.btn-sm{padding:4px 10px;font-size:12px}
+.btn-test{background:#8b5cf6;color:white}
+.btn-test:hover{background:#7c3aed}
+.btn-race{background:#f59e0b;color:white}
+.btn-race:hover{background:#d97706}
+
+.unified-key-banner{background:linear-gradient(135deg,#1e3a5f,#1e1b4b);border:1px solid #334155;border-radius:12px;padding:20px;margin-bottom:20px}
+.unified-key-banner h2{font-size:16px;margin-bottom:12px;color:#93c5fd}
+.key-display{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.key-value{font-family:monospace;font-size:16px;background:#0f172a;padding:10px 16px;border-radius:8px;border:1px solid #334155;flex:1;min-width:300px;word-break:break-all}
+.key-value .copy-text{user-select:all}
+.copy-btn{background:#334155;border:none;color:#e2e8f0;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:13px}
+.copy-btn:hover{background:#475569}
+.base-url-display{margin-top:10px;font-size:12px;color:#94a3b8}
+.base-url-display code{font-family:monospace;background:#0f172a;padding:2px 8px;border-radius:4px;color:#60a5fa}
+
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.stat-card{background:#1e293b;border-radius:10px;padding:16px;border:1px solid #334155}
+.stat-card h3{font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.stat-card .value{font-size:24px;font-weight:700}
+.stat-card .value.blue{color:#3b82f6}
+.stat-card .value.green{color:#22c55e}
+.stat-card .value.red{color:#ef4444}
+.stat-card .value.purple{color:#a855f7}
+.stat-card .value.yellow{color:#f59e0b}
+.stat-card .value.cyan{color:#06b6d4}
+
+.section{background:#1e293b;border-radius:12px;padding:20px;margin-bottom:16px;border:1px solid #334155}
+.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.section-header h2{font-size:16px}
+
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px 8px;text-align:left;border-bottom:1px solid #334155}
+th{font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px}
+td{font-size:13px}
+tr:hover{background:rgba(59,130,246,0.05)}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}
+.badge-green{background:rgba(34,197,94,0.15);color:#22c55e}
+.badge-red{background:rgba(239,68,68,0.15);color:#ef4444}
+.badge-purple{background:rgba(168,85,247,0.15);color:#a855f7}
+.badge-yellow{background:rgba(245,158,11,0.15);color:#f59e0b}
+
+.key-mask{font-family:monospace;color:#64748b;font-size:12px}
+.provider-tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;background:rgba(59,130,246,0.15);color:#3b82f6}
+.model-tag{font-family:monospace;font-size:11px;color:#94a3b8}
+
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:1000;justify-content:center;align-items:center}
+.modal-overlay.active{display:flex}
+.modal{background:#1e293b;border-radius:16px;padding:24px;width:90%;max-width:550px;border:1px solid #334155;max-height:90vh;overflow-y:auto}
+.modal h2{margin-bottom:16px;font-size:18px}
+.form-group{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.form-group label{font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px}
+.form-group input,.form-group select,.form-group textarea{padding:10px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;font-size:14px}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#3b82f6}
+.form-row{display:flex;gap:10px}
+.form-row .form-group{flex:1}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
+
+.test-result{margin-top:12px;padding:12px;border-radius:8px;font-size:13px;display:none}
+.test-result.success{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:#86efac;display:block}
+.test-result.error{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;display:block}
+.test-result .reply{font-family:monospace;white-space:pre-wrap;margin-top:8px;padding:8px;background:rgba(0,0,0,0.2);border-radius:4px}
+
+.empty-state{text-align:center;padding:30px;color:#64748b}
+
+.toast{position:fixed;bottom:20px;right:20px;padding:12px 20px;border-radius:8px;color:white;font-size:14px;z-index:2000;animation:slideIn 0.3s ease}
+.toast-success{background:#22c55e}
+.toast-error{background:#ef4444}
+@keyframes slideIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+.error-list{max-height:250px;overflow-y:auto}
+.error-item{padding:8px;border-bottom:1px solid #334155;font-size:12px}
+.error-time{color:#64748b;font-size:11px}
+.error-msg{color:#f87171;margin-top:2px}
+
+.tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid #334155;padding-bottom:8px}
+.tab{padding:8px 16px;border-radius:8px 8px 0 0;cursor:pointer;font-size:13px;background:transparent;color:#94a3b8;border:none}
+.tab.active{background:#334155;color:#e2e8f0}
+.tab:hover{background:#334155;color:#e2e8f0}
+
+.race-result{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:16px;margin-bottom:12px}
+.race-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.race-provider{font-weight:600;color:#3b82f6}
+.race-latency{font-size:12px;color:#94a3b8}
+.race-reply{font-size:13px;line-height:1.6}
+.race-loading{text-align:center;padding:20px;color:#94a3b8}
+
+.log-entry{display:flex;gap:12px;padding:8px;border-bottom:1px solid #334155;font-size:12px}
+.log-time{color:#64748b;min-width:140px}
+.log-provider{min-width:80px}
+.log-model{min-width:120px;color:#94a3b8}
+.log-status{min-width:50px}
+.log-cost{min-width:80px;color:#22c55e}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+<h1>AI Gateway</h1>
+<div class="header-right">
+<button class="btn btn-race" id="btn-race">Race Mode</button>
+<button class="btn btn-secondary" id="btn-config">Config</button>
+<button class="btn btn-primary" id="btn-add">+ Add API Key</button>
+</div>
+</header>
+
+<div class="unified-key-banner">
+<h2>Unified API Key (use this in your apps)</h2>
+<div class="key-display">
+<div class="key-value"><span class="copy-text" id="unified-key">Loading...</span></div>
+<button class="copy-btn" id="btn-copy-key">Copy</button>
+<button class="btn btn-sm btn-secondary" id="btn-regen-key">Regenerate</button>
+</div>
+<p style="margin-top:8px;font-size:12px;color:#64748b">Use this key as the Bearer token. Set model to a key name or provider/model format.</p>
+<div class="base-url-display">Base URL: <code id="base-url">...</code></div>
+</div>
+
+<div class="stats-grid">
+<div class="stat-card"><h3>Requests</h3><div class="value blue" id="stat-total">0</div></div>
+<div class="stat-card"><h3>Errors</h3><div class="value red" id="stat-errors">0</div></div>
+<div class="stat-card"><h3>Success</h3><div class="value green" id="stat-rate">100%</div></div>
+<div class="stat-card"><h3>Keys</h3><div class="value purple" id="stat-keys">0</div></div>
+<div class="stat-card"><h3>Cost</h3><div class="value yellow" id="stat-cost">$0.00</div></div>
+<div class="stat-card"><h3>Blocked</h3><div class="value cyan" id="stat-blocked">0</div></div>
+</div>
+
+<div class="tabs">
+<button class="tab" data-tab="api-keys">API Keys</button>
+<button class="tab" data-tab="virtual-keys">Virtual Keys</button>
+<button class="tab" data-tab="guardrails">Guardrails</button>
+<button class="tab" data-tab="aliases">Aliases</button>
+<button class="tab" data-tab="failover">Failover</button>
+<button class="tab" data-tab="logs">Request Logs</button>
+</div>
+
+<div id="tab-api-keys" class="tab-content">
+<div class="section">
+<div class="section-header">
+<h2>Provider API Keys</h2>
+<button class="btn btn-sm btn-secondary" id="btn-refresh">Refresh</button>
+</div>
+<div id="keys-table"></div>
+</div>
+</div>
+
+<div id="tab-virtual-keys" class="tab-content" style="display:none">
+<div class="section">
+<div class="section-header">
+<h2>Virtual Keys (per-user API keys)</h2>
+<button class="btn btn-sm btn-primary" id="btn-add-vk">+ Add Virtual Key</button>
+</div>
+<div id="vk-table"></div>
+</div>
+</div>
+
+<div id="tab-guardrails" class="tab-content" style="display:none">
+<div class="section">
+<div class="section-header">
+<h2>Guardrails (PII & Injection Protection)</h2>
+<button class="btn btn-sm btn-primary" id="btn-add-guardrail">+ Add Rule</button>
+</div>
+<div id="guardrails-table"></div>
+</div>
+<div class="section">
+<div class="section-header"><h2>Recently Blocked</h2></div>
+<div id="blocked-list" class="error-list"></div>
+</div>
+</div>
+
+<div id="tab-aliases" class="tab-content" style="display:none">
+<div class="section">
+<div class="section-header">
+<h2>Model Aliases</h2>
+<button class="btn btn-sm btn-primary" id="btn-add-alias">+ Add Alias</button>
+</div>
+<div id="aliases-table"></div>
+</div>
+</div>
+
+<div id="tab-logs" class="tab-content" style="display:none">
+<div class="section">
+<div class="section-header"><h2>Request Logs</h2></div>
+<div id="logs-list"></div>
+</div>
+</div>
+
+<div id="tab-failover" class="tab-content" style="display:none">
+<div class="section">
+<div class="section-header"><h2>Failover Settings</h2></div>
+<div class="key-card">
+<div class="key-info">
+<div class="key-name">Enable Failover</div>
+<div class="key-provider">Automatically retry on another provider when quota expires (402)</div>
+</div>
+<label class="toggle">
+<input type="checkbox" id="fo-enabled" onchange="saveFailover()">
+<span class="toggle-slider"></span>
+</label>
+</div>
+<div class="key-card">
+<div class="key-info">
+<div class="key-name">Auto-Compact History</div>
+<div class="key-provider">Summarize chat history before sending to failover provider (saves tokens)</div>
+</div>
+<label class="toggle">
+<input type="checkbox" id="fo-compact" onchange="saveFailover()">
+<span class="toggle-slider"></span>
+</label>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px">
+<div class="form-group">
+<label>Failover Provider</label>
+<select id="fo-provider">
+<option value="">Select provider...</option>
+<option value="openai">OpenAI</option>
+<option value="anthropic">Anthropic</option>
+<option value="gemini">Google Gemini</option>
+<option value="mistral">Mistral</option>
+<option value="groq">Groq</option>
+<option value="together">Together AI</option>
+<option value="deepseek">DeepSeek</option>
+<option value="openrouter">OpenRouter</option>
+<option value="fireworks">Fireworks</option>
+<option value="nvidia">NVIDIA NIM</option>
+</select>
+</div>
+<div class="form-group">
+<label>Failover Model</label>
+<input type="text" id="fo-model" placeholder="e.g. llama-3.3-70b-versatile">
+</div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+<div class="form-group">
+<label>Compaction Model</label>
+<input type="text" id="fo-compact-model" placeholder="e.g. llama-3.3-70b-versatile">
+</div>
+<div class="form-group">
+<label>Error Triggers (HTTP codes)</label>
+<div style="display:flex;gap:12px;margin-top:8px">
+<label style="display:flex;align-items:center;gap:4px;font-size:13px;color:#94a3b8;cursor:pointer">
+<input type="checkbox" id="fo-trigger-402" checked> 402
+</label>
+<label style="display:flex;align-items:center;gap:4px;font-size:13px;color:#94a3b8;cursor:pointer">
+<input type="checkbox" id="fo-trigger-500"> 500
+</label>
+<label style="display:flex;align-items:center;gap:4px;font-size:13px;color:#94a3b8;cursor:pointer">
+<input type="checkbox" id="fo-trigger-502"> 502
+</label>
+<label style="display:flex;align-items:center;gap:4px;font-size:13px;color:#94a3b8;cursor:pointer">
+<input type="checkbox" id="fo-trigger-503"> 503
+</label>
+</div>
+</div>
+</div>
+<button class="btn btn-primary" style="margin-top:16px" onclick="saveFailover()">Save Failover Settings</button>
+</div>
+
+<div class="section">
+<div class="section-header"><h2>Failover Log</h2></div>
+<div id="failover-log-list"></div>
+</div>
+</div>
+
+<div class="section">
+<div class="section-header"><h2>Recent Errors</h2></div>
+<div id="errors-list" class="error-list"></div>
+</div>
+</div>
+
+<!-- Add Key Modal -->
+<div class="modal-overlay" id="add-modal">
+<div class="modal">
+<h2>Add API Key</h2>
+<div class="form-group">
+<label>Key Name (used as model in requests)</label>
+<input type="text" id="add-name" placeholder="my-openai-key">
+</div>
+<div class="form-group">
+<label>Provider</label>
+<select id="add-provider" onchange="onProviderChange()">
+<option value="openai">OpenAI</option>
+<option value="anthropic">Anthropic</option>
+<option value="gemini">Google Gemini</option>
+<option value="mistral">Mistral</option>
+<option value="groq">Groq</option>
+<option value="together">Together AI</option>
+<option value="deepseek">DeepSeek</option>
+<option value="openrouter">OpenRouter</option>
+<option value="fireworks">Fireworks AI</option>
+<option value="nvidia">NVIDIA NIM</option>
+<option value="custom">Custom (OpenAI-compatible)</option>
+</select>
+</div>
+<div class="form-group">
+<label>API Key</label>
+<input type="password" id="add-key" placeholder="sk-...">
+</div>
+<div class="form-group" id="add-model-group">
+<label>Model</label>
+<select id="add-model" onchange="onModelChange()"></select>
+</div>
+<div class="form-group" id="add-custom-model-group" style="display:none">
+<label>Custom Model ID</label>
+<input type="text" id="add-custom-model" placeholder="e.g. gpt-4o or org/model-name">
+</div>
+<div class="form-group" id="add-custom-url-group" style="display:none">
+<label>Custom Base URL</label>
+<input type="text" id="add-custom-url" placeholder="https://your-api.com/v1">
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>Priority (higher = used first)</label>
+<input type="number" id="add-priority" value="0">
+</div>
+</div>
+<div class="test-result" id="add-test-result"></div>
+<div class="modal-actions">
+<button class="btn btn-test" id="btn-test-add">Test Key</button>
+<button class="btn btn-secondary" id="btn-cancel-add">Cancel</button>
+<button class="btn btn-primary" id="btn-save-add">Add Key</button>
+</div>
+</div>
+</div>
+
+<!-- Add Virtual Key Modal -->
+<div class="modal-overlay" id="add-vk-modal">
+<div class="modal">
+<h2>Add Virtual Key</h2>
+<div class="form-group">
+<label>Name</label>
+<input type="text" id="vk-name" placeholder="team-app-1">
+</div>
+<div class="form-group">
+<label>Owner ID</label>
+<input type="text" id="vk-owner" placeholder="user-123">
+</div>
+<div class="form-group">
+<label>Monthly Budget ($, 0=unlimited)</label>
+<input type="number" id="vk-budget" value="0" step="0.01">
+</div>
+<div class="form-group">
+<label>Allowed Models (* = all)</label>
+<input type="text" id="vk-models" value="*" placeholder="gpt-4o,claude-sonnet-4-5">
+</div>
+<div class="form-group">
+<label>Rate Limit (req/min, 0=unlimited)</label>
+<input type="number" id="vk-rate" value="0">
+</div>
+<div class="modal-actions">
+<button class="btn btn-secondary" id="btn-cancel-vk">Cancel</button>
+<button class="btn btn-primary" id="btn-save-vk">Create Key</button>
+</div>
+</div>
+</div>
+
+<!-- Race Mode Modal -->
+<div class="modal-overlay" id="race-modal">
+<div class="modal" style="max-width:800px">
+<h2>Provider Race Mode</h2>
+<div class="form-group">
+<label>Message</label>
+<textarea id="race-message" rows="3" placeholder="What is the meaning of life?"></textarea>
+</div>
+<div class="form-group">
+<label>Providers (comma-separated, or leave empty for all)</label>
+<input type="text" id="race-providers" placeholder="openai,anthropic,gemini,groq,deepseek">
+</div>
+<div class="form-group">
+<label>Model (optional, leave empty for provider defaults)</label>
+<input type="text" id="race-model" placeholder="gpt-4o">
+</div>
+<div id="race-results"></div>
+<div class="modal-actions">
+<button class="btn btn-secondary" id="btn-cancel-race">Close</button>
+<button class="btn btn-race" id="btn-start-race">Start Race</button>
+</div>
+</div>
+</div>
+
+<!-- Add Guardrail Modal -->
+<div class="modal-overlay" id="add-guardrail-modal">
+<div class="modal">
+<h2>Add Guardrail Rule</h2>
+<div class="form-group">
+<label>Rule Name</label>
+<input type="text" id="gr-name" placeholder="block-ssn">
+</div>
+<div class="form-group">
+<label>Regex Pattern</label>
+<input type="text" id="gr-pattern" placeholder="\b\d{3}-\d{2}-\d{4}\b">
+</div>
+<div class="form-group">
+<label>Action</label>
+<select id="gr-action">
+<option value="block">Block</option>
+<option value="warn">Warn (log only)</option>
+</select>
+</div>
+<div class="modal-actions">
+<button class="btn btn-secondary" id="btn-cancel-guardrail">Cancel</button>
+<button class="btn btn-primary" id="btn-save-guardrail">Add Rule</button>
+</div>
+</div>
+</div>
+
+<!-- Add Alias Modal -->
+<div class="modal-overlay" id="add-alias-modal">
+<div class="modal">
+<h2>Add Model Alias</h2>
+<div class="form-group">
+<label>Alias Name</label>
+<input type="text" id="al-name" placeholder="smart">
+</div>
+<div class="form-group">
+<label>Target Model</label>
+<input type="text" id="al-target" placeholder="claude-sonnet-4-5">
+</div>
+<div class="modal-actions">
+<button class="btn btn-secondary" id="btn-cancel-alias">Cancel</button>
+<button class="btn btn-primary" id="btn-save-alias">Add Alias</button>
+</div>
+</div>
+</div>
+
+<!-- Config Modal -->
+<div class="modal-overlay" id="config-modal">
+<div class="modal">
+<h2>Import / Export Config</h2>
+<div class="form-group">
+<label>Config JSON</label>
+<textarea id="config-json" rows="10" style="width:100%;padding:10px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;font-family:monospace;font-size:12px;resize:vertical"></textarea>
+</div>
+<div class="modal-actions">
+<button class="btn btn-secondary" id="btn-cancel-config">Cancel</button>
+<button class="btn btn-secondary" id="btn-export-config">Export</button>
+<button class="btn btn-primary" id="btn-import-config">Import</button>
+</div>
+</div>
+</div>
+
+<script>
+const MODELS = {
+  openai: ['gpt-5.6-sol','gpt-5.6-terra','gpt-5.5','gpt-5.5-pro','gpt-5.4-mini','gpt-5.4-nano','gpt-5.4-pro','gpt-5.4','gpt-5','gpt-4.1','gpt-4.1-mini','gpt-4.1-nano','gpt-4o','gpt-4o-mini','o3','o4-mini','o3-mini'],
+  anthropic: ['claude-opus-4-5','claude-sonnet-4-5','claude-haiku-4-5','claude-sonnet-4-6','claude-sonnet-4-20250514','claude-3-5-haiku-20241022'],
+  gemini: ['gemini-3.1-pro','gemini-3.1-flash','gemini-3.6-flash-preview','gemini-3.1-flash-lite','gemini-3-flash-preview','gemini-3-pro-preview','gemini-2.5-flash-preview-06-05','gemini-2.5-pro-preview-06-05','gemini-2.0-flash','gemini-2.0-flash-lite'],
+  mistral: ['magistral-medium-2506','mistral-medium-latest','mistral-small-latest','devstral-2-small','codestral-latest','mistral-small-2503'],
+  groq: ['llama-3.3-70b-versatile','llama-3.1-8b-instant','openai/gpt-oss-120b','openai/gpt-oss-20b','mistral-saba-24b','gemma3-27b-it'],
+  together: ['meta-llama/Llama-3.3-70B-Instruct-Turbo','meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo','Qwen/Qwen2.5-72B-Instruct-Turbo','deepseek-ai/DeepSeek-V3'],
+  deepseek: ['deepseek-r1','deepseek-chat','deepseek-v4-base'],
+  openrouter: ['openai/gpt-4o','openai/gpt-4o-mini','anthropic/claude-3.5-sonnet','google/gemini-2.0-flash','meta-llama/llama-3.3-70b-instruct'],
+  fireworks: ['accounts/fireworks/models/llama-v3p3-70b-instruct','accounts/fireworks/models/llama-v3p1-70b-instruct','accounts/fireworks/models/mixtral-8x22b-instruct'],
+  nvidia: ['nvidia/nemotron-3-ultra-550b-a55b','nvidia/nemotron-3-super-120b-a12b','nvidia/nemotron-3-nano-30b-a3b'],
+  custom: ['custom-model']
+};
+
+let activeTab = 'api-keys';
+let ADMIN_PASS = '';
+
+function askPassword() {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay active';
+    overlay.id = 'login-modal';
+    overlay.innerHTML = '<div class="modal"><h2>Admin Login</h2><div class="form-group"><label>Admin Password</label><input type="password" id="login-pass" placeholder="Enter password"></div><div class="modal-actions"><button class="btn btn-primary" id="btn-login">Login</button></div></div>';
+    document.body.appendChild(overlay);
+    document.getElementById('login-pass').focus();
+    document.getElementById('login-pass').addEventListener('keydown', (e) => { if (e.key === 'Enter') document.getElementById('btn-login').click(); });
+    document.getElementById('btn-login').addEventListener('click', () => {
+      const pass = document.getElementById('login-pass').value;
+      if (pass) { overlay.remove(); resolve(pass); }
+    });
+  });
+}
+
+function authHeaders() {
+  return { 'Authorization': 'Bearer ' + ADMIN_PASS, 'Content-Type': 'application/json' };
+}
+
+async function adminFetch(url, opts) {
+  opts = opts || {};
+  opts.headers = Object.assign({}, authHeaders(), opts.headers || {});
+  return fetch(url, opts);
+}
+
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = String(s);
+  return d.innerHTML;
+}
+
+function toast(msg, type) {
+  type = type || 'success';
+  const t = document.createElement('div');
+  t.className = 'toast toast-' + type;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function() { t.remove(); }, 3000);
+}
+
+function setBaseUrl() {
+  document.getElementById('base-url').textContent = window.location.origin + '/v1/chat/completions';
+}
+
+async function loadUnifiedKey() {
+  try {
+    const res = await adminFetch('/admin/unified-key');
+    const data = await res.json();
+    document.getElementById('unified-key').textContent = data.unified_api_key;
+  } catch(e) { console.error(e); }
+}
+
+function copyUnifiedKey() {
+  const key = document.getElementById('unified-key').textContent;
+  navigator.clipboard.writeText(key);
+  toast('Unified key copied!');
+}
+
+async function regenerateKey() {
+  if (!confirm('Regenerate unified key? Update all your apps with the new key.')) return;
+  try {
+    const res = await adminFetch('/admin/unified-key', {method:'POST'});
+    const data = await res.json();
+    document.getElementById('unified-key').textContent = data.unified_api_key;
+    toast('Unified key regenerated');
+  } catch(e) { toast('Failed', 'error'); }
+}
+
+async function loadKeys() {
+  try {
+    const res = await adminFetch('/admin/keys');
+    const keys = await res.json();
+    renderKeys(keys);
+  } catch(e) { toast('Failed to load keys', 'error'); }
+}
+
+async function loadStats() {
+  try {
+    const res = await adminFetch('/admin/stats');
+    const stats = await res.json();
+    document.getElementById('stat-total').textContent = stats.total_requests || 0;
+    document.getElementById('stat-errors').textContent = stats.error_requests || 0;
+    var total = stats.total_requests || 0;
+    var errors = stats.error_requests || 0;
+    document.getElementById('stat-rate').textContent = total > 0 ? ((total - errors) / total * 100).toFixed(1) + '%' : '100%';
+    var activeKeys = 0;
+    if (stats.provider_stats) stats.provider_stats.forEach(function(p) { activeKeys += p.active_keys; });
+    document.getElementById('stat-keys').textContent = activeKeys;
+    document.getElementById('stat-cost').textContent = '$' + (stats.total_cost || 0).toFixed(4);
+    document.getElementById('stat-blocked').textContent = stats.blocked_requests || 0;
+    if (stats.recent_errors) renderErrors(stats.recent_errors);
+  } catch(e) {}
+}
+
+function renderKeys(keys) {
+  var el = document.getElementById('keys-table');
+  if (!keys || keys.length === 0) {
+    el.innerHTML = '<div class="empty-state"><p>No API keys configured yet. Click "+ Add API Key" to get started.</p></div>';
+    return;
+  }
+  var html = '<table><thead><tr><th>Name</th><th>Provider</th><th>Key</th><th>Model</th><th>Pri</th><th>Reqs</th><th>Cost</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+  keys.forEach(function(k) {
+    var statusBadge = k.enabled ? '<span class="badge badge-green">On</span>' : '<span class="badge badge-red">Off</span>';
+    var displayName = k.name || k.provider + ' Key';
+    html += '<tr>' +
+      '<td><strong>' + escHtml(displayName) + '</strong></td>' +
+      '<td><span class="provider-tag">' + escHtml(k.provider) + '</span></td>' +
+      '<td class="key-mask">' + escHtml(k.key) + '</td>' +
+      '<td><span class="model-tag">' + escHtml(k.model || '-') + '</span></td>' +
+      '<td>' + k.priority + '</td>' +
+      '<td>' + k.total_requests + '</td>' +
+      '<td>$' + (k.total_cost || 0).toFixed(4) + '</td>' +
+      '<td>' + statusBadge + '</td>' +
+      '<td style="white-space:nowrap">' +
+      '<button class="btn btn-sm btn-test" data-action="test-key" data-id="' + k.id + '">Test</button> ' +
+      '<button class="btn btn-sm btn-secondary" data-action="toggle-key" data-id="' + k.id + '" data-enabled="' + (!k.enabled) + '">' + (k.enabled ? 'Off' : 'On') + '</button> ' +
+      '<button class="btn btn-sm btn-danger" data-action="delete-key" data-id="' + k.id + '">Del</button>' +
+      '</td></tr>';
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+  el.querySelectorAll('[data-action]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var action = btn.getAttribute('data-action');
+      var id = parseInt(btn.getAttribute('data-id'));
+      if (action === 'test-key') testExistingKey(id);
+      else if (action === 'toggle-key') toggleKey(id, btn.getAttribute('data-enabled') === 'true');
+      else if (action === 'delete-key') deleteKey(id);
+    });
+  });
+}
+
+function renderErrors(errors) {
+  var el = document.getElementById('errors-list');
+  if (!errors || errors.length === 0) { el.innerHTML = '<div class="empty-state">No errors yet.</div>'; return; }
+  el.innerHTML = errors.map(function(e) {
+    return '<div class="error-item"><div class="error-time">' +
+      escHtml(new Date(e.timestamp).toLocaleString()) + ' | ' + escHtml(e.provider) + ' | Key #' + e.key_id + ' | HTTP ' + e.status_code +
+      '</div><div class="error-msg">' + escHtml(e.error.substring(0,200)) + '</div></div>';
+  }).join('');
+}
+
+function showAddModal() {
+  document.getElementById('add-name').value = '';
+  document.getElementById('add-key').value = '';
+  document.getElementById('add-custom-url').value = '';
+  document.getElementById('add-priority').value = '0';
+  document.getElementById('add-test-result').style.display = 'none';
+  onProviderChange();
+  document.getElementById('add-modal').classList.add('active');
+}
+function showConfigModal() { document.getElementById('config-json').value = ''; document.getElementById('config-modal').classList.add('active'); }
+function showRaceModal() { document.getElementById('race-results').innerHTML = ''; document.getElementById('race-modal').classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+function onProviderChange() {
+  var prov = document.getElementById('add-provider').value;
+  var modelSelect = document.getElementById('add-model');
+  var models = MODELS[prov] || [];
+  modelSelect.innerHTML = models.map(function(m) { return '<option value="' + escHtml(m) + '">' + escHtml(m) + '</option>'; }).join('') + '<option value="__custom__">Custom (enter below)...</option>';
+  document.getElementById('add-custom-url-group').style.display = prov === 'custom' ? 'block' : 'none';
+  document.getElementById('add-custom-model-group').style.display = 'none';
+  document.getElementById('add-custom-model').value = '';
+  if (!document.getElementById('add-name').value) {
+    document.getElementById('add-name').value = prov + '-key-' + Date.now().toString(36);
+  }
+}
+
+function onModelChange() {
+  var sel = document.getElementById('add-model');
+  document.getElementById('add-custom-model-group').style.display = sel.value === '__custom__' ? 'block' : 'none';
+}
+
+function getSelectedModel() {
+  var sel = document.getElementById('add-model');
+  if (sel.value === '__custom__') return document.getElementById('add-custom-model').value.trim();
+  return sel.value;
+}
+
+async function addKey() {
+  var name = document.getElementById('add-name').value.trim();
+  var provider = document.getElementById('add-provider').value;
+  var key = document.getElementById('add-key').value.trim();
+  var model = getSelectedModel();
+  var customUrl = document.getElementById('add-custom-url').value.trim();
+  var priority = parseInt(document.getElementById('add-priority').value) || 0;
+  if (!key) { toast('API key is required', 'error'); return; }
+  try {
+    var res = await adminFetch('/admin/keys', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name: name, provider: provider, key: key, model: model, custom_url: customUrl, priority: priority})
+    });
+    if (res.ok) { toast('Key added'); closeModal('add-modal'); loadKeys(); loadStats(); }
+    else { var e = await res.text(); toast(e, 'error'); }
+  } catch(e) { toast('Failed to add key', 'error'); }
+}
+
+async function testKeyFromAdd() {
+  var provider = document.getElementById('add-provider').value;
+  var key = document.getElementById('add-key').value.trim();
+  var model = getSelectedModel();
+  var customUrl = document.getElementById('add-custom-url').value.trim();
+  if (!key) { toast('Enter an API key first', 'error'); return; }
+  var resultEl = document.getElementById('add-test-result');
+  resultEl.className = 'test-result';
+  resultEl.textContent = 'Testing...';
+  resultEl.style.display = 'block';
+  try {
+    var res = await adminFetch('/admin/test-key', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({provider: provider, key: key, model: model, custom_url: customUrl})
+    });
+    var data = await res.json();
+    if (data.success) {
+      resultEl.className = 'test-result success';
+      resultEl.innerHTML = '<strong>Test Successful!</strong> (model: ' + escHtml(data.model) + ')<div class="reply">' + escHtml(data.reply) + '</div>';
+    } else {
+      resultEl.className = 'test-result error';
+      resultEl.innerHTML = '<strong>Test Failed:</strong> ' + escHtml(data.error);
+    }
+  } catch(e) {
+    resultEl.className = 'test-result error';
+    resultEl.innerHTML = '<strong>Test Failed:</strong> ' + escHtml(e.message);
+  }
+}
+
+async function testExistingKey(id) {
+  var resultEl = document.getElementById('add-test-result');
+  resultEl.className = 'test-result';
+  resultEl.textContent = 'Testing...';
+  resultEl.style.display = 'block';
+  document.getElementById('add-modal').classList.add('active');
+  try {
+    var res = await adminFetch('/admin/test-key', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({key_id: id})
+    });
+    var data = await res.json();
+    if (data.success) {
+      resultEl.className = 'test-result success';
+      resultEl.innerHTML = '<strong>Test Successful!</strong> (model: ' + escHtml(data.model) + ')<div class="reply">' + escHtml(data.reply) + '</div>';
+    } else {
+      resultEl.className = 'test-result error';
+      resultEl.innerHTML = '<strong>Test Failed:</strong> ' + escHtml(data.error);
+    }
+  } catch(e) {
+    resultEl.className = 'test-result error';
+    resultEl.innerHTML = '<strong>Test Failed:</strong> ' + escHtml(e.message);
+  }
+}
+
+async function deleteKey(id) {
+  if (!confirm('Delete this key?')) return;
+  try { await adminFetch('/admin/keys/' + id, {method:'DELETE'}); toast('Key deleted'); loadKeys(); loadStats(); }
+  catch(e) { toast('Failed', 'error'); }
+}
+
+async function toggleKey(id, enabled) {
+  try { await adminFetch('/admin/keys/' + id + '/toggle', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({enabled: enabled})}); toast(enabled ? 'Enabled' : 'Disabled'); loadKeys(); }
+  catch(e) { toast('Failed', 'error'); }
+}
+
+async function exportConfig() {
+  try { var r = await adminFetch('/admin/export'); var d = await r.json(); document.getElementById('config-json').value = JSON.stringify(d,null,2); }
+  catch(e) { toast('Failed', 'error'); }
+}
+
+async function importConfig() {
+  var json = document.getElementById('config-json').value.trim();
+  if (!json) { toast('No config', 'error'); return; }
+  try { var r = await adminFetch('/admin/import', {method:'POST', headers:{'Content-Type':'application/json'}, body:json}); var d = await r.json(); toast('Imported ' + d.imported + ' keys'); closeModal('config-modal'); loadKeys(); loadStats(); }
+  catch(e) { toast('Failed', 'error'); }
+}
+
+async function loadVirtualKeys() {
+  try {
+    const res = await adminFetch('/admin/virtual-keys');
+    const keys = await res.json();
+    renderVirtualKeys(keys);
+  } catch(e) {}
+}
+
+function renderVirtualKeys(keys) {
+  var el = document.getElementById('vk-table');
+  if (!keys || keys.length === 0) {
+    el.innerHTML = '<div class="empty-state"><p>No virtual keys yet. Click "+ Add Virtual Key" to create one.</p></div>';
+    return;
+  }
+  var html = '<table><thead><tr><th>Name</th><th>Key</th><th>Owner</th><th>Budget</th><th>Used</th><th>Reqs</th><th>Models</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+  keys.forEach(function(k) {
+    var statusBadge = k.enabled ? '<span class="badge badge-green">On</span>' : '<span class="badge badge-red">Off</span>';
+    var budget = k.monthly_budget > 0 ? '$' + k.monthly_budget.toFixed(2) : 'Unlimited';
+    var used = '$' + k.used_this_month.toFixed(4);
+    html += '<tr>' +
+      '<td><strong>' + escHtml(k.name) + '</strong></td>' +
+      '<td class="key-mask">' + escHtml(k.key) + '</td>' +
+      '<td>' + escHtml(k.owner_id || '-') + '</td>' +
+      '<td>' + budget + '</td>' +
+      '<td>' + used + '</td>' +
+      '<td>' + k.total_requests + '</td>' +
+      '<td><span class="model-tag">' + escHtml(k.allowed_models) + '</span></td>' +
+      '<td>' + statusBadge + '</td>' +
+      '<td style="white-space:nowrap">' +
+      '<button class="btn btn-sm btn-secondary" data-action="toggle-vk" data-id="' + k.id + '" data-enabled="' + (!k.enabled) + '">' + (k.enabled ? 'Off' : 'On') + '</button> ' +
+      '<button class="btn btn-sm btn-danger" data-action="delete-vk" data-id="' + k.id + '">Del</button>' +
+      '</td></tr>';
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+  el.querySelectorAll('[data-action]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var action = btn.getAttribute('data-action');
+      var id = parseInt(btn.getAttribute('data-id'));
+      if (action === 'toggle-vk') toggleVirtualKey(id, btn.getAttribute('data-enabled') === 'true');
+      else if (action === 'delete-vk') deleteVirtualKey(id);
+    });
+  });
+}
+
+async function addVirtualKey() {
+  var name = document.getElementById('vk-name').value.trim();
+  var owner = document.getElementById('vk-owner').value.trim();
+  var budget = parseFloat(document.getElementById('vk-budget').value) || 0;
+  var models = document.getElementById('vk-models').value.trim() || '*';
+  var rate = parseInt(document.getElementById('vk-rate').value) || 0;
+  if (!name) { toast('Name is required', 'error'); return; }
+  try {
+    var res = await adminFetch('/admin/virtual-keys', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name: name, owner_id: owner, monthly_budget: budget, allowed_models: models, rate_limit: rate})
+    });
+    var data = await res.json();
+    if (data.key) {
+      toast('Virtual key created: ' + data.key);
+      closeModal('add-vk-modal');
+      loadVirtualKeys();
+    } else {
+      toast('Failed', 'error');
+    }
+  } catch(e) { toast('Failed', 'error'); }
+}
+
+async function toggleVirtualKey(id, enabled) {
+  try { await adminFetch('/admin/virtual-keys/' + id + '/toggle', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({enabled: enabled})}); toast(enabled ? 'Enabled' : 'Disabled'); loadVirtualKeys(); }
+  catch(e) { toast('Failed', 'error'); }
+}
+
+async function deleteVirtualKey(id) {
+  if (!confirm('Delete this virtual key?')) return;
+  try { await adminFetch('/admin/virtual-keys/' + id, {method:'DELETE'}); toast('Deleted'); loadVirtualKeys(); }
+  catch(e) { toast('Failed', 'error'); }
+}
+
+async function startRace() {
+  var message = document.getElementById('race-message').value.trim();
+  if (!message) { toast('Enter a message', 'error'); return; }
+  var providers = document.getElementById('race-providers').value.trim();
+  var model = document.getElementById('race-model').value.trim();
+  var resultsEl = document.getElementById('race-results');
+  resultsEl.innerHTML = '<div class="race-loading">Racing across providers...</div>';
+
+  var body = {message: message};
+  if (providers) body.providers = providers.split(',').map(function(s) { return s.trim(); });
+  if (model) body.model = model;
+
+  try {
+    var key = document.getElementById('unified-key').textContent;
+    var res = await adminFetch('/admin/race', {
+      method: 'POST',
+      headers: {'Authorization': 'Bearer ' + key},
+      body: JSON.stringify(body)
+    });
+    var data = await res.json();
+    if (!data.results || data.results.length === 0) {
+      resultsEl.innerHTML = '<div class="empty-state">No results. Add API keys first.</div>';
+      return;
+    }
+    var html = '';
+    data.results.sort(function(a, b) { return a.latency_ms - b.latency_ms; });
+    data.results.forEach(function(r, i) {
+      var medal = i === 0 ? '<span class="badge badge-green">1st</span> ' : i === 1 ? '<span class="badge badge-yellow">2nd</span> ' : i === 2 ? '<span class="badge badge-purple">3rd</span> ' : '';
+      html += '<div class="race-result">' +
+        '<div class="race-header">' +
+        '<div>' + medal + '<span class="race-provider">' + escHtml(r.provider) + '</span> <span class="model-tag">' + escHtml(r.model || '') + '</span></div>' +
+        '<div class="race-latency">' + r.latency_ms + 'ms | ' + r.tokens_in + '+' + r.tokens_out + ' tokens</div>' +
+        '</div>' +
+        '<div class="race-reply">' + (r.error ? '<span style="color:#f87171">' + escHtml(r.error) + '</span>' : escHtml(r.reply)) + '</div>' +
+        '</div>';
+    });
+    resultsEl.innerHTML = html;
+  } catch(e) {
+    resultsEl.innerHTML = '<div class="race-loading" style="color:#f87171">Error: ' + escHtml(e.message) + '</div>';
+  }
+}
+
+async function loadGuardrails() {
+  try {
+    const res = await adminFetch('/admin/guardrails');
+    const guardrails = await res.json();
+    renderGuardrails(guardrails);
+  } catch(e) {}
+}
+
+function renderGuardrails(guardrails) {
+  var el = document.getElementById('guardrails-table');
+  var keys = Object.keys(guardrails);
+  if (keys.length === 0) {
+    el.innerHTML = '<div class="empty-state"><p>No guardrail rules. Built-in PII detection (email, phone, SSN, credit cards) and prompt injection protection are always active.</p></div>';
+    return;
+  }
+  var html = '<table><thead><tr><th>Name</th><th>Action</th><th>Pattern</th><th>Actions</th></tr></thead><tbody>';
+  keys.forEach(function(name) {
+    var value = guardrails[name];
+    var parts = value.split(':');
+    var action = parts[0] || 'block';
+    var pattern = parts.slice(1).join(':');
+    var actionBadge = action === 'block' ? '<span class="badge badge-red">Block</span>' : '<span class="badge badge-yellow">Warn</span>';
+    html += '<tr>' +
+      '<td><strong>' + escHtml(name) + '</strong></td>' +
+      '<td>' + actionBadge + '</td>' +
+      '<td><code style="font-size:11px;color:#94a3b8">' + escHtml(pattern.substring(0, 60)) + '</code></td>' +
+      '<td><button class="btn btn-sm btn-danger" data-action="delete-guardrail" data-name="' + escHtml(name) + '">Del</button></td>' +
+      '</tr>';
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+  el.querySelectorAll('[data-action]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      deleteGuardrail(btn.getAttribute('data-name'));
+    });
+  });
+}
+
+async function addGuardrail() {
+  var name = document.getElementById('gr-name').value.trim();
+  var pattern = document.getElementById('gr-pattern').value.trim();
+  var action = document.getElementById('gr-action').value;
+  if (!name || !pattern) { toast('Name and pattern required', 'error'); return; }
+  try {
+    await adminFetch('/admin/guardrails', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name: name, pattern: pattern, action: action})
+    });
+    toast('Guardrail added');
+    closeModal('add-guardrail-modal');
+    loadGuardrails();
+  } catch(e) { toast('Failed', 'error'); }
+}
+
+async function deleteGuardrail(name) {
+  if (!confirm('Delete guardrail: ' + name + '?')) return;
+  try {
+    await adminFetch('/admin/guardrails', {
+      method: 'DELETE',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name: name})
+    });
+    toast('Deleted');
+    loadGuardrails();
+  } catch(e) { toast('Failed', 'error'); }
+}
+
+async function loadBlocked() {
+  try {
+    const res = await adminFetch('/admin/blocked');
+    const blocked = await res.json();
+    var el = document.getElementById('blocked-list');
+    if (!blocked || blocked.length === 0) { el.innerHTML = '<div class="empty-state">No blocked requests yet.</div>'; return; }
+    el.innerHTML = blocked.map(function(b) {
+      return '<div class="error-item"><div class="error-time">' +
+        escHtml(new Date(b.timestamp).toLocaleString()) + ' | ' + escHtml(b.reason) +
+        '</div><div class="error-msg">' + escHtml(b.pattern) + '</div></div>';
+    }).join('');
+  } catch(e) {}
+}
+
+async function loadAliases() {
+  try {
+    const res = await adminFetch('/admin/aliases');
+    const aliases = await res.json();
+    renderAliases(aliases);
+  } catch(e) {}
+}
+
+function renderAliases(aliases) {
+  var el = document.getElementById('aliases-table');
+  var keys = Object.keys(aliases);
+  if (keys.length === 0) {
+    el.innerHTML = '<div class="empty-state"><p>No aliases. Add one to create shortcut model names like "smart" -> "claude-sonnet-4-5".</p></div>';
+    return;
+  }
+  var html = '<table><thead><tr><th>Alias</th><th>Target Model</th><th>Actions</th></tr></thead><tbody>';
+  keys.forEach(function(name) {
+    html += '<tr>' +
+      '<td><strong>' + escHtml(name) + '</strong></td>' +
+      '<td><span class="model-tag">' + escHtml(aliases[name]) + '</span></td>' +
+      '<td><button class="btn btn-sm btn-danger" data-action="delete-alias" data-name="' + escHtml(name) + '">Del</button></td>' +
+      '</tr>';
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+  el.querySelectorAll('[data-action]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      deleteAlias(btn.getAttribute('data-name'));
+    });
+  });
+}
+
+async function addAlias() {
+  var name = document.getElementById('al-name').value.trim();
+  var target = document.getElementById('al-target').value.trim();
+  if (!name || !target) { toast('Name and target required', 'error'); return; }
+  try {
+    await adminFetch('/admin/aliases', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name: name, target_model: target})
+    });
+    toast('Alias added');
+    closeModal('add-alias-modal');
+    loadAliases();
+  } catch(e) { toast('Failed', 'error'); }
+}
+
+async function deleteAlias(name) {
+  if (!confirm('Delete alias: ' + name + '?')) return;
+  try {
+    await adminFetch('/admin/aliases', {
+      method: 'DELETE',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name: name})
+    });
+    toast('Deleted');
+    loadAliases();
+  } catch(e) { toast('Failed', 'error'); }
+}
+
+async function loadFailoverConfig() {
+  try {
+    var res = await adminFetch('/admin/failover');
+    var config = await res.json();
+    document.getElementById('fo-enabled').checked = config.enabled === 'true';
+    document.getElementById('fo-compact').checked = config.compact === 'true';
+    document.getElementById('fo-provider').value = config.provider || '';
+    document.getElementById('fo-model').value = config.model || '';
+    document.getElementById('fo-compact-model').value = config.compact_model || '';
+    var triggers = (config.triggers || '402').split(',');
+    document.getElementById('fo-trigger-402').checked = triggers.indexOf('402') !== -1;
+    document.getElementById('fo-trigger-500').checked = triggers.indexOf('500') !== -1;
+    document.getElementById('fo-trigger-502').checked = triggers.indexOf('502') !== -1;
+    document.getElementById('fo-trigger-503').checked = triggers.indexOf('503') !== -1;
+  } catch(e) {}
+}
+
+async function saveFailover() {
+  var triggers = [];
+  if (document.getElementById('fo-trigger-402').checked) triggers.push('402');
+  if (document.getElementById('fo-trigger-500').checked) triggers.push('500');
+  if (document.getElementById('fo-trigger-502').checked) triggers.push('502');
+  if (document.getElementById('fo-trigger-503').checked) triggers.push('503');
+
+  var settings = [
+    {key: 'enabled', value: document.getElementById('fo-enabled').checked ? 'true' : 'false'},
+    {key: 'compact', value: document.getElementById('fo-compact').checked ? 'true' : 'false'},
+    {key: 'compact_model', value: document.getElementById('fo-compact-model').value},
+    {key: 'provider', value: document.getElementById('fo-provider').value},
+    {key: 'model', value: document.getElementById('fo-model').value},
+    {key: 'triggers', value: triggers.join(',')}
+  ];
+
+  for (var i = 0; i < settings.length; i++) {
+    await adminFetch('/admin/failover', {
+      method: 'POST',
+      body: JSON.stringify(settings[i])
+    });
+  }
+  toast('Failover settings saved');
+}
+
+async function loadFailoverLogs() {
+  try {
+    var res = await adminFetch('/admin/failover/logs');
+    var logs = await res.json();
+    var el = document.getElementById('failover-log-list');
+    if (!logs || logs.length === 0) { el.innerHTML = '<div class="empty-state">No failover events yet.</div>'; return; }
+    var html = '<table><thead><tr><th>Time</th><th>From</th><th>To</th><th>Trigger</th><th>Compacted</th><th>Result</th></tr></thead><tbody>';
+    logs.forEach(function(l) {
+      var resultBadge = l.success ? '<span class="badge badge-green">OK</span>' : '<span class="badge badge-red">FAIL</span>';
+      var compactBadge = l.compacted ? '<span class="badge badge-purple">YES</span>' : '<span class="badge badge-blue">NO</span>';
+      html += '<tr>' +
+        '<td>' + escHtml(new Date(l.timestamp).toLocaleString()) + '</td>' +
+        '<td><span class="provider-tag">' + escHtml(l.from_provider) + '</span> ' + escHtml(l.from_model) + '</td>' +
+        '<td><span class="provider-tag">' + escHtml(l.to_provider) + '</span> ' + escHtml(l.to_model) + '</td>' +
+        '<td><span class="badge badge-yellow">HTTP ' + l.trigger_status + '</span></td>' +
+        '<td>' + compactBadge + '</td>' +
+        '<td>' + resultBadge + '</td>' +
+        '</tr>';
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+  } catch(e) {}
+}
+
+async function loadLogs() {
+  try {
+    const res = await adminFetch('/admin/logs');
+    const logs = await res.json();
+    var el = document.getElementById('logs-list');
+    if (!logs || logs.length === 0) { el.innerHTML = '<div class="empty-state">No request logs yet.</div>'; return; }
+    var html = '<table><thead><tr><th>Time</th><th>Provider</th><th>Model</th><th>Status</th><th>Tokens</th><th>Cost</th><th>Latency</th><th>Cache</th></tr></thead><tbody>';
+    logs.forEach(function(l) {
+      var statusBadge = l.status_code < 400 ? '<span class="badge badge-green">' + l.status_code + '</span>' : '<span class="badge badge-red">' + l.status_code + '</span>';
+      var cacheBadge = l.cache_hit ? '<span class="badge badge-green">HIT</span>' : '<span class="badge badge-purple">MISS</span>';
+      html += '<tr>' +
+        '<td>' + escHtml(new Date(l.timestamp).toLocaleString()) + '</td>' +
+        '<td><span class="provider-tag">' + escHtml(l.provider) + '</span></td>' +
+        '<td><span class="model-tag">' + escHtml(l.model) + '</span></td>' +
+        '<td>' + statusBadge + '</td>' +
+        '<td>' + l.tokens_in + '+' + l.tokens_out + '</td>' +
+        '<td>$' + l.cost.toFixed(6) + '</td>' +
+        '<td>' + l.latency_ms + 'ms</td>' +
+        '<td>' + cacheBadge + '</td>' +
+        '</tr>';
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+  } catch(e) {}
+}
+
+document.querySelectorAll('.tab').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.tab-content').forEach(function(c) { c.style.display = 'none'; });
+    tab.classList.add('active');
+    var tabName = tab.getAttribute('data-tab');
+    document.getElementById('tab-' + tabName).style.display = 'block';
+    activeTab = tabName;
+    if (tabName === 'virtual-keys') loadVirtualKeys();
+    if (tabName === 'guardrails') { loadGuardrails(); loadBlocked(); }
+    if (tabName === 'aliases') loadAliases();
+    if (tabName === 'failover') { loadFailoverConfig(); loadFailoverLogs(); }
+    if (tabName === 'logs') loadLogs();
+  });
+});
+
+document.getElementById('btn-config').addEventListener('click', showConfigModal);
+document.getElementById('btn-add').addEventListener('click', showAddModal);
+document.getElementById('btn-race').addEventListener('click', showRaceModal);
+document.getElementById('btn-copy-key').addEventListener('click', copyUnifiedKey);
+document.getElementById('btn-regen-key').addEventListener('click', regenerateKey);
+document.getElementById('btn-refresh').addEventListener('click', loadKeys);
+document.getElementById('btn-test-add').addEventListener('click', testKeyFromAdd);
+document.getElementById('btn-cancel-add').addEventListener('click', function() { closeModal('add-modal'); });
+document.getElementById('btn-save-add').addEventListener('click', addKey);
+document.getElementById('btn-cancel-config').addEventListener('click', function() { closeModal('config-modal'); });
+document.getElementById('btn-export-config').addEventListener('click', exportConfig);
+document.getElementById('btn-import-config').addEventListener('click', importConfig);
+
+document.getElementById('btn-add-vk').addEventListener('click', function() { document.getElementById('add-vk-modal').classList.add('active'); });
+document.getElementById('btn-cancel-vk').addEventListener('click', function() { closeModal('add-vk-modal'); });
+document.getElementById('btn-save-vk').addEventListener('click', addVirtualKey);
+
+document.getElementById('btn-start-race').addEventListener('click', startRace);
+document.getElementById('btn-cancel-race').addEventListener('click', function() { closeModal('race-modal'); });
+
+document.getElementById('btn-add-guardrail').addEventListener('click', function() { document.getElementById('add-guardrail-modal').classList.add('active'); });
+document.getElementById('btn-cancel-guardrail').addEventListener('click', function() { closeModal('add-guardrail-modal'); });
+document.getElementById('btn-save-guardrail').addEventListener('click', addGuardrail);
+
+document.getElementById('btn-add-alias').addEventListener('click', function() { document.getElementById('add-alias-modal').classList.add('active'); });
+document.getElementById('btn-cancel-alias').addEventListener('click', function() { closeModal('add-alias-modal'); });
+document.getElementById('btn-save-alias').addEventListener('click', addAlias);
+
+askPassword().then(function(pass) {
+  ADMIN_PASS = pass;
+  setBaseUrl();
+  onProviderChange();
+  loadUnifiedKey();
+  loadKeys();
+  loadStats();
+  setInterval(loadStats, 5000);
+});
+</script>
+</body>
+</html>

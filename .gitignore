@@ -1,0 +1,8 @@
+ai-gateway
+ai-gateway-new
+gateway.db
+gateway.db-journal
+.gateway.key
+gateway.env
+*.log
+/tmp/
