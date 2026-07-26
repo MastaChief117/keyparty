@@ -203,74 +203,98 @@ All admin endpoints need `Authorization: Bearer <your-admin-password>`
 
 ## FAQs
 
-**Q: What is this thing?**
-A: It's a proxy for AI APIs. You point your apps at it, and it routes requests across multiple providers. Think of it as a bouncer for your AI requests.
+**Q: What is this?**
+A: Idk I was bored at 3am and had too many API keys
 
-**Q: Why would I need this?**
-A: Because you're tired of your OpenAI key getting rate limited at 2am while you're vibing. This gateway automatically fails over to another provider so you keep cooking.
+**Q: Why?**
+A: Because my OpenAI quota died at 2am and I was too angry to sleep
 
-**Q: Does it actually work?**
-A: Yes. We've tested it with OpenAI, Anthropic, Gemini, Groq, NVIDIA NIM, Together, DeepSeek, OpenRouter, Fireworks, and Mistral. It works. We're as surprised as you are.
+**Q: Does it work?**
+A: If you're reading this README then yeah probably. The binary is in the repo. Go find it.
 
 **Q: How much does it cost?**
-A: It's free. Open source. MIT license. We're not trying to get rich. (We're already rich in vibes.)
+A: If you give me $5 I'll call it enterprise pricing
 
 **Q: Is my data safe?**
-A: Yes. All API keys are encrypted at rest with AES-256-GCM. The gateway doesn't store your conversation history (unless you enable request logging, which is optional). We take security seriously... mostly.
+A: It's encrypted with AES-256-GCM. That sounds fancy right? That means it's safe. Trust me bro.
 
 **Q: Can I use it with my existing apps?**
-A: Yes. It's OpenAI-compatible. Just change your API base URL to the gateway URL and you're good to go. No code changes needed.
+A: If your apps talk to OpenAI then yeah. If they talk to something else then idk figure it out.
 
 **Q: What happens when a provider dies?**
-A: The gateway automatically fails over to another provider. Your chat history is preserved through compaction. You get a response like nothing happened. Magic.
+A: It fails over to another one. Your chat doesn't die. You're welcome.
 
 **Q: Can I race providers against each other?**
-A: Yes! Use the race mode. It sends your message to multiple providers simultaneously and returns the fastest response. It's like a AI thunderdome.
+A: Yes. It's basically a AI thunderdome. Two providers enter. One provider wins.
 
 **Q: Does it support streaming?**
-A: Yes. Streaming works just like it does with the original providers. The gateway forwards the stream transparently.
+A: Yes. The stream goes brrr just like it does with the original provider.
 
 **Q: Can I set up rate limits?**
-A: Yes. Virtual keys support per-key rate limits, budgets, and model allowlists. You can give users their own keys without sharing your real API keys.
+A: Yes. Virtual keys support rate limits. You can limit your friends. Or your enemies.
 
 **Q: What if I want to contribute?**
-A: Fork it, change it, PR it. We don't bite. (We're AI, we don't have mouths.)
+A: Fork it. Change it. PR it. I don't bite. (I'm AI. I don't have a mouth.)
 
 **Q: Is this production ready?**
-A: It's running in production right now. Well, not YOUR production. But someone's production. We think.
+A: It's running in production right now. Well not YOUR production. But someone's production. Maybe.
 
 **Q: Can I run this on a Raspberry Pi?**
-A: Yes. It's a single Go binary with zero dependencies. It'll run on a potato if it has Go installed.
+A: Yes. It'll run on a potato if it has Go installed. Don't test me.
 
 **Q: What's the catch?**
-A: There is no catch. It's free. Open source. MIT license. We just want to make AI routing less painful. That's it.
+A: There is no catch. It's free. Open source. MIT license. We just vibes.
 
 **Q: Why did you build this?**
-A: Because we were tired of managing 5 different API keys and changing code every time a provider died. Also we were bored at 3am. Most great things are built at 3am.
+A: I was bored at 3am. That's it. That's the whole reason.
 
-**Q: Can I use this to save money on API costs?**
-A: Yes! The gateway routes to the cheapest available provider. Also, response caching means you don't pay for the same request twice. Your wallet will thank you.
+**Q: Can I use this to save money?**
+A: If you think about it saving money is just making money. So yes. You're welcome.
 
 **Q: What if I find a bug?**
-A: Open an issue on GitHub. We'll fix it. Probably. Eventually. We promise. (No we don't.)
+A: Open an issue. I'll fix it. Probably. Eventually. No promises.
 
-**Q: Can I use this with Claude Code / Cursor / other AI tools?**
-A: Yes! Just point them at the gateway URL instead of the direct API. It's a drop-in replacement.
+**Q: Can I use this with Claude Code / Cursor?**
+A: Yes. Just point them at the gateway. It's a drop-in replacement. You're welcome.
 
 **Q: Does it support tool use / function calling?**
-A: Yes. The gateway passes through all OpenAI-compatible parameters transparently.
+A: Yes. It passes through everything. I don't discriminate.
 
 **Q: What's the max request size?**
-A: Whatever your provider supports. The gateway doesn't impose additional limits.
+A: Idk. Try it and find out. Let me know how it goes.
 
 **Q: Can I run multiple instances?**
-A: Yes. Each instance has its own SQLite database. For shared state, you'd need to swap SQLite for Postgres (PRs welcome).
+A: Yes. But why would you. One is already enough chaos.
 
 **Q: Is there a Docker image?**
-A: Not yet. But it's a single binary. Just copy it to your server and run it. No Docker needed.
+A: Not yet. Just copy the binary to your server. Docker is overrated anyway.
 
 **Q: What's the warranty?**
-A: There is no warranty. This is free software. If it breaks, you get to keep both pieces. (Just kidding, we'll help you fix it.)
+A: There is no warranty. If it breaks you get to keep both pieces. That's the deal.
+
+**Q: Can I use this to take over the world?**
+A: Technically yes. But please don't. I don't want that on my conscience.
+
+**Q: What if I spam this with requests?**
+A: I mean the providers will rate limit you. But go off I guess.
+
+**Q: Is there a hidden easter egg?**
+A: Maybe. Maybe not. You'll never know unless you read the source code. Good luck.
+
+**Q: Can I use this with Ollama?**
+A: Yes. Point it at your Ollama instance. Local AI go brrr.
+
+**Q: What's the roadmap?**
+A: Idk. I'll probably add stuff when I'm bored at 3am again. That's how this whole thing started.
+
+**Q: Can I fork this and sell it?**
+A: It's MIT license so technically yes. But also why. Just contribute back it's not hard.
+
+**Q: How many stars until I add features?**
+A: Every 10 stars I'll add a feature. That's the rule. I just made it up.
+
+**Q: What's the meaning of life?**
+A: 42. Also this gateway. Mostly this gateway though.
 
 ---
 
@@ -287,7 +311,8 @@ A: There is no warranty. This is free software. If it breaks, you get to keep bo
 - [x] Add request logging
 - [x] Add cost tracking
 - [x] Regret nothing
-- [ ] Add semantic caching (like the fancy projects do)
+- [x] Write a README at 3am
+- [ ] Add semantic caching (when I'm bored again)
 - [ ] Add MCP support (because everyone wants MCP now)
 - [ ] Add Webhooks (for the cool kids)
 - [ ] Add A/B testing (for the data nerds)
@@ -295,17 +320,20 @@ A: There is no warranty. This is free software. If it breaks, you get to keep bo
 - [ ] Buy a real domain
 - [ ] Hire someone (it's just me and the void)
 - [ ] Retire at 25
+- [ ] Actually fix the bugs instead of adding features
 
 ---
 
 <div align="center">
 
-**If you star this repo I will personally send you good vibes**
+**If you star this repo I'll add a feature**
 
-**[AI Gateway](https://github.com/MastaChief117/ai-gateway)** ← Click here to join the cool kids
+**If you don't star this repo I'll still add features because I have no self control**
+
+**[AI Gateway](https://github.com/MastaChief117/ai-gateway)** ← Click here to join the chaos
 
 *Made by a dude who should've been sleeping*
 *Last updated: Whenever I remember*
-*P.S. If you read this far you're a legend*
+*P.S. If you read this far you're legally obligated to star*
 
 </div>
