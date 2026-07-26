@@ -68,6 +68,12 @@ func main() {
 	mux.HandleFunc("/admin/race", p.HandleRace)
 	mux.HandleFunc("/admin/logs", p.HandleLogs)
 	mux.HandleFunc("/admin/blocked", p.HandleBlocked)
+	mux.HandleFunc("/admin/roast", p.HandleRoast)
+	mux.HandleFunc("/admin/8ball", p.Handle8Ball)
+	mux.HandleFunc("/admin/ship", p.HandleShip)
+	mux.HandleFunc("/admin/leaderboard", p.HandleLeaderboard)
+	mux.HandleFunc("/admin/savings", p.HandleSavings)
+	mux.HandleFunc("/admin/fun-facts", p.HandleFunFacts)
 
 	mux.HandleFunc("/admin/failover", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

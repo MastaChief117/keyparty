@@ -840,13 +840,6 @@ func (p *Proxy) HandleRace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	authHeader := r.Header.Get("Authorization")
-	apiKey := strings.TrimPrefix(authHeader, "Bearer ")
-	if !p.store.ValidateUnifiedKey(apiKey) {
-		http.Error(w, `{"error":{"message":"Invalid API key"}}`, http.StatusUnauthorized)
-		return
-	}
-
 	var reqBody struct {
 		Message   string   `json:"message"`
 		Providers []string `json:"providers"`
@@ -1113,4 +1106,295 @@ func min(a, b int) int {
 		return a
 	}
 	return b
+}
+
+// ── FUN FEATURES ────────────────────────────────────────────────────────────
+
+var roastInsults = []string{
+	"You type like your keyboard is made of wet bread",
+	"Your WiFi personality is worse than 2G in a tunnel",
+	"Even the bots feel sorry for you",
+	"You have main character energy but in a background scene",
+	"Your takes are sponsored by brain rot",
+	"Calling you mid would be a compliment",
+	"You give off strong NPC energy",
+	"Your personality is in airplane mode",
+	"You're the reason group chats go silent",
+	"You have the social awareness of a CAPTCHA",
+	"You radiate 'forgot to silence their phone in a movie' energy",
+	"You're the tutorial level everyone skips",
+	"You type with the confidence of someone who's always wrong",
+	"Your presence in chat is optional at best",
+	"You're giving 3AM energy but it's 2PM",
+	"You have the range of a dial-up modem",
+	"Even the server logs don't care about your messages",
+	"You've been buffering since you got here",
+	"Your entire vibe is permanently out of stock",
+	"You lost the plot and never found it",
+}
+
+var eightBallResponses = []string{
+	"It is certain. Like your questionable life choices.",
+	"It is decidedly so. Even the AI agrees.",
+	"Without a doubt. But also maybe. Who knows.",
+	"Yes definitely. But don't quote me on that.",
+	"You may rely on it. If you rely on anything else you're cooked.",
+	"As I see it, yes. But I'm an AI so my vision is questionable.",
+	"Most likely. But also possibly not. Math is hard.",
+	"Outlook good. Not as good as your WiFi though.",
+	"Yes. That's my final answer. I think.",
+	"Signs point to yes. But signs also point to IKEA and we all know how that ends.",
+	"Reply hazy, try again. Or don't. I'm not your mom.",
+	"Ask again later. I'm busy.",
+	"Better not tell you now. Spoiler alert.",
+	"Cannot predict now. I'm an AI not a psychic.",
+	"Concentrate and ask again. Maybe blink twice.",
+	"Don't count on it. Actually do count on it. I changed my mind.",
+	"My reply is no. Sorrynotsorry.",
+	"My sources say no. My sources are me.",
+	"Outlook not so good. But when has it ever been?",
+	"Very doubtful. Like your taste in models.",
+}
+
+var funFacts = []string{
+	"Fun fact: Your API key has been rotated more times than your sleep schedule",
+	"Fun fact: Groq is faster than your WiFi on a good day",
+	"Fun fact: The average AI gateway processes more requests than you get texts",
+	"Fun fact: Your unified key has seen things. Horrible things.",
+	"Fun fact: SQLite doesn't judge you. We do though.",
+	"Fun fact: Your cache hit rate is probably better than your hit rate on dating apps",
+	"Fun fact: This gateway has more uptime than your last relationship",
+	"Fun fact: The failover log is just a list of providers ghosting you",
+	"Fun fact: AES-256 encryption is harder to break than your New Year's resolutions",
+	"Fun fact: Your API keys are encrypted. Your search history should be too.",
+	"Fun fact: This gateway runs on Go. Not JavaScript. We have standards.",
+	"Fun fact: The race mode has seen more action than your social life",
+	"Fun fact: Your database is probably more organized than your room",
+	"Fun fact: Error 404: Your motivation not found",
+	"Fun fact: The only thing failing over more than this gateway is your diet plan",
+	"Fun fact: Rate limiting exists because even APIs need personal space",
+	"Fun fact: Your cost tracking shows you spend more on AI than on food",
+	"Fun fact: The guardrails block more than your ex's attempts to contact you",
+}
+
+func (p *Proxy) HandleRoast(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", 405)
+		return
+	}
+
+	var reqBody struct {
+		Username string `json:"username"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil || reqBody.Username == "" {
+		http.Error(w, `{"error":"Send a username to roast"}`, 400)
+		return
+	}
+
+	randomIdx := time.Now().UnixNano() % int64(len(roastInsults))
+	insult := roastInsults[randomIdx]
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"roast":   fmt.Sprintf("@%s — %s", reqBody.Username, insult),
+		"username": reqBody.Username,
+	})
+}
+
+func (p *Proxy) Handle8Ball(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", 405)
+		return
+	}
+
+	var reqBody struct {
+		Question string `json:"question"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil || reqBody.Question == "" {
+		http.Error(w, `{"error":"Ask a real question. The ball needs something to judge."}`, 400)
+		return
+	}
+
+	randomIdx := time.Now().UnixNano() % int64(len(eightBallResponses))
+	answer := eightBallResponses[randomIdx]
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"question": reqBody.Question,
+		"answer":   answer,
+	})
+}
+
+func (p *Proxy) HandleShip(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", 405)
+		return
+	}
+
+	var reqBody struct {
+		Provider1 string `json:"provider1"`
+		Provider2 string `json:"provider2"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil || reqBody.Provider1 == "" || reqBody.Provider2 == "" {
+		http.Error(w, `{"error":"Send provider1 and provider2"}`, 400)
+		return
+	}
+
+	pair := reqBody.Provider1 + "|" + reqBody.Provider2
+	pct := int(abs(int32(hashString(pair)))%100) + 1
+
+	var reason string
+	switch {
+	case pct <= 15:
+		reason = "only compatible in a universe where they both touch grass"
+	case pct <= 30:
+		reason = "both have questionable API response times and worse uptime"
+	case pct <= 45:
+		reason = "united by their mutual rate limiting habits"
+	case pct <= 60:
+		reason = "both chaos providers with functioning endpoints"
+	case pct <= 75:
+		reason = "compatible levels of unhinged token generation"
+	case pct <= 90:
+		reason = "both never go down and it's honestly working"
+	default:
+		reason = "destined by the cloud gods — the prophecy is real"
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"provider1":    reqBody.Provider1,
+		"provider2":    reqBody.Provider2,
+		"compatibility": pct,
+		"reason":       reason,
+		"status":       fmt.Sprintf("%s x %s = %d%% compatible — %s", reqBody.Provider1, reqBody.Provider2, pct, reason),
+	})
+}
+
+func hashString(s string) int32 {
+	var h int32
+	for _, c := range s {
+		h = h*31 + int32(c)
+	}
+	return h
+}
+
+func abs(n int32) int32 {
+	if n < 0 {
+		return -n
+	}
+	return n
+}
+
+func (p *Proxy) HandleLeaderboard(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", 405)
+		return
+	}
+
+	keys, err := p.store.GetKeys()
+	if err != nil {
+		http.Error(w, `{"error":"Failed"}`, 500)
+		return
+	}
+
+	type providerStats struct {
+		Provider string  `json:"provider"`
+		Requests int64   `json:"requests"`
+		Errors   int64   `json:"errors"`
+		Cost     float64 `json:"cost"`
+		Keys     int     `json:"keys"`
+	}
+
+	statsMap := make(map[string]*providerStats)
+	for _, k := range keys {
+		if _, ok := statsMap[k.Provider]; !ok {
+			statsMap[k.Provider] = &providerStats{Provider: k.Provider}
+		}
+		statsMap[k.Provider].Requests += k.TotalReqs
+		statsMap[k.Provider].Errors += k.ErrorReqs
+		statsMap[k.Provider].Cost += k.TotalCost
+		statsMap[k.Provider].Keys++
+	}
+
+	var results []providerStats
+	for _, v := range statsMap {
+		results = append(results, *v)
+	}
+
+	for i := 0; i < len(results); i++ {
+		for j := i + 1; j < len(results); j++ {
+			if results[j].Requests > results[i].Requests {
+				results[i], results[j] = results[j], results[i]
+			}
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}
+
+func (p *Proxy) HandleSavings(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", 405)
+		return
+	}
+
+	keys, err := p.store.GetKeys()
+	if err != nil {
+		http.Error(w, `{"error":"Failed"}`, 500)
+		return
+	}
+
+	var totalCost float64
+	var totalRequests int64
+	for _, k := range keys {
+		totalCost += k.TotalCost
+		totalRequests += k.TotalReqs
+	}
+
+	cacheHits := p.store.GetCacheHits()
+	cachedRequestsSaved := cacheHits
+
+	failoverLogs := p.store.GetFailoverLogs(1000)
+	failoverSuccess := 0
+	for _, l := range failoverLogs {
+		if l.Success {
+			failoverSuccess++
+		}
+	}
+
+	estimatedSavings := float64(cachedRequestsSaved) * 0.002
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"total_cost":            fmt.Sprintf("%.4f", totalCost),
+		"total_requests":        totalRequests,
+		"cache_hits":            cacheHits,
+		"cached_saved":          cachedRequestsSaved,
+		"estimated_savings":     fmt.Sprintf("%.4f", estimatedSavings),
+		"failover_successes":    failoverSuccess,
+		"failover_money_saved":  fmt.Sprintf("%.4f", float64(failoverSuccess)*0.003),
+		"message":               fmt.Sprintf("You've saved $%.4f from caching and $%.4f from failover. Your wallet sends thanks.", estimatedSavings, float64(failoverSuccess)*0.003),
+	})
+}
+
+func (p *Proxy) HandleFunFacts(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", 405)
+		return
+	}
+
+	idx := time.Now().UnixNano() % int64(len(funFacts))
+	fact := funFacts[idx]
+
+	keys, _ := p.store.GetKeys()
+	totalKeys := len(keys)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"fact":       fact,
+		"total_keys": totalKeys,
+		"timestamp":  time.Now().Format(time.RFC3339),
+	})
 }

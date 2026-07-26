@@ -478,6 +478,14 @@ func (s *Store) GetStatsJSON() (string, error) {
 	return string(b), nil
 }
 
+func (s *Store) GetCacheHits() int64 {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	var total int64
+	s.db.QueryRow("SELECT COALESCE(SUM(hit_count), 0) FROM cache_entries").Scan(&total)
+	return total
+}
+
 func (s *Store) Close() error {
 	return s.db.Close()
 }

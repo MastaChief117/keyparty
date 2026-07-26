@@ -153,6 +153,7 @@ tr:hover{background:rgba(59,130,246,0.05)}
 <button class="tab" data-tab="guardrails">Guardrails</button>
 <button class="tab" data-tab="aliases">Aliases</button>
 <button class="tab" data-tab="failover">Failover</button>
+<button class="tab" data-tab="fun-zone">Fun Zone</button>
 <button class="tab" data-tab="logs">Request Logs</button>
 </div>
 
@@ -281,6 +282,66 @@ tr:hover{background:rgba(59,130,246,0.05)}
 <div class="section">
 <div class="section-header"><h2>Failover Log</h2></div>
 <div id="failover-log-list"></div>
+</div>
+</div>
+
+<div id="tab-fun-zone" class="tab-content" style="display:none">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+<div class="section">
+<div class="section-header"><h2>🔥 AI Roast</h2></div>
+<div class="form-group">
+<label>Who should we roast?</label>
+<input type="text" id="roast-target" placeholder="Enter a username to destroy">
+</div>
+<button class="btn btn-danger" onclick="doRoast()">🔥 Roast Them</button>
+<div id="roast-result" style="margin-top:12px"></div>
+</div>
+
+<div class="section">
+<div class="section-header"><h2>🔮 Magic 8-Ball</h2></div>
+<div class="form-group">
+<label>Ask the AI a question</label>
+<input type="text" id="8ball-question" placeholder="Will I ever find an API key that works?">
+</div>
+<button class="btn btn-primary" onclick="do8Ball()" style="background:#8b5cf6">🔮 Ask the Ball</button>
+<div id="8ball-result" style="margin-top:12px"></div>
+</div>
+
+<div class="section">
+<div class="section-header"><h2>💕 Provider Shipper</h2></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+<div class="form-group">
+<label>Provider 1</label>
+<input type="text" id="ship-p1" placeholder="groq">
+</div>
+<div class="form-group">
+<label>Provider 2</label>
+<input type="text" id="ship-p2" placeholder="nvidia">
+</div>
+</div>
+<button class="btn btn-primary" onclick="doShip()" style="background:#ec4899">💕 Ship Them</button>
+<div id="ship-result" style="margin-top:12px"></div>
+</div>
+
+<div class="section">
+<div class="section-header"><h2>🎲 Fun Fact</h2></div>
+<div id="funfact-display" style="padding:16px;background:#0f172a;border-radius:8px;font-size:14px;color:#94a3b8;margin-bottom:12px">Click the button for a random fun fact</div>
+<button class="btn btn-secondary" onclick="doFunFact()">🎲 Give Me a Fact</button>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
+<div class="section">
+<div class="section-header"><h2>🏆 Provider Leaderboard</h2></div>
+<div id="leaderboard-list"></div>
+<button class="btn btn-secondary" onclick="loadLeaderboard()" style="margin-top:12px">Refresh</button>
+</div>
+
+<div class="section">
+<div class="section-header"><h2>💰 Savings Tracker</h2></div>
+<div id="savings-display"></div>
+<button class="btn btn-secondary" onclick="loadSavings()" style="margin-top:12px">Refresh</button>
+</div>
 </div>
 </div>
 
@@ -850,10 +911,8 @@ async function startRace() {
   if (model) body.model = model;
 
   try {
-    var key = document.getElementById('unified-key').textContent;
     var res = await adminFetch('/admin/race', {
       method: 'POST',
-      headers: {'Authorization': 'Bearer ' + key},
       body: JSON.stringify(body)
     });
     var data = await res.json();
@@ -1088,6 +1147,87 @@ async function loadFailoverLogs() {
   } catch(e) {}
 }
 
+async function doRoast() {
+  var target = document.getElementById('roast-target').value.trim();
+  if (!target) { toast('Enter a username to roast', 'error'); return; }
+  try {
+    var res = await adminFetch('/admin/roast', {
+      method: 'POST',
+      body: JSON.stringify({username: target})
+    });
+    var data = await res.json();
+    document.getElementById('roast-result').innerHTML = '<div style="padding:12px;background:#1e1108;border:1px solid #f97316;border-radius:8px;color:#fb923c;font-size:14px">' + escHtml(data.roast) + '</div>';
+  } catch(e) { toast('Failed', 'error'); }
+}
+
+async function do8Ball() {
+  var question = document.getElementById('8ball-question').value.trim();
+  if (!question) { toast('Ask a real question', 'error'); return; }
+  try {
+    var res = await adminFetch('/admin/8ball', {
+      method: 'POST',
+      body: JSON.stringify({question: question})
+    });
+    var data = await res.json();
+    document.getElementById('8ball-result').innerHTML = '<div style="padding:12px;background:#0f0a1a;border:1px solid #8b5cf6;border-radius:8px;color:#a78bfa;font-size:14px"><strong>🔮 ' + escHtml(data.answer) + '</strong></div>';
+  } catch(e) { toast('Failed', 'error'); }
+}
+
+async function doShip() {
+  var p1 = document.getElementById('ship-p1').value.trim();
+  var p2 = document.getElementById('ship-p2').value.trim();
+  if (!p1 || !p2) { toast('Enter both providers', 'error'); return; }
+  try {
+    var res = await adminFetch('/admin/ship', {
+      method: 'POST',
+      body: JSON.stringify({provider1: p1, provider2: p2})
+    });
+    var data = await res.json();
+    var color = data.compatibility > 75 ? '#22c55e' : data.compatibility > 50 ? '#f59e0b' : data.compatibility > 25 ? '#f97316' : '#ef4444';
+    document.getElementById('ship-result').innerHTML = '<div style="padding:12px;background:#1a0a1e;border:1px solid #ec4899;border-radius:8px;color:#f472b6;font-size:14px"><strong>' + escHtml(data.status) + '</strong></div>';
+  } catch(e) { toast('Failed', 'error'); }
+}
+
+async function doFunFact() {
+  try {
+    var res = await adminFetch('/admin/fun-facts');
+    var data = await res.json();
+    document.getElementById('funfact-display').innerHTML = '<span style="color:#e2e8f0">' + escHtml(data.fact) + '</span>';
+  } catch(e) { toast('Failed', 'error'); }
+}
+
+async function loadLeaderboard() {
+  try {
+    var res = await adminFetch('/admin/leaderboard');
+    var data = await res.json();
+    var el = document.getElementById('leaderboard-list');
+    if (!data || data.length === 0) { el.innerHTML = '<div class="empty-state">No data yet. Start sending requests!</div>'; return; }
+    var medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+    var html = '<table><thead><tr><th>#</th><th>Provider</th><th>Requests</th><th>Errors</th><th>Cost</th></tr></thead><tbody>';
+    data.forEach(function(p, i) {
+      var medal = i < medals.length ? medals[i] : (i+1);
+      html += '<tr><td>' + medal + '</td><td><span class="provider-tag">' + escHtml(p.provider) + '</span></td><td>' + p.requests + '</td><td>' + p.errors + '</td><td>$' + p.cost.toFixed(4) + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+  } catch(e) {}
+}
+
+async function loadSavings() {
+  try {
+    var res = await adminFetch('/admin/savings');
+    var data = await res.json();
+    var el = document.getElementById('savings-display');
+    el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
+      '<div style="padding:12px;background:#0f172a;border-radius:8px;text-align:center"><div style="font-size:11px;color:#94a3b8;text-transform:uppercase">Total Cost</div><div style="font-size:20px;font-weight:700;color:#3b82f6">$' + data.total_cost + '</div></div>' +
+      '<div style="padding:12px;background:#0f172a;border-radius:8px;text-align:center"><div style="font-size:11px;color:#94a3b8;text-transform:uppercase">Cache Hits</div><div style="font-size:20px;font-weight:700;color:#22c55e">' + data.cache_hits + '</div></div>' +
+      '<div style="padding:12px;background:#0f172a;border-radius:8px;text-align:center"><div style="font-size:11px;color:#94a3b8;text-transform:uppercase">Saved (Cache)</div><div style="font-size:20px;font-weight:700;color:#22c55e">$' + data.estimated_savings + '</div></div>' +
+      '<div style="padding:12px;background:#0f172a;border-radius:8px;text-align:center"><div style="font-size:11px;color:#94a3b8;text-transform:uppercase">Saved (Failover)</div><div style="font-size:20px;font-weight:700;color:#22c55e">$' + data.failover_money_saved + '</div></div>' +
+      '</div>' +
+      '<div style="margin-top:12px;padding:10px;background:#0f172a;border-radius:8px;font-size:13px;color:#94a3b8">' + escHtml(data.message) + '</div>';
+  } catch(e) {}
+}
+
 async function loadLogs() {
   try {
     const res = await adminFetch('/admin/logs');
@@ -1126,6 +1266,7 @@ document.querySelectorAll('.tab').forEach(function(tab) {
     if (tabName === 'guardrails') { loadGuardrails(); loadBlocked(); }
     if (tabName === 'aliases') loadAliases();
     if (tabName === 'failover') { loadFailoverConfig(); loadFailoverLogs(); }
+    if (tabName === 'fun-zone') { loadLeaderboard(); loadSavings(); }
     if (tabName === 'logs') loadLogs();
   });
 });
