@@ -1,59 +1,109 @@
-# AI Gateway
+<div align="center">
 
-A production-grade, self-hosted AI gateway written in Go. One OpenAI-compatible API endpoint for multiple LLM providers with intelligent failover, context compaction, encryption at rest, and a built-in admin dashboard.
+# 🔀 AI Gateway
 
-## Features
+**One API to rule them all. Route LLM requests across 10 providers like a boss.**
 
-- **Multi-Provider Routing** — Route to OpenAI, Anthropic, Gemini, Groq, NVIDIA NIM, Together, DeepSeek, OpenRouter, Fireworks, and Mistral through a single endpoint
-- **Round-Robin Rotation** — Automatically distribute requests across multiple API keys per provider
-- **Compaction Failover** — When a provider's quota expires (402), chat history is summarized and forwarded to a backup provider so nothing is lost
-- **Response Caching** — SHA-256 based request deduplication with configurable TTL
-- **Guardrails** — PII detection (email, phone, SSN, credit cards), prompt injection blocking, and custom regex rules
-- **Virtual Keys** — Consumer-facing API keys with per-key budgets, rate limits, and model allowlists
-- **Model Aliases** — Map friendly names to real model IDs (e.g. `smart` → `claude-sonnet-4-5`)
-- **Provider Race Mode** — Send requests to multiple providers simultaneously, return the fastest response
-- **Encryption at Rest** — AES-256-GCM encryption for all API keys with a machine-specific key file
-- **Request Logging** — Full audit trail of all requests with token usage and cost tracking
-- **Cost Tracking** — Per-key and per-provider cost estimation
-- **Admin Dashboard** — Web-based UI with tabs for API Keys, Virtual Keys, Guardrails, Aliases, Failover, and Request Logs
+*Failover when quota dies. Encrypt your keys. Race providers. Guard your prompts. All from one dashboard.*
 
-## Quick Start
+**[Docs](#wtf-is-this) • [Quick Start](#quick-start-in-60-seconds) • [Features](#the-stuff) • [API](#api-nonsense)**
+
+*Bugs Fixed: 3 • Features Added: 12 • Sleep Deprived: Absolutely*
+
+</div>
+
+---
+
+## WTF is this
+
+So basically you have API keys for like 5 different AI providers and you're tired of:
+- OpenAI rate limiting you at 2am when you're vibing
+- Anthropic eating your credits like pacman
+- Having to change your code every time you want to switch providers
+- Your API keys sitting in plain text like a clown
+
+**This gateway solves all of that.** You point ONE endpoint at it, and it:
+- Routes to whichever provider is available
+- Rotates across your keys automatically
+- Fails over to another provider when one dies (with your chat history intact)
+- Encrypts everything at rest so nobody can steal your keys
+- Blocks prompt injection and PII from leaking
+- Lets you race providers against each other for the fastest response
+
+It's like a load balancer but for AI. And it has a dashboard. Because everything needs a dashboard.
+
+## Quick Start (in 60 seconds)
 
 ```bash
-# Clone the repo
+# Clone the thing
 git clone https://github.com/MastaChief117/ai-gateway.git
 cd ai-gateway
 
-# Build
+# Build it (needs Go 1.24+)
 go build -o ai-gateway .
 
-# Run
-./ai-gateway -port 8080 -admin-pass your-password
+# Run it
+./ai-gateway -port 8080 -admin-pass your-password-here
 ```
 
-Dashboard available at `http://localhost:8080`
+Dashboard: **http://localhost:8080**
 
-## Configuration
+That's it. No Docker. No Kubernetes. No npm install. Just a single binary and vibes.
 
-### CLI Flags
+## The Stuff
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `-port` | `8080` | Server port |
-| `-admin-pass` | (required) | Admin dashboard password |
-| `-db` | `gateway.db` | SQLite database path |
-| `-cache-ttl` | `60` | Cache TTL in minutes |
-| `-cors-origin` | (empty) | Allowed CORS origin |
+| Feature | What it does |
+|---------|-------------|
+| 🔀 **Multi-Provider Routing** | OpenAI, Anthropic, Gemini, Groq, NVIDIA NIM, Together, DeepSeek, OpenRouter, Fireworks, Mistral — one endpoint |
+| 🔄 **Round-Robin Rotation** | Spreads requests across multiple keys per provider |
+| 💥 **Compaction Failover** | When quota dies (402), summarizes your chat history and sends it to a backup provider. Nothing is lost. |
+| ⚡ **Provider Race Mode** | Sends your message to multiple providers simultaneously, returns the fastest response |
+| 🛡️ **Guardrails** | PII detection, prompt injection blocking, custom regex rules |
+| 🔑 **Virtual Keys** | Give users their own API keys with budgets, rate limits, and model allowlists |
+| 🏷️ **Model Aliases** | Map `smart` → `claude-sonnet-4-5`, `fast` → `gpt-4o-mini` |
+| 🔒 **Encryption at Rest** | AES-256-GCM encryption for all API keys. Your keys are safe. |
+| 📊 **Request Logging** | Full audit trail with token usage and cost tracking |
+| 💰 **Cost Tracking** | Per-key and per-provider cost estimation |
+| 📦 **Response Caching** | SHA-256 deduplication. Same request? Cached. |
+| 🎛️ **Admin Dashboard** | Web UI with tabs for everything. Dark mode because light mode is a war crime. |
 
-### Environment Variables
+## The Failover Thing (it's cool ok)
 
-| Variable | Description |
-|----------|-------------|
-| `ADMIN_PASSWORD` | Admin password (alternative to `-admin-pass`) |
+Here's how compaction failover works:
 
-## API
+1. You send a request to OpenAI
+2. OpenAI says "lol you're out of credits" (HTTP 402)
+3. Gateway goes "no worries bro" and summarizes your entire chat history
+4. Sends that summary to Groq (or whatever backup you configured)
+5. You get a response like nothing happened
+6. Response has `X-Gateway-Failover: true` header so you know it happened
 
-### Chat Completions (OpenAI-compatible)
+**Your conversation survives.** Even if the provider dies. That's the whole point.
+
+Configure it in the dashboard or via API:
+
+```bash
+# Enable failover
+curl -X POST http://localhost:8080/admin/failover \
+  -H "Authorization: Bearer admin-password" \
+  -H "Content-Type: application/json" \
+  -d '{"key":"enabled","value":"true"}'
+
+# Pick your backup provider
+curl -X POST http://localhost:8080/admin/failover \
+  -H "Authorization: Bearer admin-password" \
+  -H "Content-Type: application/json" \
+  -d '{"key":"provider","value":"groq"}'
+
+curl -X POST http://localhost:8080/admin/failover \
+  -H "Authorization: Bearer admin-password" \
+  -H "Content-Type: application/json" \
+  -d '{"key":"model","value":"llama-3.3-70b-versatile"}'
+```
+
+## API Nonsense
+
+### Chat Completions (OpenAI-compatible, obviously)
 
 ```bash
 curl http://localhost:8080/v1/chat/completions \
@@ -61,11 +111,11 @@ curl http://localhost:8080/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
     "model": "gpt-4o",
-    "messages": [{"role": "user", "content": "Hello"}]
+    "messages": [{"role": "user", "content": "say hi"}]
   }'
 ```
 
-### Provider Race Mode
+### Provider Race Mode (who's fastest?)
 
 ```bash
 curl http://localhost:8080/admin/race \
@@ -78,72 +128,86 @@ curl http://localhost:8080/admin/race \
   }'
 ```
 
-### Admin Endpoints
+### All Admin Endpoints
 
-All admin endpoints require `Authorization: Bearer <admin-password>`.
-
-| Method | Endpoint | Description |
+| Method | Endpoint | What it does |
 |--------|----------|-------------|
-| GET | `/admin/unified-key` | Get unified API key |
-| POST | `/admin/unified-key` | Regenerate unified API key |
-| GET/POST | `/admin/keys` | List / Add API keys |
-| DELETE | `/admin/keys/:id` | Delete API key |
-| POST | `/admin/keys/:id/toggle` | Enable/disable key |
-| GET/POST | `/admin/failover` | Get / Set failover config |
-| GET | `/admin/failover/logs` | Failover event logs |
-| GET | `/admin/virtual-keys` | List virtual keys |
+| GET | `/admin/unified-key` | Get your unified API key |
+| POST | `/admin/unified-key` | Regenerate it (update all your apps!) |
+| GET/POST | `/admin/keys` | List / Add provider API keys |
+| DELETE | `/admin/keys/:id` | Delete a key |
+| POST | `/admin/keys/:id/toggle` | Enable/disable a key |
+| GET/POST | `/admin/failover` | Failover config |
+| GET | `/admin/failover/logs` | See when failover happened |
+| GET | `/admin/virtual-keys` | Consumer-facing keys |
+| POST | `/admin/virtual-keys` | Create virtual key |
 | GET | `/admin/guardrails` | List guardrails |
-| GET | `/admin/aliases` | List model aliases |
+| POST | `/admin/guardrails` | Add guardrail |
+| GET | `/admin/aliases` | Model aliases |
+| POST | `/admin/aliases` | Add alias |
 | GET | `/admin/logs` | Request logs |
-| GET | `/admin/stats` | Dashboard statistics |
+| GET | `/admin/stats` | Dashboard stats |
+| POST | `/admin/race` | Provider race |
 
-## Failover & Compaction
+All admin endpoints need `Authorization: Bearer <your-admin-password>`
 
-The gateway supports automatic failover when a provider returns a 402 (quota exhausted) or other configured error codes. Optionally, chat history can be compacted (summarized) before forwarding to the backup provider.
+## Config Stuff
 
-**How it works:**
-1. Request is sent to the primary provider
-2. If the provider returns 402 (or other trigger code), the gateway intercepts the error
-3. If compaction is enabled, the full chat history is summarized via a cheap model
-4. The compacted (or full) history is sent to the configured failover provider
-5. The response is returned to the client with `X-Gateway-Failover: true` header
+### CLI Flags (because env vars are for cowards)
 
-Configure via the dashboard's **Failover** tab or via the API:
+| Flag | Default | What it does |
+|------|---------|-------------|
+| `-port` | `8080` | Server port |
+| `-admin-pass` | (required) | Admin dashboard password |
+| `-db` | `gateway.db` | SQLite database path |
+| `-cache-ttl` | `60` | Cache TTL in minutes |
+| `-cors-origin` | (empty) | Allowed CORS origin |
 
-```bash
-# Enable failover
-curl -X POST http://localhost:8080/admin/failover \
-  -H "Authorization: Bearer admin-password" \
-  -H "Content-Type: application/json" \
-  -d '{"key":"enabled","value":"true"}'
+### Environment Variables (for the cowards)
 
-# Set failover target
-curl -X POST http://localhost:8080/admin/failover \
-  -H "Authorization: Bearer admin-password" \
-  -H "Content-Type: application/json" \
-  -d '{"key":"provider","value":"groq"}'
+| Variable | What it does |
+|----------|-------------|
+| `ADMIN_PASSWORD` | Admin password (alternative to `-admin-pass`) |
 
-curl -X POST http://localhost:8080/admin/failover \
-  -H "Authorization: Bearer admin-password" \
-  -H "Content-Type: application/json" \
-  -d '{"key":"model","value":"llama-3.3-70b-versatile"}'
-```
+## Security (we take this seriously)
 
-## Security
+- 🔐 **API Key Encryption** — All keys encrypted at rest with AES-256-GCM
+- 🔑 **Key File** — `.gateway.key` with `0600` permissions (only root/gateway can read)
+- 🛡️ **Guardrails** — PII detection and prompt injection blocking
+- 🚫 **SSRF Protection** — Blocks requests to localhost, private IPs, metadata endpoints
 
-- **API Key Encryption** — All provider API keys and the unified key are encrypted at rest using AES-256-GCM
-- **Encryption Key** — Stored in `.gateway.key` with `0600` permissions (only the gateway process owner can read)
-- **Guardrails** — PII detection and prompt injection blocking built-in
-- **SSRF Protection** — Blocks requests to localhost, private IPs, and metadata endpoints
+## Tech Stuff
 
-## Tech Stack
+- **Language:** Go 1.24+ (single binary, no deps, 32MB base memory)
+- **Database:** SQLite (it just works)
+- **Encryption:** AES-256-GCM (military grade or whatever)
+- **Frontend:** Vanilla HTML/CSS/JS (no React, no Vue, no suffering)
+- **Tunnel:** Cloudflare Quick Tunnel support (for when you're too lazy to set up nginx)
 
-- **Language:** Go 1.24+
-- **Database:** SQLite (via `go-sqlite`)
-- **Encryption:** AES-256-GCM
-- **Frontend:** Vanilla HTML/CSS/JS (embedded via `go:embed`)
-- **Tunnel:** Cloudflare Quick Tunnel support
+## Roadmap
 
-## License
+- [x] Make gateway
+- [x] Add failover with compaction
+- [x] Add encryption
+- [x] Make dashboard
+- [x] Add race mode
+- [x] Regret nothing
+- [ ] Add semantic caching (like the fancy projects do)
+- [ ] Add MCP support
+- [ ] Add Webhooks
+- [ ] Take over the AI gateway market
+- [ ] Buy a real domain
+- [ ] Retire
 
-MIT
+---
+
+<div align="center">
+
+**If you star this repo I will personally thank you**
+
+**[AI Gateway](https://github.com/MastaChief117/ai-gateway)** ← Click here to be cool
+
+*Made by a dude who should've been sleeping*
+*Last updated: Whenever I remember*
+
+</div>
