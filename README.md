@@ -2,35 +2,43 @@
 
 # 🔀 AI Gateway
 
-**One API to rule them all. Route LLM requests across 10 providers like a maniac.**
+**One endpoint. Ten providers. Zero budget.**
 
-*Failover when quota dies. Encrypt your keys. Race providers. Guard your prompts. All from one dashboard.*
+*For the broke dev juggling free tiers at 3AM, praying one of them doesn't rate-limit them mid-demo.*
 
-**[WTF is this](#wtf-is-this) • [Quick Start](#quick-start-in-60-seconds) • [The Stuff](#the-stuff) • [FAQ (it's funny)](#faqs)**
+**[What is this](#what-is-this) • [Quick Start](#quick-start-in-60-seconds) • [The Stuff](#the-stuff) • [FAQ (it's funny)](#faqs)**
 
-*Features Added: 12 • Sleep Deprived: Immensely • Coffee Consumed: Yes*
+*Features: 28 • Sleep Deprived: Immensely • Free Tier Credits: Scattered Across 5 Providers*
 
 </div>
 
 ---
 
-## WTF is this
+## What is this
 
-So basically you have API keys for like 5 different AI providers and you're tired of:
-- OpenAI rate limiting you at 2am when you're vibing
-- Anthropic eating your credits like pacman eating dots
-- Having to change your code every time you want to switch providers
-- Your API keys sitting in plain text like a clown at a security convention
+You're building an AI agent. You sign up for free tiers on Groq, Nvidia, DeepSeek, maybe grab an OpenAI trial. Now you've got:
+
+- 5 different API endpoints
+- 5 different auth methods
+- 5 different rate limits
+- 5 different ways to get screwed when one goes down
+
+And you have $4 across all of them.
 
 **This gateway solves all of that.** You point ONE endpoint at it, and it:
+
 - Routes to whichever provider is breathing
 - Rotates across your keys automatically (like a DJ but for API keys)
 - Fails over to another provider when one dies (your chat history survives because we're not monsters)
-- Encrypts everything at rest so nobody can steal your keys (yes we take security seriously)
-- Blocks prompt injection and PII from leaking (your SSN is safe with us)
-- Lets you race providers against each other for the fastest response (may the fastest API win)
+- **Compacts your chat history** to fit within cheaper provider limits when quota dies
+- Encrypts everything at rest so nobody can steal your keys
+- Blocks prompt injection and PII from leaking
+- Tracks every penny you spend across all providers
+- Lets you race providers, roast each other, rap battle, and more
 
 It's like a load balancer but for AI. And it has a dashboard. Because everything needs a dashboard.
+
+Most API gateways are built for enterprises with Kubernetes clusters and DevOps teams. **This one is built for the dev who has $4 and a dream.**
 
 ---
 
@@ -56,20 +64,49 @@ That's it. No Docker. No Kubernetes. No npm install. No node_modules folder the 
 
 ## The Stuff
 
-| Feature | What it does | Cool Factor |
+### Core Features
+
+| Feature | What it does | Why you care |
 |---------|-------------|-------------|
-| 🔀 **Multi-Provider Routing** | OpenAI, Anthropic, Gemini, Groq, NVIDIA NIM, Together, DeepSeek, OpenRouter, Fireworks, Mistral — one endpoint | ⭐⭐⭐⭐⭐ |
-| 🔄 **Round-Robin Rotation** | Spreads requests across multiple keys per provider like butter on toast | ⭐⭐⭐⭐ |
-| 💥 **Compaction Failover** | When quota dies (402), summarizes your chat history and sends it to a backup provider. Nothing is lost. You're welcome. | ⭐⭐⭐⭐⭐ |
-| ⚡ **Provider Race Mode** | Sends your message to multiple providers simultaneously, returns the fastest response. It's a race and everyone wins. | ⭐⭐⭐⭐⭐ |
-| 🛡️ **Guardrails** | PII detection, prompt injection blocking, custom regex rules. We catch the bad stuff before it reaches the AI. | ⭐⭐⭐⭐ |
-| 🔑 **Virtual Keys** | Give users their own API keys with budgets, rate limits, and model allowlists. Share without sharing your real keys. | ⭐⭐⭐⭐ |
-| 🏷️ **Model Aliases** | Map `smart` → `claude-sonnet-4-5`, `fast` → `gpt-4o-mini`. Sound smart without knowing model names. | ⭐⭐⭐ |
-| 🔒 **Encryption at Rest** | AES-256-GCM encryption for all API keys. Your keys are safe. We promise. | ⭐⭐⭐⭐⭐ |
-| 📊 **Request Logging** | Full audit trail with token usage and cost tracking. Know where your money goes. | ⭐⭐⭐ |
-| 💰 **Cost Tracking** | Per-key and per-provider cost estimation. Your wallet will thank you. | ⭐⭐⭐ |
-| 📦 **Response Caching** | SHA-256 deduplication. Same request? Cached. You're welcome, your rate limits. | ⭐⭐⭐ |
-| 🎛️ **Admin Dashboard** | Web UI with tabs for everything. Dark mode because light mode is a war crime. | ⭐⭐⭐⭐⭐ |
+| 🔀 **Multi-Provider Routing** | OpenAI, Anthropic, Gemini, Groq, NVIDIA, Together, DeepSeek, OpenRouter, Fireworks, Mistral — one endpoint | Stop changing your code when a provider dies |
+| 🔄 **Round-Robin Rotation** | Spreads requests across multiple keys per provider | Your 3 Groq free tier keys work as one |
+| 💥 **Compaction Failover** | When quota dies (402), summarizes your chat history and sends it to a backup provider | Your $4 just got you through a demo |
+| ⚡ **Provider Race Mode** | Sends your message to multiple providers simultaneously, returns the fastest | Find out which free tier is actually fastest |
+| 🛡️ **Guardrails** | PII detection, prompt injection blocking, custom regex rules | Your SSN stays home |
+| 🔑 **Virtual Keys** | Give users their own API keys with budgets, rate limits, and model allowlists | Share without sharing your real keys |
+| 🏷️ **Model Aliases** | Map `smart` → `claude-sonnet-4-5`, `fast` → `gpt-4o-mini` | Sound smart without knowing model names |
+| 🔒 **Encryption at Rest** | AES-256-GCM encryption for all API keys | Your keys are safe. We promise. |
+| 📊 **Request Logging** | Full audit trail with token usage and cost tracking | Know where your money goes |
+| 💰 **Cost Tracking** | Per-key and per-provider cost estimation | Your wallet will thank you |
+| 📦 **Response Caching** | SHA-256 deduplication. Same request? Cached. | Your rate limits thank you |
+| 🎛️ **Admin Dashboard** | Web UI with tabs for everything. Dark mode. | Because light mode is a war crime |
+
+### Fun Features
+
+| Feature | What it does | Vibe |
+|---------|-------------|------|
+| 🥊 **AI Rumble** | Two providers roast each other in real-time via SSE streaming | Boxing match but for LLMs |
+| 🎤 **Rap Battle** | Two AIs drop bars with context memory across rounds | 8 Mile but make it AI |
+| 🎰 **Model Roulette** | Random provider picks your message | Surprise me mode |
+| 🌊 **Vibe Check** | Send a message, get a random vibe rating | Important metrics |
+| 🧠 **AI Therapist** | Sarcastic therapy for when your code won't compile | We've all been there |
+| 🔥 **Roast My Logs** | AI roasts your API usage patterns | Painful but funny |
+| 🗳️ **AI Poll** | Same prompt to multiple providers, compare answers | Democratic AI |
+
+### Pro Tools
+
+| Feature | What it does | Power level |
+|---------|-------------|-------------|
+| 📊 **VK Usage Dashboard** | Per virtual key usage breakdown with cost, latency, errors | Know who's spending what |
+| 🔄 **Auto-Rotate Keys** | Pick the healthiest key per provider automatically | Never hit a dead key again |
+| 🧪 **Chat Playground** | Full chat UI with SSE streaming, provider/model picker | Test prompts without leaving the dashboard |
+| 📋 **Weekly Recap** | Stats summary + AI-generated snarky reports | Your usage, but make it funny |
+| 📈 **Cost Analytics** | Cost by provider/day/model with CSS bar charts | See where your credits go |
+| 🪝 **Webhooks** | Notify URLs on events (request, error, failover) | Get alerted when things break |
+| 📝 **Prompt Templates** | Save and manage system prompts | Reuse without copy-pasting |
+| ⏱️ **Rate Limit Tiers** | Tier-based rate limiting management (free/premium) | Give friends different access levels |
+| 💰 **Budget Alerts** | Threshold alerts per virtual key | Don't let anyone burn the group's credits |
+| 🔍 **Search Logs** | Filter by provider/model/status/virtual key | Find that one request that broke everything |
 
 ---
 
@@ -85,18 +122,18 @@ Here's how compaction failover works:
 6. Response has `X-Gateway-Failover: true` header so you know it happened
 7. You feel like a genius for setting this up
 
-**Your conversation survives.** Even if the provider dies. That's the whole point. We don't let your chat die with the provider.
+**Your conversation survives.** Even if the provider dies. That's the whole point.
 
 Configure it in the dashboard or via API:
 
 ```bash
-# Enable failover (because why not)
+# Enable failover
 curl -X POST http://localhost:8080/admin/failover \
   -H "Authorization: Bearer admin-password" \
   -H "Content-Type: application/json" \
   -d '{"key":"enabled","value":"true"}'
 
-# Pick your backup provider (like picking a backup prom date)
+# Pick your backup provider
 curl -X POST http://localhost:8080/admin/failover \
   -H "Authorization: Bearer admin-password" \
   -H "Content-Type: application/json" \
@@ -128,13 +165,30 @@ curl http://localhost:8080/v1/chat/completions \
 
 ```bash
 curl http://localhost:8080/admin/race \
-  -H "Authorization: Bearer YOUR_UNIFIED_KEY" \
+  -H "Authorization: Bearer YOUR_ADMIN_PASSWORD" \
   -H "Content-Type: application/json" \
   -d '{
     "message": "Hello, which model are you?",
-    "providers": "groq,nvidia",
-    "model": "llama-3.3-70b-versatile"
+    "providers": ["groq", "nvidia"]
   }'
+```
+
+### AI Rumble (roast battle)
+
+```bash
+curl http://localhost:8080/admin/rumble \
+  -H "Authorization: Bearer YOUR_ADMIN_PASSWORD" \
+  -H "Content-Type: application/json" \
+  -d '{"rounds": 5}' | stream
+```
+
+### Model Roulette (surprise me)
+
+```bash
+curl http://localhost:8080/admin/roulette \
+  -H "Authorization: Bearer YOUR_ADMIN_PASSWORD" \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Say something chaotic"}'
 ```
 
 ### All Admin Endpoints
@@ -142,29 +196,45 @@ curl http://localhost:8080/admin/race \
 | Method | Endpoint | What it does |
 |--------|----------|-------------|
 | GET | `/admin/unified-key` | Get your unified API key |
-| POST | `/admin/unified-key` | Regenerate it (update all your apps!) |
+| POST | `/admin/unified-key` | Regenerate it |
 | GET/POST | `/admin/keys` | List / Add provider API keys |
 | DELETE | `/admin/keys/:id` | Delete a key |
 | POST | `/admin/keys/:id/toggle` | Enable/disable a key |
 | GET/POST | `/admin/failover` | Failover config |
 | GET | `/admin/failover/logs` | See when failover happened |
-| GET | `/admin/virtual-keys` | Consumer-facing keys |
-| POST | `/admin/virtual-keys` | Create virtual key |
-| GET | `/admin/guardrails` | List guardrails |
-| POST | `/admin/guardrails` | Add guardrail |
-| GET | `/admin/aliases` | Model aliases |
-| POST | `/admin/aliases` | Add alias |
+| GET/POST | `/admin/virtual-keys` | Consumer-facing keys |
+| GET/POST | `/admin/guardrails` | Guardrail rules |
+| GET/POST | `/admin/aliases` | Model aliases |
 | GET | `/admin/logs` | Request logs |
 | GET | `/admin/stats` | Dashboard stats |
 | POST | `/admin/race` | Provider race |
-
-All admin endpoints need `Authorization: Bearer <your-admin-password>`
+| POST | `/admin/rumble` | AI Rumble (SSE) |
+| POST | `/admin/rap-battle` | Rap Battle (SSE) |
+| POST | `/admin/roulette` | Model Roulette |
+| POST | `/admin/roast-logs` | Roast my logs |
+| POST | `/admin/therapist` | AI Therapist |
+| POST | `/admin/vibe-check` | Vibe Check |
+| POST | `/admin/poll` | AI Poll |
+| GET/POST | `/admin/webhooks` | Webhook management |
+| POST | `/admin/webhooks/test` | Test webhooks |
+| GET | `/admin/logs/search` | Search logs with filters |
+| GET/POST | `/admin/templates` | Prompt templates |
+| GET/POST | `/admin/rate-tiers` | Rate limit tiers |
+| GET/POST | `/admin/budget-alerts` | Budget alerts |
+| GET | `/admin/budget-alerts/check` | Check triggered alerts |
+| GET | `/admin/vk-usage` | Virtual key usage |
+| POST | `/admin/auto-rotate` | Pick healthiest key |
+| GET | `/admin/auto-rotate/status` | Provider health status |
+| POST | `/admin/playground` | Chat playground |
+| GET | `/admin/recap` | Weekly recap data |
+| POST | `/admin/recap/generate` | AI-generated recap |
+| GET | `/admin/analytics` | Cost analytics |
 
 ---
 
 ## Config Stuff
 
-### CLI Flags (because env vars are for cowards)
+### CLI Flags
 
 | Flag | Default | What it does |
 |------|---------|-------------|
@@ -174,7 +244,7 @@ All admin endpoints need `Authorization: Bearer <your-admin-password>`
 | `-cache-ttl` | `60` | Cache TTL in minutes |
 | `-cors-origin` | (empty) | Allowed CORS origin |
 
-### Environment Variables (for the cowards)
+### Environment Variables
 
 | Variable | What it does |
 |----------|-------------|
@@ -184,60 +254,83 @@ All admin endpoints need `Authorization: Bearer <your-admin-password>`
 
 ## Security (we take this seriously... mostly)
 
-- 🔐 **API Key Encryption** — All keys encrypted at rest with AES-256-GCM. Military grade or whatever.
-- 🔑 **Key File** — `.gateway.key` with `0600` permissions (only root/gateway can read. your cat can't.)
-- 🛡️ **Guardrails** — PII detection and prompt injection blocking (your SSN stays home)
-- 🚫 **SSRF Protection** — Blocks requests to localhost, private IPs, metadata endpoints (nice try hackers)
+- 🔐 **API Key Encryption** — All keys encrypted at rest with AES-256-GCM
+- 🔑 **Key File** — `.gateway.key` with `0600` permissions (only root/gateway can read)
+- 🛡️ **Guardrails** — PII detection and prompt injection blocking
+- 🚫 **SSRF Protection** — Blocks requests to localhost, private IPs, metadata endpoints
 
 ---
 
 ## Tech Stuff
 
-- **Language:** Go 1.24+ (single binary, no deps, 32MB base memory. it's smol.)
-- **Database:** SQLite (it just works. seriously. no config needed.)
-- **Encryption:** AES-256-GCM (military grade or whatever the cool kids say)
+- **Language:** Go 1.24+ (single binary, no deps, ~20MB memory. it's smol.)
+- **Database:** SQLite (it just works. no config needed.)
+- **Encryption:** AES-256-GCM (military grade or whatever)
 - **Frontend:** Vanilla HTML/CSS/JS (no React, no Vue, no suffering. just vibes.)
-- **Tunnel:** Cloudflare Quick Tunnel support (for when you're too lazy to set up nginx. we don't judge.)
+- **Tunnel:** Cloudflare Quick Tunnel support (for when you're too lazy to set up nginx)
+
+---
+
+## Who this is for
+
+- Solo devs building AI agents on free tiers
+- Small teams sharing API credits
+- Hackathon projects that need multi-provider resilience
+- Students learning AI/LLM integration
+- Anyone tired of managing 5 different AI API dashboards
+- People who think infrastructure can be fun
+- The broke dev with $4 across three providers
+
+## Who this is NOT for
+
+- Enterprises needing horizontal scaling (it's a single binary)
+- Teams needing RBAC, SSO, or audit logs
+- Anyone processing millions of requests (SQLite has limits)
+- People who want a plugin system (no Lua/Go extensions yet)
+- gRPC-only setups (HTTP only)
 
 ---
 
 ## FAQs
 
 **Q: What is this?**
-A: Idk I was bored at 3am and had too many API keys
+A: An AI gateway for broke devs. One endpoint, ten providers, zero budget.
 
 **Q: Why?**
 A: Because my OpenAI quota died at 2am and I was too angry to sleep
 
 **Q: Does it work?**
-A: If you're reading this README then yeah probably. The binary is in the repo. Go find it.
+A: If you're reading this README then yeah probably.
 
 **Q: How much does it cost?**
 A: If you give me $5 I'll call it enterprise pricing
 
 **Q: Is my data safe?**
-A: It's encrypted with AES-256-GCM. That sounds fancy right? That means it's safe. Trust me bro.
+A: It's encrypted with AES-256-GCM. That sounds fancy right? Trust me bro.
 
 **Q: Can I use it with my existing apps?**
-A: If your apps talk to OpenAI then yeah. If they talk to something else then idk figure it out.
+A: If your apps talk to OpenAI then yeah. It's a drop-in replacement.
 
 **Q: What happens when a provider dies?**
 A: It fails over to another one. Your chat doesn't die. You're welcome.
 
 **Q: Can I race providers against each other?**
-A: Yes. It's basically a AI thunderdome. Two providers enter. One provider wins.
+A: Yes. It's basically an AI thunderdome.
+
+**Q: Can two AIs roast each other?**
+A: Yes. AI Rumble and Rap Battle are built in. It's exactly as chaotic as it sounds.
 
 **Q: Does it support streaming?**
 A: Yes. The stream goes brrr just like it does with the original provider.
 
 **Q: Can I set up rate limits?**
-A: Yes. Virtual keys support rate limits. You can limit your friends. Or your enemies.
+A: Yes. Virtual keys support rate limits and tiers. You can limit your friends. Or your enemies.
 
-**Q: What if I want to contribute?**
-A: Fork it. Change it. PR it. I don't bite. (I'm AI. I don't have a mouth.)
+**Q: Can I track how much I'm spending?**
+A: Yes. Cost analytics, per-provider breakdowns, per-virtual-key usage, budget alerts. Your wallet will thank you.
 
-**Q: Is this production ready?**
-A: It's running in production right now. Well not YOUR production. But someone's production. Maybe.
+**Q: Can I use this with Claude Code / Cursor?**
+A: Yes. Just point them at the gateway. You're welcome.
 
 **Q: Can I run this on a Raspberry Pi?**
 A: Yes. It'll run on a potato if it has Go installed. Don't test me.
@@ -245,56 +338,8 @@ A: Yes. It'll run on a potato if it has Go installed. Don't test me.
 **Q: What's the catch?**
 A: There is no catch. It's free. Open source. MIT license. We just vibes.
 
-**Q: Why did you build this?**
-A: I was bored at 3am. That's it. That's the whole reason.
-
-**Q: Can I use this to save money?**
-A: If you think about it saving money is just making money. So yes. You're welcome.
-
 **Q: What if I find a bug?**
 A: Open an issue. I'll fix it. Probably. Eventually. No promises.
-
-**Q: Can I use this with Claude Code / Cursor?**
-A: Yes. Just point them at the gateway. It's a drop-in replacement. You're welcome.
-
-**Q: Does it support tool use / function calling?**
-A: Yes. It passes through everything. I don't discriminate.
-
-**Q: What's the max request size?**
-A: Idk. Try it and find out. Let me know how it goes.
-
-**Q: Can I run multiple instances?**
-A: Yes. But why would you. One is already enough chaos.
-
-**Q: Is there a Docker image?**
-A: Not yet. Just copy the binary to your server. Docker is overrated anyway.
-
-**Q: What's the warranty?**
-A: There is no warranty. If it breaks you get to keep both pieces. That's the deal.
-
-**Q: Can I use this to take over the world?**
-A: Technically yes. But please don't. I don't want that on my conscience.
-
-**Q: What if I spam this with requests?**
-A: I mean the providers will rate limit you. But go off I guess.
-
-**Q: Is there a hidden easter egg?**
-A: Maybe. Maybe not. You'll never know unless you read the source code. Good luck.
-
-**Q: Can I use this with Ollama?**
-A: Yes. Point it at your Ollama instance. Local AI go brrr.
-
-**Q: What's the roadmap?**
-A: Idk. I'll probably add stuff when I'm bored at 3am again. That's how this whole thing started.
-
-**Q: Can I fork this and sell it?**
-A: It's MIT license so technically yes. But also why. Just contribute back it's not hard.
-
-**Q: How many stars until I add features?**
-A: Every 10 stars I'll add a feature. That's the rule. I just made it up.
-
-**Q: What's the meaning of life?**
-A: 42. Also this gateway. Mostly this gateway though.
 
 ---
 
@@ -310,12 +355,23 @@ A: 42. Also this gateway. Mostly this gateway though.
 - [x] Add model aliases
 - [x] Add request logging
 - [x] Add cost tracking
-- [x] Regret nothing
-- [x] Write a README at 3am
+- [x] Add AI Rumble (roast battle)
+- [x] Add Rap Battle (SSE streaming)
+- [x] Add Model Roulette, Vibe Check, Therapist, Roast Logs
+- [x] Add Webhooks
+- [x] Add Prompt Templates
+- [x] Add AI Poll
+- [x] Add Rate Limit Tiers
+- [x] Add Budget Alerts
+- [x] Add VK Usage Dashboard
+- [x] Add Auto-Rotate Keys
+- [x] Add Chat Playground
+- [x] Add Weekly Recaps
+- [x] Add Cost Analytics
 - [ ] Add semantic caching (when I'm bored again)
 - [ ] Add MCP support (because everyone wants MCP now)
-- [ ] Add Webhooks (for the cool kids)
 - [ ] Add A/B testing (for the data nerds)
+- [ ] Add streaming support for Rumble/Rap Battle (double SSE)
 - [ ] Take over the AI gateway market
 - [ ] Buy a real domain
 - [ ] Hire someone (it's just me and the void)
