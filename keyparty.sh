@@ -1,10 +1,10 @@
 #!/bin/bash
 set -e
 
-BINARY="ai-gateway"
+BINARY="keyparty"
 CONFIG_FILE="gateway.env"
 PORT=8080
-TUNNEL_LOG="/tmp/ai-gateway-tunnel.log"
+TUNNEL_LOG="/tmp/keyparty-tunnel.log"
 GW_PID=""
 CF_PID=""
 
@@ -18,7 +18,7 @@ cleanup() {
 }
 trap cleanup SIGINT SIGTERM
 
-echo "=== AI Gateway Setup ==="
+echo "=== KeyParty Setup ==="
 echo ""
 
 # ── Check Go ──
@@ -38,7 +38,7 @@ fi
 if ! command -v go &>/dev/null; then
     echo "Error: Go is not installed."
     echo "Install from: https://go.dev/dl/"
-    echo "Or put it in ../go-sdk/ next to the ai-gateway folder."
+    echo "Or put it in ../go-sdk/ next to the keyparty folder."
     exit 1
 fi
 GO_VER=$(go version | grep -oP 'go\K[0-9.]+')
@@ -127,7 +127,7 @@ fi
 
 # ── Start gateway ──
 echo ""
-echo "Starting AI Gateway on port $PORT..."
+echo "Starting KeyParty on port $PORT..."
 export ADMIN_PASSWORD
 ./$BINARY -port $PORT &
 GW_PID=$!
