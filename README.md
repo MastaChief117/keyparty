@@ -42,30 +42,28 @@ Most API gateways are built for enterprises with Kubernetes clusters and DevOps 
 
 ---
 
-## Quick Start (in 60 seconds)
+## Quick Start
 
 ```bash
 # Clone the thing
 git clone https://github.com/MastaChief117/keyparty.git
 cd keyparty
 
-# Build it (needs Go 1.24+)
-go build -o keyparty .
-
-# Run it
-./keyparty -port 8080 -admin-pass your-password-here
-```
-
-Or use the setup script (installs cloudflared, sets up tunnel):
-
-```bash
+# Run the setup script (auto-installs Go + cloudflared if missing)
 chmod +x keyparty.sh
 ./keyparty.sh
 ```
 
 Dashboard: **http://localhost:8080**
 
-That's it. No Docker. No Kubernetes. No npm install. No node_modules folder the size of Texas. Just a single binary and vibes.
+That's it. No Docker. No Kubernetes. No npm install. The script handles Go, builds the binary, and optionally sets up a Cloudflare tunnel.
+
+### Manual build (if you already have Go)
+
+```bash
+go build -o keyparty .
+./keyparty -port 8080 -admin-pass your-password-here
+```
 
 ---
 
