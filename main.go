@@ -516,7 +516,7 @@ func main() {
 	if strings.Contains(addr, "443") {
 		scheme = "https"
 	}
-	fmt.Printf("AI Gateway running on %s://localhost%s\n", scheme, addr)
+	fmt.Printf("KeyParty running on %s://localhost%s\n", scheme, addr)
 	fmt.Printf("Proxy endpoint: %s://localhost%s/v1/chat/completions\n", scheme, addr)
 	fmt.Printf("Dashboard: %s://localhost%s\n", scheme, addr)
 	if *adminPass != "" {

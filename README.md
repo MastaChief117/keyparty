@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🔀 AI Gateway
+# 🔀 KeyParty
 
 **One endpoint. Ten providers. Zero budget.**
 
@@ -46,14 +46,14 @@ Most API gateways are built for enterprises with Kubernetes clusters and DevOps 
 
 ```bash
 # Clone the thing
-git clone https://github.com/MastaChief117/ai-gateway.git
-cd ai-gateway
+git clone https://github.com/MastaChief117/keyparty.git
+cd keyparty
 
 # Build it (needs Go 1.24+)
-go build -o ai-gateway .
+go build -o keyparty .
 
 # Run it
-./ai-gateway -port 8080 -admin-pass your-password-here
+./keyparty -port 8080 -admin-pass your-password-here
 ```
 
 Dashboard: **http://localhost:8080**
@@ -386,7 +386,7 @@ A: Open an issue. I'll fix it. Probably. Eventually. No promises.
 
 **If you don't star this repo I'll still add features because I have no self control**
 
-**[AI Gateway](https://github.com/MastaChief117/ai-gateway)** ← Click here to join the chaos
+**[KeyParty](https://github.com/MastaChief117/keyparty)** ← Click here to join the chaos
 
 *Made by a dude who should've been sleeping*
 *Last updated: Whenever I remember*

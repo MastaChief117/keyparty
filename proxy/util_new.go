@@ -113,10 +113,10 @@ func (p *Proxy) handleWebhookTest(w http.ResponseWriter, r *http.Request) {
 	testData := map[string]interface{}{
 		"event":     "test",
 		"timestamp": time.Now().Format(time.RFC3339),
-		"message":   "This is a test webhook delivery from AI Gateway",
+		"message":   "This is a test webhook delivery from KeyParty",
 		"data": map[string]string{
 			"type":    "test",
-			"gateway": "ai-gateway",
+			"gateway": "keyparty",
 		},
 	}
 
