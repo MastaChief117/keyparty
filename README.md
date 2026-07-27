@@ -252,12 +252,94 @@ curl http://localhost:8080/admin/roulette \
 
 ---
 
-## Security (we take this seriously... mostly)
+## Security
 
-- 🔐 **API Key Encryption** — All keys encrypted at rest with AES-256-GCM
-- 🔑 **Key File** — `.gateway.key` with `0600` permissions (only root/gateway can read)
-- 🛡️ **Guardrails** — PII detection and prompt injection blocking
-- 🚫 **SSRF Protection** — Blocks requests to localhost, private IPs, metadata endpoints
+We take this seriously — not "trust me bro" seriously, actually seriously. Here's what's real:
+
+### What we do
+
+| Protection | Implementation |
+|-----------|----------------|
+| 🔐 **Encryption at Rest** | AES-256-GCM via `golang.org/x/crypto/chacha20poly1305`. All API keys encrypted in SQLite. Decrypted only in memory during request handling. |
+| 🔑 **Key File** | `.gateway.key` stored with `0600` permissions. Key is a 256-bit random value generated on first run. Lost key = encrypted data is gone forever. |
+| 🛡️ **Guardrails** | PII detection (SSN, email, phone), prompt injection blocking via regex patterns, custom rules configurable per-deployment. |
+| 🚫 **SSRF Protection** | Blocks requests to localhost, private IPs, link-local, and cloud metadata endpoints (169.254.169.254). |
+| 🔒 **Admin Auth** | Bearer token auth on all `/admin/*` endpoints. Password passed via CLI flag or env var. |
+| 🕐 **Rate Limiting** | Per-virtual-key rate limits with configurable windows. |
+| 📊 **Request Logging** | Full audit trail — who requested what, when, which provider, cost, latency. |
+
+### Threat Model
+
+**This gateway is designed for:**
+- Solo devs or small teams (< 5 people)
+- Self-hosted on a single machine
+- Trusted network environment (home, personal VPS)
+- Non-critical workloads (prototyping, personal projects, hackathons)
+
+**This gateway is NOT designed for:**
+- Public-facing production with untrusted users
+- Enterprises needing SOC2/HIPAA compliance
+- Multi-tenant SaaS with strict isolation requirements
+- Environments where the host machine is untrusted
+
+**Known limitations:**
+- SQLite is not designed for high-concurrency writes. If you hit 100+ concurrent requests, you'll see contention.
+- No TLS termination — use a reverse proxy (nginx, Caddy, Cloudflare Tunnel) for HTTPS.
+- No authentication on the `/v1/chat/completions` endpoint unless you create virtual keys. Anyone with the unified key can use it.
+- The admin password is passed as a CLI argument or env var. It's visible in `ps` output. Use a reverse proxy with its own auth if this matters.
+- No audit log tamper protection. If someone gets root, they can modify the SQLite database.
+
+### Audit Status
+
+- **No formal security audit has been performed.** This is a solo developer project.
+- **Crypto primitives are standard** — AES-256-GCM and ChaCha20-Poly1305 are well-studied and used by the Go standard library.
+- **No custom crypto** — we use `golang.org/x/crypto`, not hand-rolled anything.
+- **If you find a vulnerability**, open a GitHub issue or email the maintainer. Please don't tweet about it first.
+
+---
+
+## Operational Requirements
+
+"But it's just a binary, right?" Yeah. And so is a nuclear warhead. Here's what you need to actually run this thing:
+
+### Minimum Requirements
+
+- **OS:** Linux, macOS, Windows (any)
+- **RAM:** ~20MB at rest, ~50MB under load
+- **Disk:** ~50MB for binary + database grows with usage (~1KB per request logged)
+- **Go:** 1.24+ (only for building, not running)
+
+### What You Need to Manage
+
+| Task | Frequency | Difficulty |
+|------|-----------|-----------|
+| **Key rotation** | When a provider revokes/expires a key | Manual (dashboard or API) |
+| **Database backups** | Weekly if you care about logs | `cp gateway.db gateway.db.bak` |
+| **Monitoring** | Ongoing | Check `/admin/stats` or set up webhooks |
+| **Log rotation** | Monthly | The request log grows. Delete old entries via API or SQLite. |
+| **Updates** | When we ship new features | `git pull && go build` |
+| **Provider management** | When free tiers change | Update keys, adjust failover config |
+
+### Production Tips
+
+1. **Put it behind a reverse proxy.** Nginx, Caddy, or Cloudflare Tunnel. Don't expose port 8080 directly.
+2. **Use HTTPS.** The gateway doesn't do TLS. Your reverse proxy does.
+3. **Set up webhooks** for error alerts so you know when providers die.
+4. **Back up `.gateway.key` somewhere safe.** Lose it = lose all encrypted keys. There is no recovery.
+5. **Don't run as root** if you can avoid it. The gateway doesn't need elevated privileges.
+6. **Use virtual keys** instead of sharing your unified key. You can revoke them individually.
+
+### What "Production" Means Here
+
+This is a **self-hosted tool for individuals and small teams.** If you're deploying this for >10 users or handling sensitive data, you should:
+
+- Conduct your own security review
+- Set up proper monitoring and alerting
+- Use a managed database if SQLite doesn't fit your concurrency needs
+- Add TLS termination via reverse proxy
+- Consider whether you need compliance certifications
+
+**We're honest about what this is: a great tool for personal use and small teams.** If you need enterprise-grade everything, there are commercial alternatives. We're not trying to be them.
 
 ---
 
@@ -306,7 +388,7 @@ A: If you're reading this README then yeah probably.
 A: If you give me $5 I'll call it enterprise pricing
 
 **Q: Is my data safe?**
-A: It's encrypted with AES-256-GCM. That sounds fancy right? Trust me bro.
+A: AES-256-GCM encryption at rest. No custom crypto. Standard libraries. No formal audit yet. Read the [Security section](#security) for the full threat model. We're honest about what this is.
 
 **Q: Can I use it with my existing apps?**
 A: If your apps talk to OpenAI then yeah. It's a drop-in replacement.
