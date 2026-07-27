@@ -74,6 +74,7 @@ func main() {
 	mux.HandleFunc("/admin/leaderboard", p.HandleLeaderboard)
 	mux.HandleFunc("/admin/savings", p.HandleSavings)
 	mux.HandleFunc("/admin/fun-facts", p.HandleFunFacts)
+	mux.HandleFunc("/admin/rumble", p.HandleRumble)
 
 	mux.HandleFunc("/admin/failover", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

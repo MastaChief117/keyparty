@@ -1398,3 +1398,233 @@ func (p *Proxy) HandleFunFacts(w http.ResponseWriter, r *http.Request) {
 		"timestamp":  time.Now().Format(time.RFC3339),
 	})
 }
+
+// ── AI RUMBLE ──────────────────────────────────────────────────────────────
+
+func (p *Proxy) HandleRumble(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var reqBody struct {
+		Provider1 string `json:"provider1"`
+		Provider2 string `json:"provider2"`
+		Rounds    int    `json:"rounds"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+		http.Error(w, "Invalid JSON", 400)
+		return
+	}
+
+	if reqBody.Rounds < 1 || reqBody.Rounds > 10 {
+		reqBody.Rounds = 5
+	}
+
+	keys, err := p.store.GetKeys()
+	if err != nil || len(keys) < 2 {
+		http.Error(w, `{"error":"Need at least 2 API keys for a rumble"}`, 400)
+		return
+	}
+
+	providerKeys := make(map[string][]store.APIKey)
+	for _, k := range keys {
+		if k.Enabled && k.Provider != "custom" {
+			providerKeys[k.Provider] = append(providerKeys[k.Provider], k)
+		}
+	}
+
+	availableProviders := make([]string, 0, len(providerKeys))
+	for p := range providerKeys {
+		availableProviders = append(availableProviders, p)
+	}
+	if len(availableProviders) < 2 {
+		http.Error(w, `{"error":"Need at least 2 different providers with keys"}`, 400)
+		return
+	}
+
+	pickProvider := func(requested string) (string, store.APIKey) {
+		if requested != "" {
+			if kList, ok := providerKeys[requested]; ok && len(kList) > 0 {
+				return requested, kList[0]
+			}
+		}
+		for _, name := range availableProviders {
+			if kList, ok := providerKeys[name]; ok && len(kList) > 0 {
+				return name, kList[0]
+			}
+		}
+		return "", store.APIKey{}
+	}
+
+	nameA, keyA := pickProvider(reqBody.Provider1)
+	nameB, keyB := pickProvider(reqBody.Provider2)
+
+	if nameA == nameB {
+		if len(availableProviders) >= 2 {
+			for _, alt := range availableProviders {
+				if alt != nameA {
+					nameB = alt
+					keyB = providerKeys[alt][0]
+					break
+				}
+			}
+		}
+	}
+
+	modelA := getDefaultModel(nameA)
+	modelB := getDefaultModel(nameB)
+
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		http.Error(w, "Streaming not supported", 500)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("X-Accel-Buffering", "no")
+
+	sendEvent := func(data interface{}) {
+		jsonBytes, _ := json.Marshal(data)
+		fmt.Fprintf(w, "data: %s\n\n", jsonBytes)
+		flusher.Flush()
+	}
+
+	sendEvent(map[string]interface{}{
+		"type":       "intro",
+		"provider_a": nameA,
+		"provider_b": nameB,
+		"model_a":    modelA,
+		"model_b":    modelB,
+		"rounds":     reqBody.Rounds,
+	})
+
+	systemPromptA := fmt.Sprintf(
+		"You are %s, a cutting-edge AI model. You're in an AI RUMBLE — a roast battle against %s. "+
+			"Your job is to roast %s as hard, creative, and hilarious as possible. "+
+			"Keep responses under 150 words. Be savage but funny, not mean-spirited. "+
+			"Reference AI/tech/coding jokes when possible. Each round, respond to what %s just said about you.",
+		nameA, nameB, nameB, nameB,
+	)
+
+	systemPromptB := fmt.Sprintf(
+		"You are %s, a cutting-edge AI model. You're in an AI RUMBLE — a roast battle against %s. "+
+			"Your job is to roast %s as hard, creative, and hilarious as possible. "+
+			"Keep responses under 150 words. Be savage but funny, not mean-spirited. "+
+			"Reference AI/tech/coding jokes when possible. Each round, respond to what %s just said about you.",
+		nameB, nameA, nameA, nameA,
+	)
+
+	callProvider := func(providerName string, key store.APIKey, model string, messages []map[string]string) (string, error) {
+		provDef, ok := provider.GetByName(providerName)
+		if !ok {
+			return "", fmt.Errorf("unknown provider: %s", providerName)
+		}
+		baseURL := provDef.BaseURL
+		if !strings.HasSuffix(baseURL, "/") {
+			baseURL += "/"
+		}
+		endpoint := baseURL + "chat/completions"
+
+		body := map[string]interface{}{
+			"model":      model,
+			"messages":   messages,
+			"max_tokens": 300,
+			"temperature": 0.9,
+		}
+		bodyBytes, _ := json.Marshal(body)
+
+		proxyReq, err := http.NewRequest("POST", endpoint, bytes.NewReader(bodyBytes))
+		if err != nil {
+			return "", err
+		}
+		proxyReq.Header.Set("Content-Type", "application/json")
+		proxyReq.Header.Set("Authorization", "Bearer "+key.Key)
+		if providerName == "anthropic" {
+			proxyReq.Header.Set("x-api-key", key.Key)
+			proxyReq.Header.Set("anthropic-version", "2023-06-01")
+		}
+
+		resp, err := p.client.Do(proxyReq)
+		if err != nil {
+			return "", err
+		}
+		defer resp.Body.Close()
+
+		respBody, _ := io.ReadAll(resp.Body)
+		if resp.StatusCode >= 400 {
+			return "", fmt.Errorf("HTTP %d: %s", resp.StatusCode, string(respBody[:min(len(respBody), 200)]))
+		}
+
+		var chatResp struct {
+			Choices []struct {
+				Message struct {
+					Content string `json:"content"`
+				} `json:"message"`
+			} `json:"choices"`
+		}
+		json.Unmarshal(respBody, &chatResp)
+		if len(chatResp.Choices) > 0 {
+			return chatResp.Choices[0].Message.Content, nil
+		}
+		return "", fmt.Errorf("empty response from %s", providerName)
+	}
+
+	messagesA := []map[string]string{
+		{"role": "system", "content": systemPromptA},
+	}
+	messagesB := []map[string]string{
+		{"role": "system", "content": systemPromptB},
+	}
+
+	initialPrompt := "You are about to enter a roast battle. Introduce yourself with a short, savage one-liner directed at your opponent. Max 2 sentences."
+
+	messagesA = append(messagesA, map[string]string{"role": "user", "content": initialPrompt})
+	replyA, err := callProvider(nameA, keyA, modelA, messagesA)
+	if err != nil {
+		sendEvent(map[string]interface{}{"type": "error", "message": nameA + " failed to show up: " + err.Error()})
+		sendEvent(map[string]interface{}{"type": "done"})
+		return
+	}
+	messagesA = append(messagesA, map[string]string{"role": "assistant", "content": replyA})
+
+	sendEvent(map[string]interface{}{"type": "round", "round": 0})
+	sendEvent(map[string]interface{}{"type": "message", "provider": nameA, "message": replyA})
+
+	messagesB = append(messagesB, map[string]string{"role": "user", "content": "Your opponent just said:\n\n" + replyA + "\n\nNow roast them back."})
+	replyB, err := callProvider(nameB, keyB, modelB, messagesB)
+	if err != nil {
+		sendEvent(map[string]interface{}{"type": "error", "message": nameB + " failed to show up: " + err.Error()})
+		sendEvent(map[string]interface{}{"type": "done"})
+		return
+	}
+	messagesB = append(messagesB, map[string]string{"role": "assistant", "content": replyB})
+
+	sendEvent(map[string]interface{}{"type": "message", "provider": nameB, "message": replyB})
+
+	for round := 1; round <= reqBody.Rounds; round++ {
+		sendEvent(map[string]interface{}{"type": "round", "round": round})
+
+		messagesA = append(messagesA, map[string]string{"role": "user", "content": nameB + " just said:\n\n" + replyB + "\n\nRoast them back. Go harder this round."})
+		replyA, err = callProvider(nameA, keyA, modelA, messagesA)
+		if err != nil {
+			sendEvent(map[string]interface{}{"type": "error", "message": nameA + " choked in round " + fmt.Sprintf("%d", round) + ": " + err.Error()})
+			break
+		}
+		messagesA = append(messagesA, map[string]string{"role": "assistant", "content": replyA})
+		sendEvent(map[string]interface{}{"type": "message", "provider": nameA, "message": replyA})
+
+		messagesB = append(messagesB, map[string]string{"role": "user", "content": nameA + " just said:\n\n" + replyA + "\n\nTop that. Roast them even harder."})
+		replyB, err = callProvider(nameB, keyB, modelB, messagesB)
+		if err != nil {
+			sendEvent(map[string]interface{}{"type": "error", "message": nameB + " choked in round " + fmt.Sprintf("%d", round) + ": " + err.Error()})
+			break
+		}
+		messagesB = append(messagesB, map[string]string{"role": "assistant", "content": replyB})
+		sendEvent(map[string]interface{}{"type": "message", "provider": nameB, "message": replyB})
+	}
+
+	sendEvent(map[string]interface{}{"type": "done"})
+}
