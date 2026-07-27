@@ -43,66 +43,66 @@ func NewKeyring(dbPath string) (*Keyring, error) {
 	return &Keyring{key: key}, nil
 }
 
-func (k *Keyring) Encrypt(plaintext string) string {
+func (k *Keyring) Encrypt(plaintext string) (string, error) {
 	if plaintext == "" {
-		return ""
+		return "", nil
 	}
 
 	block, err := aes.NewCipher(k.key)
 	if err != nil {
-		return plaintext
+		return "", fmt.Errorf("encrypt: %w", err)
 	}
 
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return plaintext
+		return "", fmt.Errorf("encrypt: %w", err)
 	}
 
 	nonce := make([]byte, gcm.NonceSize())
 	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-		return plaintext
+		return "", fmt.Errorf("encrypt: %w", err)
 	}
 
 	ciphertext := gcm.Seal(nonce, nonce, []byte(plaintext), nil)
-	return "enc:" + base64.StdEncoding.EncodeToString(ciphertext)
+	return "enc:" + base64.StdEncoding.EncodeToString(ciphertext), nil
 }
 
-func (k *Keyring) Decrypt(ciphertext string) string {
+func (k *Keyring) Decrypt(ciphertext string) (string, error) {
 	if ciphertext == "" {
-		return ""
+		return "", nil
 	}
 
 	if !strings.HasPrefix(ciphertext, "enc:") {
-		return ciphertext
+		return ciphertext, nil
 	}
 
 	data, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(ciphertext, "enc:"))
 	if err != nil {
-		return ciphertext
+		return "", fmt.Errorf("decrypt: %w", err)
 	}
 
 	block, err := aes.NewCipher(k.key)
 	if err != nil {
-		return ciphertext
+		return "", fmt.Errorf("decrypt: %w", err)
 	}
 
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return ciphertext
+		return "", fmt.Errorf("decrypt: %w", err)
 	}
 
 	nonceSize := gcm.NonceSize()
 	if len(data) < nonceSize {
-		return ciphertext
+		return "", fmt.Errorf("decrypt: invalid ciphertext")
 	}
 
 	nonce, ciphertextBytes := data[:nonceSize], data[nonceSize:]
 	plaintext, err := gcm.Open(nil, nonce, ciphertextBytes, nil)
 	if err != nil {
-		return ciphertext
+		return "", fmt.Errorf("decrypt: %w", err)
 	}
 
-	return string(plaintext)
+	return string(plaintext), nil
 }
 
 func (k *Keyring) IsEncrypted(value string) bool {

@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"sync"
@@ -65,20 +66,15 @@ func init() {
 func RateLimit(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ip := r.RemoteAddr
-		if fwd := r.Header.Get("X-Forwarded-For"); fwd != "" {
-			ip = strings.Split(fwd, ",")[0]
+		if idx := strings.LastIndex(ip, ":"); idx != -1 {
+			ip = ip[:idx]
 		}
 		limiter.mu.Lock()
-		v, exists := limiter.visitors[ip]
-		tokens := 0
-		if exists {
-			tokens = v.tokens
-		} else {
-			tokens = limiter.burst
+		if len(limiter.visitors) > 10000 {
+			limiter.visitors = make(map[string]*visitor)
 		}
 		limiter.mu.Unlock()
 		w.Header().Set("X-RateLimit-Limit", fmt.Sprintf("%d", limiter.burst))
-		w.Header().Set("X-RateLimit-Remaining", fmt.Sprintf("%d", tokens))
 		if !limiter.allow(ip) {
 			http.Error(w, `{"error":"Rate limit exceeded"}`, http.StatusTooManyRequests)
 			return
@@ -98,8 +94,20 @@ func SecurityHeaders(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("X-Frame-Options", "DENY")
-		w.Header().Set("X-XSS-Protection", "1; mode=block")
 		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+		w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'")
+		next(w, r)
+	}
+}
+
+func Recover(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				log.Printf("panic recovered: %v", err)
+				http.Error(w, `{"error":"Internal server error"}`, http.StatusInternalServerError)
+			}
+		}()
 		next(w, r)
 	}
 }
@@ -107,10 +115,14 @@ func SecurityHeaders(next http.HandlerFunc) http.HandlerFunc {
 func CORS(allowOrigin string, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
-		if allowOrigin == "" || allowOrigin == "*" {
+		if allowOrigin != "" && allowOrigin != "*" {
+			if origin == allowOrigin {
+				w.Header().Set("Access-Control-Allow-Origin", origin)
+				w.Header().Set("Vary", "Origin")
+			}
+		} else if allowOrigin == "*" {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
-		} else if origin == allowOrigin {
-			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Vary", "Origin")
 		}
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-API-Key, X-Admin-Key")

@@ -232,7 +232,7 @@ func (s *Store) migrate() error {
 	s.db.QueryRow("SELECT COUNT(*) FROM settings WHERE key = 'unified_api_key'").Scan(&count)
 	if count == 0 {
 		key := generateKey()
-		encrypted := s.keyring.Encrypt(key)
+		encrypted, _ := s.keyring.Encrypt(key)
 		s.db.Exec("INSERT INTO settings (key, value) VALUES ('unified_api_key', ?)", encrypted)
 	}
 
@@ -265,7 +265,7 @@ func (s *Store) GetUnifiedKey() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return s.keyring.Decrypt(val), nil
+	return s.keyring.Decrypt(val)
 }
 
 func (s *Store) ValidateUnifiedKey(key string) bool {
@@ -280,7 +280,7 @@ func (s *Store) RegenerateUnifiedKey() (string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	newKey := generateKey()
-	encrypted := s.keyring.Encrypt(newKey)
+	encrypted, _ := s.keyring.Encrypt(newKey)
 	_, err := s.db.Exec("UPDATE settings SET value = ? WHERE key = 'unified_api_key'", encrypted)
 	return newKey, err
 }
@@ -288,7 +288,10 @@ func (s *Store) RegenerateUnifiedKey() (string, error) {
 func (s *Store) AddKey(name, provider, key, model, customURL string, priority int) (int64, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	encrypted := s.keyring.Encrypt(key)
+	encrypted, err := s.keyring.Encrypt(key)
+	if err != nil {
+		return 0, err
+	}
 	result, err := s.db.Exec(
 		"INSERT INTO api_keys (name, provider, key, model, custom_url, priority, enabled) VALUES (?, ?, ?, ?, ?, ?, 1)",
 		name, provider, encrypted, model, customURL, priority,
@@ -315,7 +318,7 @@ func (s *Store) GetKeys() ([]APIKey, error) {
 		if err != nil {
 			return nil, err
 		}
-		k.Key = s.keyring.Decrypt(k.Key)
+		k.Key, _ = s.keyring.Decrypt(k.Key)
 		if lastUsed.Valid {
 			k.LastUsed = lastUsed.Time
 		}
@@ -357,7 +360,7 @@ func (s *Store) GetKeysByProvider(provider string) ([]APIKey, error) {
 		if err != nil {
 			return nil, err
 		}
-		k.Key = s.keyring.Decrypt(k.Key)
+		k.Key, _ = s.keyring.Decrypt(k.Key)
 		if lastUsed.Valid {
 			k.LastUsed = lastUsed.Time
 		}
@@ -380,7 +383,7 @@ func (s *Store) GetKeyByName(name string) (*APIKey, error) {
 	if err != nil {
 		return nil, err
 	}
-	k.Key = s.keyring.Decrypt(k.Key)
+	k.Key, _ = s.keyring.Decrypt(k.Key)
 	if lastUsed.Valid {
 		k.LastUsed = lastUsed.Time
 	}
@@ -532,9 +535,13 @@ func (s *Store) GetKeyByID(id int64) (*APIKey, error) {
 func (s *Store) UpdateKey(id int64, name, provider, key, model, customURL string, priority int) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	_, err := s.db.Exec(
+	encrypted, err := s.keyring.Encrypt(key)
+	if err != nil {
+		return err
+	}
+	_, err = s.db.Exec(
 		"UPDATE api_keys SET name = ?, provider = ?, key = ?, model = ?, custom_url = ?, priority = ? WHERE id = ?",
-		name, provider, key, model, customURL, priority, id,
+		name, provider, encrypted, model, customURL, priority, id,
 	)
 	return err
 }
@@ -667,6 +674,20 @@ func (s *Store) RecordVirtualKeyUsage(key string, cost float64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.db.Exec("UPDATE virtual_keys SET used_this_month = used_this_month + ?, total_requests = total_requests + 1, last_used = CURRENT_TIMESTAMP WHERE key = ?", cost, key)
+}
+
+func (s *Store) DeductBudgetAtomic(key string, cost float64) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	result, err := s.db.Exec(
+		"UPDATE virtual_keys SET used_this_month = used_this_month + ?, total_requests = total_requests + 1, last_used = CURRENT_TIMESTAMP WHERE key = ? AND (monthly_budget = 0 OR used_this_month + ? <= monthly_budget)",
+		cost, key, cost,
+	)
+	if err != nil {
+		return false, err
+	}
+	affected, _ := result.RowsAffected()
+	return affected > 0, nil
 }
 
 func (s *Store) DeleteVirtualKey(id int64) error {
@@ -1524,7 +1545,7 @@ func (s *Store) GetHealthyKeysByProvider(provider string) ([]APIKey, error) {
 		var k APIKey
 		var lastUsed, createdAt sql.NullTime
 		rows.Scan(&k.ID, &k.Name, &k.Provider, &k.Key, &k.Model, &k.CustomURL, &k.Priority, &k.Enabled, &k.TotalReqs, &k.ErrorReqs, &k.TotalCost, &lastUsed, &createdAt)
-		k.Key = s.keyring.Decrypt(k.Key)
+		k.Key, _ = s.keyring.Decrypt(k.Key)
 		if lastUsed.Valid {
 			k.LastUsed = lastUsed.Time
 		}

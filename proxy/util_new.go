@@ -72,6 +72,10 @@ func (p *Proxy) HandleWebhooks(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, `{"error":"URL is required"}`, http.StatusBadRequest)
 			return
 		}
+		if isBlockedURL(req.URL) {
+			http.Error(w, `{"error":"Webhook URL blocked (SSRF protection)"}`, http.StatusBadRequest)
+			return
+		}
 		if req.Events == "" {
 			req.Events = "*"
 		}

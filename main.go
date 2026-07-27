@@ -22,6 +22,7 @@ var ssrfBlocklist = []string{
 	"172.19.", "172.20.", "172.21.", "172.22.", "172.23.", "172.24.", "172.25.",
 	"172.26.", "172.27.", "172.28.", "172.29.", "172.30.", "172.31.",
 	"169.254.", "0.", "metadata.google", "100.100.100.200",
+	"::1", "fc00:", "fe80:", "fd00:",
 }
 
 func isBlockedURL(rawURL string) bool {
@@ -314,6 +315,9 @@ func main() {
 			if !store.ValidateProvider(k.Provider) {
 				continue
 			}
+			if k.CustomURL != "" && isBlockedURL(k.CustomURL) {
+				continue
+			}
 			_, err := s.AddKey(k.Name, k.Provider, k.Key, k.Model, k.CustomURL, k.Priority)
 			if err != nil {
 				continue
@@ -501,10 +505,12 @@ func main() {
 		fmt.Fprint(w, indexHTML)
 	})
 
-	handler := middleware.CORS(*corsOrigin,
-		middleware.SecurityHeaders(
-			middleware.RateLimit(
-				auth.WrapAdmin(*adminPass, mux),
+	handler := middleware.Recover(
+		middleware.CORS(*corsOrigin,
+			middleware.SecurityHeaders(
+				middleware.RateLimit(
+					auth.WrapAdmin(*adminPass, mux),
+				),
 			),
 		),
 	)

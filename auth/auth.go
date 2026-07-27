@@ -9,7 +9,7 @@ import (
 func AdminAuth(adminPassword string, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if adminPassword == "" {
-			next(w, r)
+			http.Error(w, `{"error":"Admin password not configured. Server operator must set -admin-pass or ADMIN_PASSWORD."}`, http.StatusServiceUnavailable)
 			return
 		}
 		authHeader := r.Header.Get("Authorization")

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -24,6 +25,7 @@ var ssrfBlocklist = []string{
 	"172.19.", "172.20.", "172.21.", "172.22.", "172.23.", "172.24.", "172.25.",
 	"172.26.", "172.27.", "172.28.", "172.29.", "172.30.", "172.31.",
 	"169.254.", "0.", "metadata.google", "100.100.100.200",
+	"::1", "fc00:", "fe80:", "fd00:",
 }
 
 var piiPatterns = map[string]*regexp.Regexp{
@@ -75,17 +77,52 @@ type Proxy struct {
 	providerIdx map[string]*int64
 	mu          sync.Mutex
 	cacheTTL    int
+	vkRateMu    sync.Mutex
+	vkTokens    map[string]*vkBucket
+}
+
+type vkBucket struct {
+	tokens   int
+	lastSeen time.Time
 }
 
 func New(s *store.Store) *Proxy {
+	transport := &http.Transport{
+		MaxIdleConns:        100,
+		MaxIdleConnsPerHost: 20,
+		IdleConnTimeout:     90 * time.Second,
+	}
 	return &Proxy{
 		store: s,
 		client: &http.Client{
-			Timeout: 120 * time.Second,
+			Timeout:   120 * time.Second,
+			Transport: transport,
 		},
 		providerIdx: make(map[string]*int64),
 		cacheTTL:    60,
+		vkTokens:    make(map[string]*vkBucket),
 	}
+}
+
+func (p *Proxy) allowVK(vkKey string, rateLimit int) bool {
+	p.vkRateMu.Lock()
+	defer p.vkRateMu.Unlock()
+	bucket, exists := p.vkTokens[vkKey]
+	if !exists {
+		bucket = &vkBucket{tokens: rateLimit, lastSeen: time.Now()}
+		p.vkTokens[vkKey] = bucket
+	}
+	elapsed := time.Since(bucket.lastSeen)
+	bucket.lastSeen = time.Now()
+	bucket.tokens += int(elapsed.Seconds() * float64(rateLimit))
+	if bucket.tokens > rateLimit {
+		bucket.tokens = rateLimit
+	}
+	if bucket.tokens <= 0 {
+		return false
+	}
+	bucket.tokens--
+	return true
 }
 
 func (p *Proxy) SetCacheTTL(ttl int) {
@@ -141,10 +178,11 @@ func (p *Proxy) checkGuardrails(message string) (bool, string, string) {
 	return false, "", ""
 }
 
-func (p *Proxy) computeHash(model string, messages []interface{}) string {
+func (p *Proxy) computeHash(model string, messages []interface{}, vkID string) string {
 	data, _ := json.Marshal(map[string]interface{}{
 		"model":    model,
 		"messages": messages,
+		"vk_id":    vkID,
 	})
 	h := sha256.Sum256(data)
 	return fmt.Sprintf("%x", h)
@@ -171,6 +209,7 @@ func (p *Proxy) compactHistory(messages []interface{}, compactModel string) ([]i
 	}
 
 	key := fallKeys[0]
+	log.Printf("COMPACTION WARNING: Conversation history being sent to %s for summarization (different from original provider)", key.Provider)
 	provDef, ok := provider.GetByName(key.Provider)
 	if !ok {
 		return messages, 0, 0
@@ -310,6 +349,12 @@ func (p *Proxy) HandleChatCompletions(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, `{"error":{"message":"Monthly budget exceeded","type":"budget_exceeded"}}`, http.StatusPaymentRequired)
 			return
 		}
+		if vk.RateLimit > 0 {
+			if !p.allowVK(vk.Key, vk.RateLimit) {
+				http.Error(w, `{"error":{"message":"Rate limit exceeded for this virtual key","type":"rate_limit"}}`, http.StatusTooManyRequests)
+				return
+			}
+		}
 		if !p.store.CanUseModel(vk, modelName) {
 			http.Error(w, `{"error":{"message":"Model not allowed for this key","type":"model_not_allowed"}}`, http.StatusForbidden)
 			return
@@ -349,7 +394,11 @@ func (p *Proxy) HandleChatCompletions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !isStream {
-		hash := p.computeHash(modelName, messages)
+		vkID := ""
+		if vk != nil {
+			vkID = vk.Key
+		}
+		hash := p.computeHash(modelName, messages, vkID)
 		cacheEntry, err := p.store.GetCacheByHash(hash)
 		if err == nil && cacheEntry != nil {
 			p.store.IncrementCacheHit(hash)
@@ -500,7 +549,7 @@ func (p *Proxy) HandleChatCompletions(w http.ResponseWriter, r *http.Request) {
 	p.store.RecordCost(targetKey.ID, cost)
 
 	if vk != nil {
-		p.store.RecordVirtualKeyUsage(vk.Key, cost)
+		p.store.DeductBudgetAtomic(vk.Key, cost)
 	}
 
 	virtualKeyName := ""
@@ -510,7 +559,11 @@ func (p *Proxy) HandleChatCompletions(w http.ResponseWriter, r *http.Request) {
 	p.store.LogRequest(virtualKeyName, targetKey.Provider, actualModel, resp.StatusCode, tokensIn, tokensOut, cost, latencyMs, false)
 
 	if !isStream {
-		hash := p.computeHash(modelName, messages)
+		vkID := ""
+		if vk != nil {
+			vkID = vk.Key
+		}
+		hash := p.computeHash(modelName, messages, vkID)
 		p.store.SetCache(hash, string(respBody), modelName, p.cacheTTL)
 	}
 
