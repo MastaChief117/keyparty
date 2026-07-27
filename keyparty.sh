@@ -26,9 +26,11 @@ if ! command -v go &>/dev/null; then
     # Check common local install paths
     for p in \
         "$(dirname "$0")/../go-sdk/bin/go" \
+        "$(dirname "$0")/go/bin/go" \
         "$HOME/go/bin/go" \
         "$(dirname "$0")/../go/bin/go" \
-        /usr/local/go/bin/go; do
+        /usr/local/go/bin/go \
+        /tmp/go/bin/go; do
         if [ -x "$p" ]; then
             export PATH="$(dirname "$p"):$PATH"
             break
@@ -36,10 +38,29 @@ if ! command -v go &>/dev/null; then
     done
 fi
 if ! command -v go &>/dev/null; then
-    echo "Error: Go is not installed."
-    echo "Install from: https://go.dev/dl/"
-    echo "Or put it in ../go-sdk/ next to the keyparty folder."
-    exit 1
+    echo "Go is not installed. Attempting to install..."
+    ARCH=$(uname -m)
+    OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+    case "$ARCH" in
+        x86_64)  GO_ARCH="amd64" ;;
+        aarch64) GO_ARCH="arm64" ;;
+        armv7l)  GO_ARCH="armv6l" ;;
+        *)       echo "Error: Unsupported architecture: $ARCH"; echo "Install from: https://go.dev/dl/"; exit 1 ;;
+    esac
+    GO_VER="1.24.5"
+    GO_URL="https://go.dev/dl/go${GO_VER}.${OS}-${GO_ARCH}.tar.gz"
+    echo "Downloading Go $GO_VER from $GO_URL"
+    if curl -fsSL "$GO_URL" -o /tmp/go.tar.gz; then
+        rm -rf /tmp/go
+        tar -C /tmp -xzf /tmp/go.tar.gz
+        rm -f /tmp/go.tar.gz
+        export PATH="/tmp/go/bin:$PATH"
+        echo "Go installed: $(go version)"
+    else
+        echo "Error: Failed to download Go."
+        echo "Install manually from: https://go.dev/dl/"
+        exit 1
+    fi
 fi
 GO_VER=$(go version | grep -oP 'go\K[0-9.]+')
 echo "Go version: $GO_VER"
