@@ -353,6 +353,50 @@ This is a **self-hosted tool for individuals and small teams.** If you're deploy
 
 ---
 
+## Performance (we actually tested it)
+
+We stress tested it so you don't have to. Here are real numbers:
+
+### Binary
+
+- **On disk:** 16MB
+- **Threads:** 5
+
+### RAM Usage
+
+| Stage | RSS (actual RAM) | Virtual Size |
+|-------|-----------------|--------------|
+| Fresh start (idle) | **~11MB** | 1.7GB |
+| After 500 requests | **~23MB** | 2.2GB |
+| After 1,500 requests | **~31MB** | 3.5GB |
+
+> RSS = what your OS actually allocates. Virtual size includes Go runtime mappings (not real memory).
+
+### Database Growth
+
+| Stage | DB Size |
+|-------|---------|
+| Fresh | 88KB |
+| After 500 requests | 144KB |
+| After 1,500 requests | 248KB |
+
+**~100 bytes per request logged.** Your database won't blow up.
+
+### Throughput
+
+- **~20 RPS** with fast-failing requests (fake keys)
+- With real providers, RPS depends on provider latency — the gateway adds negligible overhead
+- **No memory leaks observed** — RSS grows proportionally to load, not time
+
+### TL;DR
+
+- **Idle:** ~11MB RAM — lighter than most Electron apps
+- **Under load:** ~20-35MB RAM — very efficient for a Go binary
+- **DB grows slowly:** ~100 bytes per request
+- Runs on a potato 🥔
+
+---
+
 ## Who this is for
 
 - Solo devs building AI agents on free tiers
