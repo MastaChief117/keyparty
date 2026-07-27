@@ -30,6 +30,10 @@ var limiter = &rateLimiter{
 func (rl *rateLimiter) allow(key string) bool {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
+	return rl.allowLocked(key)
+}
+
+func (rl *rateLimiter) allowLocked(key string) bool {
 	v, exists := rl.visitors[key]
 	if !exists {
 		v = &visitor{tokens: rl.burst, lastSeen: time.Now()}
@@ -73,9 +77,15 @@ func RateLimit(next http.HandlerFunc) http.HandlerFunc {
 		if len(limiter.visitors) > 10000 {
 			limiter.visitors = make(map[string]*visitor)
 		}
+		remaining := limiter.burst
+		allowed := limiter.allowLocked(ip)
+		if v, ok := limiter.visitors[ip]; ok {
+			remaining = v.tokens
+		}
 		limiter.mu.Unlock()
 		w.Header().Set("X-RateLimit-Limit", fmt.Sprintf("%d", limiter.burst))
-		if !limiter.allow(ip) {
+		w.Header().Set("X-RateLimit-Remaining", fmt.Sprintf("%d", remaining))
+		if !allowed {
 			http.Error(w, `{"error":"Rate limit exceeded"}`, http.StatusTooManyRequests)
 			return
 		}

@@ -2,6 +2,7 @@ package auth
 
 import (
 	"crypto/subtle"
+	"log"
 	"net/http"
 	"strings"
 )
@@ -9,6 +10,7 @@ import (
 func AdminAuth(adminPassword string, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if adminPassword == "" {
+			log.Printf("AUDIT: Admin access attempt with no password configured - %s %s from %s", r.Method, r.URL.Path, r.RemoteAddr)
 			http.Error(w, `{"error":"Admin password not configured. Server operator must set -admin-pass or ADMIN_PASSWORD."}`, http.StatusServiceUnavailable)
 			return
 		}
@@ -18,6 +20,7 @@ func AdminAuth(adminPassword string, next http.HandlerFunc) http.HandlerFunc {
 			token = r.Header.Get("X-Admin-Key")
 		}
 		if subtle.ConstantTimeCompare([]byte(token), []byte(adminPassword)) != 1 {
+			log.Printf("AUDIT: Failed admin auth attempt - %s %s from %s", r.Method, r.URL.Path, r.RemoteAddr)
 			http.Error(w, `{"error":"Unauthorized"}`, http.StatusUnauthorized)
 			return
 		}

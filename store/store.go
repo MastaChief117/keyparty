@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 	"sync"
 	"time"
@@ -417,13 +418,17 @@ func (s *Store) UpdatePriority(id int64, priority int) error {
 func (s *Store) RecordRequest(id int64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.db.Exec("UPDATE api_keys SET total_requests = total_requests + 1, last_used = CURRENT_TIMESTAMP WHERE id = ?", id)
+	if _, err := s.db.Exec("UPDATE api_keys SET total_requests = total_requests + 1, last_used = CURRENT_TIMESTAMP WHERE id = ?", id); err != nil {
+		log.Printf("DB error recording request: %v", err)
+	}
 }
 
 func (s *Store) RecordCost(id int64, cost float64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.db.Exec("UPDATE api_keys SET total_cost = total_cost + ? WHERE id = ?", cost, id)
+	if _, err := s.db.Exec("UPDATE api_keys SET total_cost = total_cost + ? WHERE id = ?", cost, id); err != nil {
+		log.Printf("DB error recording cost: %v", err)
+	}
 }
 
 func (s *Store) RecordError(id int64, provider, errMsg string, statusCode int) {
@@ -432,8 +437,12 @@ func (s *Store) RecordError(id int64, provider, errMsg string, statusCode int) {
 	if len(errMsg) > 500 {
 		errMsg = errMsg[:500]
 	}
-	s.db.Exec("UPDATE api_keys SET error_requests = error_requests + 1 WHERE id = ?", id)
-	s.db.Exec("INSERT INTO error_log (key_id, provider, error, status_code) VALUES (?, ?, ?, ?)", id, provider, errMsg, statusCode)
+	if _, err := s.db.Exec("UPDATE api_keys SET error_requests = error_requests + 1 WHERE id = ?", id); err != nil {
+		log.Printf("DB error recording error count: %v", err)
+	}
+	if _, err := s.db.Exec("INSERT INTO error_log (key_id, provider, error, status_code) VALUES (?, ?, ?, ?)", id, provider, errMsg, statusCode); err != nil {
+		log.Printf("DB error inserting error log: %v", err)
+	}
 }
 
 func (s *Store) GetStats() (*KeyStats, error) {
@@ -780,8 +789,13 @@ func (s *Store) IncrementCacheHit(hash string) {
 func (s *Store) ClearExpiredCache() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	_, err := s.db.Exec("DELETE FROM cache_entries WHERE expires_at IS NOT NULL AND expires_at < datetime('now')")
-	return err
+	s.db.Exec("DELETE FROM cache_entries WHERE expires_at IS NOT NULL AND expires_at < datetime('now')")
+	var count int
+	s.db.QueryRow("SELECT COUNT(*) FROM cache_entries").Scan(&count)
+	if count > 10000 {
+		s.db.Exec("DELETE FROM cache_entries WHERE id IN (SELECT id FROM cache_entries ORDER BY hit_count ASC, created_at ASC LIMIT ?)", count-5000)
+	}
+	return nil
 }
 
 func (s *Store) LogRequest(virtualKey, provider, model string, statusCode, tokensIn, tokensOut int, cost float64, latencyMs int64, cacheHit bool) {

@@ -179,12 +179,8 @@ func (p *Proxy) checkGuardrails(message string) (bool, string, string) {
 }
 
 func (p *Proxy) computeHash(model string, messages []interface{}, vkID string) string {
-	data, _ := json.Marshal(map[string]interface{}{
-		"model":    model,
-		"messages": messages,
-		"vk_id":    vkID,
-	})
-	h := sha256.Sum256(data)
+	msgJSON, _ := json.Marshal(messages)
+	h := sha256.Sum256(append([]byte(model+":"+vkID+":"), msgJSON...))
 	return fmt.Sprintf("%x", h)
 }
 
@@ -522,7 +518,7 @@ func (p *Proxy) HandleChatCompletions(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(resp.StatusCode)
-		w.Write(respBody)
+		w.Write([]byte(fmt.Sprintf(`{"error":{"message":"Provider error","status":%d}}`, resp.StatusCode)))
 		return
 	}
 
