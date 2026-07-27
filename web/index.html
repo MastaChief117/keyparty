@@ -182,6 +182,9 @@ tr:hover{background:rgba(59,130,246,0.05)}
 <button class="tab" data-tab="failover">Failover</button>
 <button class="tab" data-tab="fun-zone">Fun Zone</button>
 <button class="tab" data-tab="rumble">AI Rumble</button>
+<button class="tab" data-tab="new-fun">More Fun</button>
+<button class="tab" data-tab="utils">Utilities</button>
+<button class="tab" data-tab="pro">Pro Tools</button>
 <button class="tab" data-tab="logs">Request Logs</button>
 </div>
 
@@ -412,6 +415,169 @@ tr:hover{background:rgba(59,130,246,0.05)}
 </div>
 
 <div class="rumble-chat" id="rumble-chat" style="display:none"></div>
+</div>
+
+<div id="tab-new-fun" class="tab-content" style="display:none">
+<div class="fun-grid">
+<div class="section">
+<div class="section-header"><h2>🎰 Model Roulette</h2></div>
+<p style="font-size:12px;color:#94a3b8;margin-bottom:10px">Spins the wheel — picks a random provider for your message</p>
+<div class="form-group"><label>Your Message</label><input type="text" id="roulette-msg" placeholder="Say something reckless..."></div>
+<button class="btn btn-sm btn-race" onclick="doRoulette()">🎰 Spin!</button>
+<div id="roulette-result" style="margin-top:10px"></div>
+</div>
+<div class="section">
+<div class="section-header"><h2>🔥 Roast My Logs</h2></div>
+<p style="font-size:12px;color:#94a3b8;margin-bottom:10px">AI roasts your API usage patterns</p>
+<button class="btn btn-sm btn-danger" onclick="doRoastLogs()">🔥 Roast Me</button>
+<div id="roastlogs-result" style="margin-top:10px"></div>
+</div>
+<div class="section">
+<div class="section-header"><h2>🧠 AI Therapist</h2></div>
+<p style="font-size:12px;color:#94a3b8;margin-bottom:10px">When your code won't compile and you need emotional support</p>
+<div class="form-group"><label>Vent here</label><input type="text" id="therapist-msg" placeholder="My API key keeps failing..."></div>
+<button class="btn btn-sm btn-primary" onclick="doTherapist()">🧠 Help Me</button>
+<div id="therapist-result" style="margin-top:10px"></div>
+</div>
+<div class="section">
+<div class="section-header"><h2>🌊 Vibe Check</h2></div>
+<p style="font-size:12px;color:#94a3b8;margin-bottom:10px">Send a message, get a random vibe rating</p>
+<div class="form-group"><label>Message</label><input type="text" id="vibe-msg" placeholder="What's the vibe?"></div>
+<button class="btn btn-sm btn-primary" onclick="doVibeCheck()" style="background:#06b6d4">🌊 Check Vibe</button>
+<div id="vibe-result" style="margin-top:10px"></div>
+</div>
+<div class="section">
+<div class="section-header"><h2>🎤 Rap Battle</h2></div>
+<p style="font-size:12px;color:#94a3b8;margin-bottom:10px">Two AIs drop bars against each other</p>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<div class="form-group"><label>Fighter A</label><input type="text" id="rap-p1" placeholder="random"></div>
+<div class="form-group"><label>Fighter B</label><input type="text" id="rap-p2" placeholder="random"></div>
+</div>
+<div class="form-group"><label>Rounds</label><select id="rap-rounds"><option value="3">3</option><option value="5" selected>5</option></select></div>
+<button class="btn btn-sm btn-race" onclick="doRapBattle()">🎤 Start Battle</button>
+<div class="rumble-chat" id="rap-chat" style="display:none;margin-top:10px"></div>
+</div>
+</div>
+</div>
+
+<div id="tab-utils" class="tab-content" style="display:none">
+<div class="fun-grid">
+<div class="section">
+<div class="section-header"><h2>🪝 Webhooks</h2></div>
+<div class="form-group"><label>URL</label><input type="text" id="wh-url" placeholder="https://example.com/hook"></div>
+<div class="form-group"><label>Events (* or comma-sep)</label><input type="text" id="wh-events" value="*" placeholder="request,error,failover"></div>
+<button class="btn btn-sm btn-primary" onclick="addWebhook()">Add Webhook</button>
+<button class="btn btn-sm btn-secondary" onclick="testWebhooks()" style="margin-left:8px">Test All</button>
+<div id="webhooks-list" style="margin-top:10px"></div>
+</div>
+<div class="section">
+<div class="section-header"><h2>🔍 Search Logs</h2></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<div class="form-group"><label>Provider</label><input type="text" id="sl-provider" placeholder="groq"></div>
+<div class="form-group"><label>Model</label><input type="text" id="sl-model" placeholder="llama"></div>
+<div class="form-group"><label>Status</label><input type="text" id="sl-status" placeholder="200"></div>
+<div class="form-group"><label>Limit</label><input type="number" id="sl-limit" value="50"></div>
+</div>
+<button class="btn btn-sm btn-primary" onclick="searchLogs()">🔍 Search</button>
+<div id="searchlogs-results" style="margin-top:10px"></div>
+</div>
+<div class="section">
+<div class="section-header"><h2>📝 Prompt Templates</h2></div>
+<div class="form-group"><label>Name</label><input type="text" id="tpl-name" placeholder="my-template"></div>
+<div class="form-group"><label>System Prompt</label><textarea id="tpl-prompt" rows="3" placeholder="You are a helpful assistant..."></textarea></div>
+<button class="btn btn-sm btn-primary" onclick="addTemplate()">Save Template</button>
+<div id="templates-list" style="margin-top:10px"></div>
+</div>
+<div class="section">
+<div class="section-header"><h2>🗳️ AI Poll</h2></div>
+<p style="font-size:12px;color:#94a3b8;margin-bottom:10px">Send same prompt to multiple providers, compare answers</p>
+<div class="form-group"><label>Message</label><input type="text" id="poll-msg" placeholder="What is the meaning of life?"></div>
+<div class="form-group"><label>Providers (comma-sep)</label><input type="text" id="poll-providers" value="groq,nvidia,deepseek"></div>
+<button class="btn btn-sm btn-primary" onclick="doPoll()">🗳️ Send Poll</button>
+<div id="poll-results" style="margin-top:10px"></div>
+</div>
+<div class="section">
+<div class="section-header"><h2>⏱️ Rate Limit Tiers</h2></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<div class="form-group"><label>Tier Name</label><input type="text" id="rl-name" placeholder="free"></div>
+<div class="form-group"><label>Req/Min</label><input type="number" id="rl-rpm" value="10"></div>
+<div class="form-group"><label>Req/Day</label><input type="number" id="rl-rpd" value="100"></div>
+<div class="form-group"><label>Monthly Budget</label><input type="number" id="rl-budget" step="0.01" value="0"></div>
+</div>
+<button class="btn btn-sm btn-primary" onclick="addRateTier()">Add Tier</button>
+<div id="ratelimits-list" style="margin-top:10px"></div>
+</div>
+<div class="section">
+<div class="section-header"><h2>💰 Budget Alerts</h2></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<div class="form-group"><label>VK ID</label><input type="number" id="ba-vkid" placeholder="1"></div>
+<div class="form-group"><label>Threshold %</label><input type="number" id="ba-threshold" value="80"></div>
+</div>
+<button class="btn btn-sm btn-primary" onclick="addBudgetAlert()">Add Alert</button>
+<button class="btn btn-sm btn-secondary" onclick="checkBudgetAlerts()" style="margin-left:8px">Check Now</button>
+<div id="budgets-list" style="margin-top:10px"></div>
+</div>
+</div>
+</div>
+
+<div id="tab-pro" class="tab-content" style="display:none">
+<div class="fun-grid">
+<div class="section">
+<div class="section-header"><h2>📊 VK Usage</h2></div>
+<button class="btn btn-sm btn-secondary" onclick="loadVKUsage()">Refresh</button>
+<div id="vk-usage-table" style="margin-top:10px"></div>
+</div>
+<div class="section">
+<div class="section-header"><h2>🔄 Auto-Rotate Keys</h2></div>
+<div class="form-group"><label>Provider</label><select id="rotate-provider">
+<option value="openai">OpenAI</option><option value="anthropic">Anthropic</option>
+<option value="gemini">Gemini</option><option value="groq">Groq</option>
+<option value="nvidia">Nvidia</option><option value="deepseek">DeepSeek</option>
+</select></div>
+<button class="btn btn-sm btn-primary" onclick="doAutoRotate()">🔄 Pick Best Key</button>
+<div id="rotate-result" style="margin-top:10px"></div>
+<h3 style="margin-top:12px;font-size:13px;color:#94a3b8">Provider Health</h3>
+<button class="btn btn-sm btn-secondary" onclick="loadRotateStatus()">Refresh</button>
+<div id="rotate-health" style="margin-top:8px"></div>
+</div>
+<div class="section">
+<div class="section-header"><h2>🧪 Playground</h2></div>
+<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+<select id="pg-provider">
+<option value="openai">OpenAI</option><option value="anthropic">Anthropic</option>
+<option value="gemini">Gemini</option><option value="groq">Groq</option>
+<option value="nvidia">Nvidia</option><option value="deepseek">DeepSeek</option>
+</select>
+<input type="text" id="pg-model" placeholder="model (optional)" style="flex:1">
+<label style="font-size:12px;color:#94a3b8"><input type="checkbox" id="pg-stream"> Stream</label>
+</div>
+<div class="form-group"><textarea id="pg-message" rows="3" placeholder="Type your message..."></textarea></div>
+<button class="btn btn-sm btn-primary" onclick="sendPlayground()">Send</button>
+<div id="pg-response" style="margin-top:10px;padding:12px;background:#0f172a;border-radius:8px;font-size:13px;min-height:40px;white-space:pre-wrap"></div>
+<div id="pg-stats" style="margin-top:6px;font-size:11px;color:#64748b"></div>
+</div>
+<div class="section">
+<div class="section-header"><h2>📋 Weekly Recap</h2></div>
+<button class="btn btn-sm btn-secondary" onclick="loadRecap()">Load Recap</button>
+<button class="btn btn-sm btn-primary" onclick="generateRecap()" style="margin-left:8px">Generate Report</button>
+<div id="recap-data" style="margin-top:10px"></div>
+<div id="recap-generated" style="margin-top:10px;padding:12px;background:#0f172a;border-radius:8px;font-size:13px;white-space:pre-wrap;display:none"></div>
+</div>
+<div class="section">
+<div class="section-header"><h2>📈 Cost Analytics</h2></div>
+<select id="analytics-days" onchange="loadAnalytics()" style="margin-bottom:10px;padding:6px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;font-size:12px">
+<option value="7">Last 7 days</option><option value="14">Last 14 days</option>
+<option value="30" selected>Last 30 days</option><option value="90">Last 90 days</option>
+</select>
+<div id="analytics-summary" style="margin-bottom:12px"></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+<div><h3 style="font-size:13px;color:#94a3b8;margin-bottom:8px">By Provider</h3><div id="analytics-provider"></div></div>
+<div><h3 style="font-size:13px;color:#94a3b8;margin-bottom:8px">By Day</h3><div id="analytics-daily"></div></div>
+</div>
+<h3 style="font-size:13px;color:#94a3b8;margin:12px 0 8px">Top Models</h3>
+<div id="analytics-models"></div>
+</div>
+</div>
 </div>
 
 <div class="section">
@@ -1439,6 +1605,426 @@ async function startRumble() {
   btn.textContent = '🥊 FIGHT!';
 }
 
+// ── EASY FUN FEATURES ──────────────────────────────────────────────────────
+
+async function doRoulette() {
+  var msg = document.getElementById('roulette-msg').value.trim();
+  if (!msg) { toast('Type something first', 'error'); return; }
+  try {
+    var res = await adminFetch('/admin/roulette', { method: 'POST', body: JSON.stringify({message: msg}) });
+    var data = await res.json();
+    document.getElementById('roulette-result').innerHTML =
+      '<div class="race-result"><div class="race-header"><span class="race-provider">' + escHtml(data.provider) + '</span><span class="race-latency">' + data.latency_ms + 'ms</span></div><div class="race-reply">' + escHtml(data.reply) + '</div></div>';
+  } catch(e) { toast('Failed: ' + e.message, 'error'); }
+}
+
+async function doRoastLogs() {
+  try {
+    var res = await adminFetch('/admin/roast-logs', { method: 'POST', body: '{}' });
+    var data = await res.json();
+    document.getElementById('roastlogs-result').innerHTML =
+      '<div style="padding:12px;background:#1e1108;border:1px solid #f97316;border-radius:8px;color:#fb923c;font-size:13px"><strong>' + escHtml(data.provider) + ' says:</strong><br>' + escHtml(data.roast) + '</div>';
+  } catch(e) { toast('Failed', 'error'); }
+}
+
+async function doTherapist() {
+  var msg = document.getElementById('therapist-msg').value.trim();
+  if (!msg) { toast('Say something', 'error'); return; }
+  try {
+    var res = await adminFetch('/admin/therapist', { method: 'POST', body: JSON.stringify({message: msg}) });
+    var data = await res.json();
+    document.getElementById('therapist-result').innerHTML =
+      '<div style="padding:12px;background:#0a1a0a;border:1px solid #22c55e;border-radius:8px;color:#86efac;font-size:13px"><strong>🧠 ' + escHtml(data.provider) + ':</strong><br>' + escHtml(data.reply) + '</div>';
+  } catch(e) { toast('Failed', 'error'); }
+}
+
+async function doVibeCheck() {
+  var msg = document.getElementById('vibe-msg').value.trim();
+  if (!msg) { toast('Type something', 'error'); return; }
+  try {
+    var res = await adminFetch('/admin/vibe-check', { method: 'POST', body: JSON.stringify({message: msg}) });
+    var data = await res.json();
+    document.getElementById('vibe-result').innerHTML =
+      '<div style="padding:12px;background:#0a1a1e;border:1px solid #06b6d4;border-radius:8px;color:#67e8f9;font-size:13px"><strong>🌊 ' + escHtml(data.provider) + ':</strong><br><pre style="white-space:pre-wrap;margin:0">' + escHtml(data.reply) + '</pre></div>';
+  } catch(e) { toast('Failed', 'error'); }
+}
+
+async function doRapBattle() {
+  var p1 = document.getElementById('rap-p1').value.trim();
+  var p2 = document.getElementById('rap-p2').value.trim();
+  var rounds = parseInt(document.getElementById('rap-rounds').value) || 3;
+  var chatEl = document.getElementById('rap-chat');
+  chatEl.style.display = 'block';
+  chatEl.innerHTML = '<div class="rumble-round">🎤 Loading...</div>';
+  var body = { rounds: rounds };
+  if (p1) body.provider1 = p1;
+  if (p2) body.provider2 = p2;
+  try {
+    var res = await fetch('/admin/rap-battle', { method: 'POST', headers: { 'Authorization': 'Bearer ' + ADMIN_PASS, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    var reader = res.body.getReader();
+    var decoder = new TextDecoder();
+    var buffer = '';
+    var lastA = '';
+    while (true) {
+      var { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      var lines = buffer.split('\n');
+      buffer = lines.pop();
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i].trim();
+        if (!line.startsWith('data: ')) continue;
+        try {
+          var evt = JSON.parse(line.slice(6));
+          if (evt.type === 'round') {
+            var rd = document.createElement('div');
+            rd.className = 'rumble-round';
+            rd.textContent = '--- Round ' + evt.round + ' ---';
+            chatEl.appendChild(rd);
+          } else if (evt.type === 'message') {
+            if (!lastA) lastA = evt.provider;
+            var side = evt.provider === lastA ? 'a' : 'b';
+            var md = document.createElement('div');
+            md.className = 'rumble-msg ' + side;
+            md.innerHTML = '<div class="rumble-author">' + escHtml(evt.provider) + '</div>' + escHtml(evt.message).replace(/\n/g, '<br>');
+            chatEl.appendChild(md);
+            chatEl.scrollTop = chatEl.scrollHeight;
+          } else if (evt.type === 'done') {
+            var dd = document.createElement('div');
+            dd.className = 'rumble-round';
+            dd.style.color = '#f59e0b';
+            dd.textContent = '🎤 BATTLE COMPLETE';
+            chatEl.appendChild(dd);
+          }
+        } catch(e) {}
+      }
+    }
+  } catch(e) { chatEl.innerHTML += '<div style="color:#ef4444">Error: ' + escHtml(e.message) + '</div>'; }
+}
+
+// ── MEDIUM UTILITY FEATURES ────────────────────────────────────────────────
+
+async function addWebhook() {
+  var url = document.getElementById('wh-url').value.trim();
+  var events = document.getElementById('wh-events').value.trim() || '*';
+  if (!url) { toast('URL required', 'error'); return; }
+  await adminFetch('/admin/webhooks', { method: 'POST', body: JSON.stringify({url: url, events: events}) });
+  document.getElementById('wh-url').value = '';
+  loadWebhooks();
+}
+
+async function loadWebhooks() {
+  try {
+    var data = await (await adminFetch('/admin/webhooks')).json();
+    var el = document.getElementById('webhooks-list');
+    if (!data || data.length === 0) { el.innerHTML = '<div class="empty-state">No webhooks</div>'; return; }
+    var html = '<table><thead><tr><th>ID</th><th>URL</th><th>Events</th><th></th></tr></thead><tbody>';
+    data.forEach(function(w) {
+      html += '<tr><td>' + w.id + '</td><td style="font-size:12px">' + escHtml(w.url) + '</td><td>' + escHtml(w.events) + '</td><td><button class="btn btn-sm btn-danger" onclick="deleteWebhook(' + w.id + ')">Delete</button></td></tr>';
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+  } catch(e) {}
+}
+
+async function deleteWebhook(id) {
+  await adminFetch('/admin/webhooks/' + id, { method: 'DELETE' });
+  loadWebhooks();
+}
+
+async function testWebhooks() {
+  var res = await adminFetch('/admin/webhooks/test', { method: 'POST', body: '{}' });
+  var data = await res.json();
+  toast('Test sent to ' + (data.results || []).length + ' webhooks', 'success');
+}
+
+async function searchLogs() {
+  var params = new URLSearchParams();
+  var p = document.getElementById('sl-provider').value.trim();
+  var m = document.getElementById('sl-model').value.trim();
+  var s = document.getElementById('sl-status').value.trim();
+  var l = document.getElementById('sl-limit').value;
+  if (p) params.set('provider', p);
+  if (m) params.set('model', m);
+  if (s) params.set('status', s);
+  if (l) params.set('limit', l);
+  try {
+    var data = await (await adminFetch('/admin/logs/search?' + params.toString())).json();
+    var el = document.getElementById('searchlogs-results');
+    if (!data || data.length === 0) { el.innerHTML = '<div class="empty-state">No results</div>'; return; }
+    var html = '<table><thead><tr><th>Time</th><th>Provider</th><th>Model</th><th>Status</th><th>Cost</th><th>Latency</th></tr></thead><tbody>';
+    data.forEach(function(l) {
+      var sc = l.status_code < 400 ? '<span class="badge badge-green">' + l.status_code + '</span>' : '<span class="badge badge-red">' + l.status_code + '</span>';
+      html += '<tr><td style="font-size:11px">' + new Date(l.timestamp).toLocaleString() + '</td><td><span class="provider-tag">' + escHtml(l.provider) + '</span></td><td class="model-tag">' + escHtml(l.model) + '</td><td>' + sc + '</td><td>$' + l.cost.toFixed(6) + '</td><td>' + l.latency_ms + 'ms</td></tr>';
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+  } catch(e) {}
+}
+
+async function addTemplate() {
+  var name = document.getElementById('tpl-name').value.trim();
+  var prompt = document.getElementById('tpl-prompt').value.trim();
+  if (!name) { toast('Name required', 'error'); return; }
+  await adminFetch('/admin/templates', { method: 'POST', body: JSON.stringify({name: name, system_prompt: prompt}) });
+  document.getElementById('tpl-name').value = '';
+  document.getElementById('tpl-prompt').value = '';
+  loadTemplates();
+}
+
+async function loadTemplates() {
+  try {
+    var data = await (await adminFetch('/admin/templates')).json();
+    var el = document.getElementById('templates-list');
+    if (!data || data.length === 0) { el.innerHTML = '<div class="empty-state">No templates</div>'; return; }
+    var html = '<table><thead><tr><th>Name</th><th>Prompt</th><th></th></tr></thead><tbody>';
+    data.forEach(function(t) {
+      html += '<tr><td>' + escHtml(t.name) + '</td><td style="font-size:12px;max-width:300px;overflow:hidden;text-overflow:ellipsis">' + escHtml(t.system_prompt) + '</td><td><button class="btn btn-sm btn-danger" onclick="deleteTemplate(\'' + escHtml(t.name) + '\')">Delete</button></td></tr>';
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+  } catch(e) {}
+}
+
+async function deleteTemplate(name) {
+  await adminFetch('/admin/templates/' + encodeURIComponent(name), { method: 'DELETE' });
+  loadTemplates();
+}
+
+async function doPoll() {
+  var msg = document.getElementById('poll-msg').value.trim();
+  var providers = document.getElementById('poll-providers').value.split(',').map(function(s) { return s.trim(); });
+  if (!msg) { toast('Message required', 'error'); return; }
+  document.getElementById('poll-results').innerHTML = '<div class="race-loading">Polling providers...</div>';
+  try {
+    var res = await adminFetch('/admin/poll', { method: 'POST', body: JSON.stringify({message: msg, providers: providers}) });
+    var data = await res.json();
+    var el = document.getElementById('poll-results');
+    if (!data.results || data.results.length === 0) { el.innerHTML = '<div class="empty-state">No results</div>'; return; }
+    var html = '';
+    data.results.forEach(function(r) {
+      html += '<div class="race-result"><div class="race-header"><span class="race-provider">' + escHtml(r.provider) + '</span><span class="race-latency">' + r.latency_ms + 'ms</span></div>';
+      if (r.error) { html += '<div style="color:#f87171">' + escHtml(r.error) + '</div>'; }
+      else { html += '<div class="race-reply">' + escHtml(r.reply) + '</div>'; }
+      html += '</div>';
+    });
+    el.innerHTML = html;
+  } catch(e) { document.getElementById('poll-results').innerHTML = '<div style="color:#ef4444">Error: ' + escHtml(e.message) + '</div>'; }
+}
+
+async function addRateTier() {
+  var name = document.getElementById('rl-name').value.trim();
+  var rpm = parseInt(document.getElementById('rl-rpm').value) || 0;
+  var rpd = parseInt(document.getElementById('rl-rpd').value) || 0;
+  var budget = parseFloat(document.getElementById('rl-budget').value) || 0;
+  if (!name) { toast('Name required', 'error'); return; }
+  await adminFetch('/admin/rate-tiers', { method: 'POST', body: JSON.stringify({name: name, requests_per_minute: rpm, requests_per_day: rpd, monthly_budget: budget}) });
+  document.getElementById('rl-name').value = '';
+  loadRateTiers();
+}
+
+async function loadRateTiers() {
+  try {
+    var data = await (await adminFetch('/admin/rate-tiers')).json();
+    var el = document.getElementById('ratelimits-list');
+    if (!data || data.length === 0) { el.innerHTML = '<div class="empty-state">No tiers</div>'; return; }
+    var html = '<table><thead><tr><th>Name</th><th>Req/Min</th><th>Req/Day</th><th>Budget</th><th></th></tr></thead><tbody>';
+    data.forEach(function(t) {
+      html += '<tr><td>' + escHtml(t.name) + '</td><td>' + t.requests_per_minute + '</td><td>' + t.requests_per_day + '</td><td>$' + t.monthly_budget + '</td><td><button class="btn btn-sm btn-danger" onclick="deleteRateTier(' + t.id + ')">Delete</button></td></tr>';
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+  } catch(e) {}
+}
+
+async function deleteRateTier(id) {
+  await adminFetch('/admin/rate-tiers/' + id, { method: 'DELETE' });
+  loadRateTiers();
+}
+
+async function addBudgetAlert() {
+  var vkid = parseInt(document.getElementById('ba-vkid').value);
+  var threshold = parseInt(document.getElementById('ba-threshold').value) || 80;
+  if (!vkid) { toast('VK ID required', 'error'); return; }
+  await adminFetch('/admin/budget-alerts', { method: 'POST', body: JSON.stringify({virtual_key_id: vkid, threshold_percent: threshold}) });
+  loadBudgetAlerts();
+}
+
+async function loadBudgetAlerts() {
+  try {
+    var data = await (await adminFetch('/admin/budget-alerts')).json();
+    var el = document.getElementById('budgets-list');
+    if (!data || data.length === 0) { el.innerHTML = '<div class="empty-state">No alerts</div>'; return; }
+    var html = '<table><thead><tr><th>ID</th><th>VK</th><th>Threshold</th><th>Notified</th><th></th></tr></thead><tbody>';
+    data.forEach(function(a) {
+      html += '<tr><td>' + a.id + '</td><td>' + escHtml(a.virtual_key_name || ('VK#' + a.virtual_key_id)) + '</td><td>' + a.threshold_percent + '%</td><td>' + (a.notified ? 'Yes' : 'No') + '</td><td><button class="btn btn-sm btn-danger" onclick="deleteBudgetAlert(' + a.id + ')">Delete</button></td></tr>';
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+  } catch(e) {}
+}
+
+async function deleteBudgetAlert(id) {
+  await adminFetch('/admin/budget-alerts/' + id, { method: 'DELETE' });
+  loadBudgetAlerts();
+}
+
+async function checkBudgetAlerts() {
+  try {
+    var data = await (await adminFetch('/admin/budget-alerts/check')).json();
+    if (!data || data.length === 0) { toast('No triggered alerts', 'success'); return; }
+    toast(data.length + ' alerts triggered!', 'error');
+  } catch(e) { toast('Check failed', 'error'); }
+}
+
+// ── HARD PRO FEATURES ──────────────────────────────────────────────────────
+
+async function loadVKUsage() {
+  try {
+    var data = await (await adminFetch('/admin/vk-usage')).json();
+    var el = document.getElementById('vk-usage-table');
+    if (!data || data.length === 0) { el.innerHTML = '<div class="empty-state">No VK usage data</div>'; return; }
+    var html = '<table><thead><tr><th>Key</th><th>Requests</th><th>Cost</th><th>Avg Latency</th><th>Top Provider</th><th>Errors</th></tr></thead><tbody>';
+    data.forEach(function(vk) {
+      html += '<tr><td style="font-size:12px" title="' + escHtml(vk.virtual_key) + '">' + escHtml((vk.vk_name || vk.virtual_key || '').substring(0, 16)) + '</td><td>' + vk.total_requests + '</td><td>$' + (vk.total_cost || 0).toFixed(4) + '</td><td>' + Math.round(vk.avg_latency || 0) + 'ms</td><td><span class="provider-tag">' + escHtml(vk.top_provider || '-') + '</span></td><td style="color:' + (vk.error_count > 0 ? '#f87171' : '#22c55e') + '">' + vk.error_count + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+  } catch(e) {}
+}
+
+async function doAutoRotate() {
+  var provider = document.getElementById('rotate-provider').value;
+  try {
+    var res = await adminFetch('/admin/auto-rotate', { method: 'POST', body: JSON.stringify({provider: provider}) });
+    var data = await res.json();
+    if (data.error) { document.getElementById('rotate-result').innerHTML = '<span style="color:#f87171">' + escHtml(data.error) + '</span>'; return; }
+    document.getElementById('rotate-result').innerHTML = '<div style="padding:10px;background:#0a1a0a;border:1px solid #22c55e;border-radius:8px;color:#86efac;font-size:13px"><strong>Best key:</strong> ' + escHtml(data.key_name) + ' (ID: ' + data.key_id + ', errors: ' + data.error_count + ', model: ' + escHtml(data.model) + ')</div>';
+  } catch(e) { toast('Failed', 'error'); }
+}
+
+async function loadRotateStatus() {
+  try {
+    var data = await (await adminFetch('/admin/auto-rotate/status')).json();
+    var el = document.getElementById('rotate-health');
+    if (!data || data.length === 0) { el.innerHTML = '<div class="empty-state">No providers</div>'; return; }
+    var html = '';
+    data.forEach(function(p) {
+      var pct = p.total_keys > 0 ? Math.round(p.healthy_keys / p.total_keys * 100) : 0;
+      var color = pct > 75 ? '#22c55e' : pct > 50 ? '#f59e0b' : '#ef4444';
+      html += '<div style="padding:8px;background:#0f172a;border-radius:6px;margin-bottom:6px;font-size:13px"><span class="provider-tag">' + escHtml(p.provider) + '</span> ' + p.healthy_keys + '/' + p.total_keys + ' healthy (' + pct + '%) — <span style="color:' + color + '">' + p.total_errors + ' errors</span></div>';
+    });
+    el.innerHTML = html;
+  } catch(e) {}
+}
+
+async function sendPlayground() {
+  var provider = document.getElementById('pg-provider').value;
+  var model = document.getElementById('pg-model').value.trim();
+  var message = document.getElementById('pg-message').value.trim();
+  var stream = document.getElementById('pg-stream').checked;
+  var respEl = document.getElementById('pg-response');
+  var statsEl = document.getElementById('pg-stats');
+  if (!message) { toast('Type a message', 'error'); return; }
+  respEl.textContent = 'Loading...';
+  statsEl.textContent = '';
+  var body = { provider: provider, messages: [{role: 'user', content: message}], stream: stream };
+  if (model) body.model = model;
+  try {
+    if (stream) {
+      respEl.textContent = '';
+      var res = await fetch('/admin/playground', { method: 'POST', headers: { 'Authorization': 'Bearer ' + ADMIN_PASS, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      var reader = res.body.getReader();
+      var decoder = new TextDecoder();
+      while (true) {
+        var { done, value } = await reader.read();
+        if (done) break;
+        var text = decoder.decode(value, { stream: true });
+        var lines = text.split('\n');
+        for (var i = 0; i < lines.length; i++) {
+          if (lines[i].startsWith('data: ')) {
+            try {
+              var evt = JSON.parse(lines[i].slice(6));
+              if (evt.type === 'token') respEl.textContent += evt.content;
+              if (evt.type === 'done') statsEl.textContent = 'Provider: ' + evt.provider + ' | Model: ' + evt.model + ' | ' + evt.latency_ms + 'ms';
+            } catch(e) {}
+          }
+        }
+      }
+    } else {
+      var res = await adminFetch('/admin/playground', { method: 'POST', body: JSON.stringify(body) });
+      var data = await res.json();
+      if (data.error) { respEl.textContent = 'Error: ' + data.error; return; }
+      respEl.textContent = data.reply;
+      statsEl.textContent = 'Provider: ' + data.provider + ' | Model: ' + data.model + ' | ' + data.latency_ms + 'ms | Tokens: ' + data.tokens_in + ' in / ' + data.tokens_out + ' out';
+    }
+  } catch(e) { respEl.textContent = 'Error: ' + e.message; }
+}
+
+async function loadRecap() {
+  try {
+    var data = await (await adminFetch('/admin/recap')).json();
+    var el = document.getElementById('recap-data');
+    el.innerHTML = '<div style="padding:12px;background:#0f172a;border-radius:8px;font-size:13px">' +
+      '<p><strong>Period:</strong> ' + escHtml(data.period) + '</p>' +
+      '<p><strong>Requests:</strong> ' + data.total_requests + ' | <strong>Cost:</strong> $' + (data.total_cost || 0).toFixed(4) + '</p>' +
+      '<p><strong>Cache Hits:</strong> ' + data.cache_hits + ' | <strong>Error Rate:</strong> ' + (data.error_rate || 0).toFixed(1) + '%</p>' +
+      '<p><strong>Top Provider:</strong> ' + escHtml(data.top_provider || '-') + ' | <strong>Top Model:</strong> ' + escHtml(data.top_model || '-') + '</p>' +
+      '<p><strong>Avg Latency:</strong> ' + Math.round(data.avg_latency || 0) + 'ms</p></div>';
+  } catch(e) {}
+}
+
+async function generateRecap() {
+  var el = document.getElementById('recap-generated');
+  el.style.display = 'block';
+  el.textContent = 'Generating...';
+  try {
+    var res = await adminFetch('/admin/recap/generate', { method: 'POST', body: '{}' });
+    var data = await res.json();
+    if (data.error) { el.textContent = 'Error: ' + data.error; return; }
+    el.innerHTML = '<strong>Generated via ' + escHtml(data.provider) + ':</strong><br><br>' + escHtml(data.recap_text || '').replace(/\n/g, '<br>');
+  } catch(e) { el.textContent = 'Failed'; }
+}
+
+async function loadAnalytics() {
+  var days = document.getElementById('analytics-days').value;
+  try {
+    var data = await (await adminFetch('/admin/analytics?days=' + days)).json();
+    document.getElementById('analytics-summary').innerHTML =
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">' +
+      '<div style="padding:10px;background:#0f172a;border-radius:8px;text-align:center"><div style="font-size:10px;color:#94a3b8;text-transform:uppercase">Total Cost</div><div style="font-size:18px;font-weight:700;color:#3b82f6">$' + (data.total_cost || 0).toFixed(4) + '</div></div>' +
+      '<div style="padding:10px;background:#0f172a;border-radius:8px;text-align:center"><div style="font-size:10px;color:#94a3b8;text-transform:uppercase">Total Tokens</div><div style="font-size:18px;font-weight:700;color:#22c55e">' + (data.total_tokens || 0).toLocaleString() + '</div></div>' +
+      '<div style="padding:10px;background:#0f172a;border-radius:8px;text-align:center"><div style="font-size:10px;color:#94a3b8;text-transform:uppercase">Avg Latency</div><div style="font-size:18px;font-weight:700;color:#f59e0b">' + Math.round(data.avg_latency || 0) + 'ms</div></div></div>';
+
+    var maxCost = 0;
+    (data.by_provider || []).forEach(function(p) { if (p.cost > maxCost) maxCost = p.cost; });
+    var provHtml = '';
+    (data.by_provider || []).forEach(function(p) {
+      var pct = maxCost > 0 ? (p.cost / maxCost * 100) : 0;
+      provHtml += '<div style="margin:4px 0"><div style="display:flex;justify-content:space-between;font-size:12px"><span>' + escHtml(p.provider) + '</span><span>$' + p.cost.toFixed(4) + ' (' + p.requests + ')</span></div>';
+      provHtml += '<div style="background:#1e293b;border-radius:3px;height:14px"><div style="background:#3b82f6;height:100%;width:' + pct + '%;border-radius:3px"></div></div></div>';
+    });
+    document.getElementById('analytics-provider').innerHTML = provHtml || '<div class="empty-state">No data</div>';
+
+    var maxDay = 0;
+    (data.by_day || []).forEach(function(d) { if (d.cost > maxDay) maxDay = d.cost; });
+    var dayHtml = '';
+    (data.by_day || []).forEach(function(d) {
+      var pct = maxDay > 0 ? (d.cost / maxDay * 100) : 0;
+      dayHtml += '<div style="margin:4px 0"><div style="display:flex;justify-content:space-between;font-size:12px"><span>' + d.date + '</span><span>$' + d.cost.toFixed(4) + '</span></div>';
+      dayHtml += '<div style="background:#1e293b;border-radius:3px;height:14px"><div style="background:#22c55e;height:100%;width:' + pct + '%;border-radius:3px"></div></div></div>';
+    });
+    document.getElementById('analytics-daily').innerHTML = dayHtml || '<div class="empty-state">No data</div>';
+
+    var modelHtml = '<table><thead><tr><th>Model</th><th>Provider</th><th>Cost</th><th>Requests</th></tr></thead><tbody>';
+    (data.top_models || []).forEach(function(m) {
+      modelHtml += '<tr><td class="model-tag">' + escHtml(m.model) + '</td><td><span class="provider-tag">' + escHtml(m.provider) + '</span></td><td>$' + m.cost.toFixed(4) + '</td><td>' + m.requests + '</td></tr>';
+    });
+    modelHtml += '</tbody></table>';
+    document.getElementById('analytics-models').innerHTML = modelHtml || '<div class="empty-state">No data</div>';
+  } catch(e) {}
+}
+
 document.querySelectorAll('.tab').forEach(function(tab) {
   tab.addEventListener('click', function() {
     document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
@@ -1453,6 +2039,8 @@ document.querySelectorAll('.tab').forEach(function(tab) {
     if (tabName === 'failover') { loadFailoverConfig(); loadFailoverLogs(); }
     if (tabName === 'fun-zone') { loadLeaderboard(); loadSavings(); }
     if (tabName === 'rumble') loadRumbleProviders();
+    if (tabName === 'utils') { loadWebhooks(); loadTemplates(); loadRateTiers(); loadBudgetAlerts(); }
+    if (tabName === 'pro') { loadVKUsage(); loadRotateStatus(); loadAnalytics(); }
     if (tabName === 'logs') loadLogs();
   });
 });

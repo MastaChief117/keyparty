@@ -240,6 +240,8 @@ func (s *Store) migrate() error {
 	s.db.Exec("ALTER TABLE api_keys ADD COLUMN model TEXT DEFAULT ''")
 	s.db.Exec("ALTER TABLE api_keys ADD COLUMN total_cost REAL DEFAULT 0")
 
+	s.migrateNewTables()
+
 	return nil
 }
 
@@ -983,4 +985,643 @@ func (s *Store) GetFailoverLogs(limit int) []FailoverLog {
 		logs = append(logs, l)
 	}
 	return logs
+}
+
+// ── NEW TABLES: WEBHOOKS, TEMPLATES, BUDGET ALERTS, RATE LIMIT TIERS ──────
+
+type Webhook struct {
+	ID        int64     `json:"id"`
+	URL       string    `json:"url"`
+	Events    string    `json:"events"`
+	Secret    string    `json:"secret,omitempty"`
+	Enabled   bool      `json:"enabled"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+type WebhookDelivery struct {
+	ID        int64     `json:"id"`
+	WebhookID int64     `json:"webhook_id"`
+	Event     string    `json:"event"`
+	Status    int       `json:"status"`
+	Response  string    `json:"response"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+type PromptTemplate struct {
+	ID           int64     `json:"id"`
+	Name         string    `json:"name"`
+	SystemPrompt string    `json:"system_prompt"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+}
+
+type BudgetAlert struct {
+	ID               int64     `json:"id"`
+	VirtualKeyID     int64     `json:"virtual_key_id"`
+	VirtualKeyName   string    `json:"virtual_key_name"`
+	ThresholdPercent int       `json:"threshold_percent"`
+	Notified         bool      `json:"notified"`
+	CreatedAt        time.Time `json:"created_at"`
+}
+
+type RateLimitTier struct {
+	ID              int64     `json:"id"`
+	Name            string    `json:"name"`
+	RequestsPerMin  int       `json:"requests_per_minute"`
+	RequestsPerDay  int       `json:"requests_per_day"`
+	MonthlyBudget   float64   `json:"monthly_budget"`
+	CreatedAt       time.Time `json:"created_at"`
+}
+
+func (s *Store) migrateNewTables() error {
+	_, err := s.db.Exec(`
+		CREATE TABLE IF NOT EXISTS webhooks (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			url TEXT NOT NULL,
+			events TEXT DEFAULT '*',
+			secret TEXT DEFAULT '',
+			enabled INTEGER DEFAULT 1,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		);
+		CREATE TABLE IF NOT EXISTS webhook_log (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			webhook_id INTEGER,
+			event TEXT DEFAULT '',
+			status INTEGER DEFAULT 0,
+			response TEXT DEFAULT '',
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		);
+		CREATE TABLE IF NOT EXISTS prompt_templates (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL UNIQUE,
+			system_prompt TEXT DEFAULT '',
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		);
+		CREATE TABLE IF NOT EXISTS budget_alerts (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			virtual_key_id INTEGER,
+			threshold_percent INTEGER DEFAULT 80,
+			notified INTEGER DEFAULT 0,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		);
+		CREATE TABLE IF NOT EXISTS rate_limit_tiers (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL UNIQUE,
+			requests_per_minute INTEGER DEFAULT 0,
+			requests_per_day INTEGER DEFAULT 0,
+			monthly_budget REAL DEFAULT 0,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		);
+	`)
+	return err
+}
+
+// ── WEBHOOKS ───────────────────────────────────────────────────────────────
+
+func (s *Store) AddWebhook(url, events, secret string) (int64, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	result, err := s.db.Exec("INSERT INTO webhooks (url, events, secret, enabled) VALUES (?, ?, ?, 1)", url, events, secret)
+	if err != nil {
+		return 0, err
+	}
+	return result.LastInsertId()
+}
+
+func (s *Store) GetWebhooks() ([]Webhook, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	rows, err := s.db.Query("SELECT id, url, events, secret, enabled, created_at FROM webhooks ORDER BY id ASC")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var hooks []Webhook
+	for rows.Next() {
+		var h Webhook
+		var createdAt sql.NullTime
+		var enabled int
+		rows.Scan(&h.ID, &h.URL, &h.Events, &h.Secret, &enabled, &createdAt)
+		h.Enabled = enabled == 1
+		if createdAt.Valid {
+			h.CreatedAt = createdAt.Time
+		}
+		hooks = append(hooks, h)
+	}
+	return hooks, nil
+}
+
+func (s *Store) DeleteWebhook(id int64) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	_, err := s.db.Exec("DELETE FROM webhooks WHERE id = ?", id)
+	return err
+}
+
+func (s *Store) LogWebhookDelivery(webhookID int64, event string, status int, response string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if len(response) > 500 {
+		response = response[:500]
+	}
+	s.db.Exec("INSERT INTO webhook_log (webhook_id, event, status, response) VALUES (?, ?, ?, ?)", webhookID, event, status, response)
+}
+
+func (s *Store) GetWebhookDeliveries(limit int) ([]WebhookDelivery, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if limit <= 0 {
+		limit = 50
+	}
+	rows, err := s.db.Query("SELECT id, webhook_id, event, status, response, created_at FROM webhook_log ORDER BY id DESC LIMIT ?", limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var deliveries []WebhookDelivery
+	for rows.Next() {
+		var d WebhookDelivery
+		var createdAt sql.NullTime
+		rows.Scan(&d.ID, &d.WebhookID, &d.Event, &d.Status, &d.Response, &createdAt)
+		if createdAt.Valid {
+			d.CreatedAt = createdAt.Time
+		}
+		deliveries = append(deliveries, d)
+	}
+	return deliveries, nil
+}
+
+func (s *Store) GetActiveWebhooks() []Webhook {
+	hooks, _ := s.GetWebhooks()
+	var active []Webhook
+	for _, h := range hooks {
+		if h.Enabled {
+			active = append(active, h)
+		}
+	}
+	return active
+}
+
+func (s *Store) ShouldFireWebhook(h Webhook, event string) bool {
+	if h.Events == "*" || h.Events == "" {
+		return true
+	}
+	events := strings.Split(h.Events, ",")
+	for _, e := range events {
+		if strings.TrimSpace(e) == event {
+			return true
+		}
+	}
+	return false
+}
+
+// ── PROMPT TEMPLATES ───────────────────────────────────────────────────────
+
+func (s *Store) AddTemplate(name, systemPrompt string) (int64, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	result, err := s.db.Exec(
+		"INSERT OR REPLACE INTO prompt_templates (name, system_prompt, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)",
+		name, systemPrompt,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.LastInsertId()
+}
+
+func (s *Store) GetTemplates() ([]PromptTemplate, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	rows, err := s.db.Query("SELECT id, name, system_prompt, created_at, updated_at FROM prompt_templates ORDER BY id ASC")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var templates []PromptTemplate
+	for rows.Next() {
+		var t PromptTemplate
+		var createdAt, updatedAt sql.NullTime
+		rows.Scan(&t.ID, &t.Name, &t.SystemPrompt, &createdAt, &updatedAt)
+		if createdAt.Valid {
+			t.CreatedAt = createdAt.Time
+		}
+		if updatedAt.Valid {
+			t.UpdatedAt = updatedAt.Time
+		}
+		templates = append(templates, t)
+	}
+	return templates, nil
+}
+
+func (s *Store) GetTemplateByName(name string) (*PromptTemplate, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	var t PromptTemplate
+	var createdAt, updatedAt sql.NullTime
+	err := s.db.QueryRow("SELECT id, name, system_prompt, created_at, updated_at FROM prompt_templates WHERE name = ?", name).
+		Scan(&t.ID, &t.Name, &t.SystemPrompt, &createdAt, &updatedAt)
+	if err != nil {
+		return nil, err
+	}
+	if createdAt.Valid {
+		t.CreatedAt = createdAt.Time
+	}
+	if updatedAt.Valid {
+		t.UpdatedAt = updatedAt.Time
+	}
+	return &t, nil
+}
+
+func (s *Store) DeleteTemplate(name string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	_, err := s.db.Exec("DELETE FROM prompt_templates WHERE name = ?", name)
+	return err
+}
+
+// ── BUDGET ALERTS ──────────────────────────────────────────────────────────
+
+func (s *Store) AddBudgetAlert(vkID int64, threshold int) (int64, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	result, err := s.db.Exec("INSERT INTO budget_alerts (virtual_key_id, threshold_percent, notified) VALUES (?, ?, 0)", vkID, threshold)
+	if err != nil {
+		return 0, err
+	}
+	return result.LastInsertId()
+}
+
+func (s *Store) GetBudgetAlerts() ([]BudgetAlert, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	rows, err := s.db.Query(`
+		SELECT ba.id, ba.virtual_key_id, vk.name, ba.threshold_percent, ba.notified, ba.created_at
+		FROM budget_alerts ba LEFT JOIN virtual_keys vk ON ba.virtual_key_id = vk.id
+		ORDER BY ba.id ASC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var alerts []BudgetAlert
+	for rows.Next() {
+		var a BudgetAlert
+		var createdAt sql.NullTime
+		var notified int
+		rows.Scan(&a.ID, &a.VirtualKeyID, &a.VirtualKeyName, &a.ThresholdPercent, &notified, &createdAt)
+		a.Notified = notified == 1
+		if createdAt.Valid {
+			a.CreatedAt = createdAt.Time
+		}
+		alerts = append(alerts, a)
+	}
+	return alerts, nil
+}
+
+func (s *Store) DeleteBudgetAlert(id int64) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	_, err := s.db.Exec("DELETE FROM budget_alerts WHERE id = ?", id)
+	return err
+}
+
+func (s *Store) CheckBudgetAlerts() []BudgetAlert {
+	alerts, _ := s.GetBudgetAlerts()
+	var triggered []BudgetAlert
+	for _, a := range alerts {
+		if a.Notified {
+			continue
+		}
+		vk, err := s.GetVirtualKeyByID(a.VirtualKeyID)
+		if err != nil || vk == nil {
+			continue
+		}
+		if vk.MonthlyBudget <= 0 {
+			continue
+		}
+		percent := int((vk.UsedThisMonth / vk.MonthlyBudget) * 100)
+		if percent >= a.ThresholdPercent {
+			triggered = append(triggered, a)
+		}
+	}
+	return triggered
+}
+
+func (s *Store) MarkAlertNotified(id int64) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.db.Exec("UPDATE budget_alerts SET notified = 1 WHERE id = ?", id)
+}
+
+func (s *Store) ResetAlertNotifications() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.db.Exec("UPDATE budget_alerts SET notified = 0")
+}
+
+// ── RATE LIMIT TIERS ───────────────────────────────────────────────────────
+
+func (s *Store) AddRateLimitTier(name string, rpm, rpd int, budget float64) (int64, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	result, err := s.db.Exec(
+		"INSERT OR REPLACE INTO rate_limit_tiers (name, requests_per_minute, requests_per_day, monthly_budget) VALUES (?, ?, ?, ?)",
+		name, rpm, rpd, budget,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.LastInsertId()
+}
+
+func (s *Store) GetRateLimitTiers() ([]RateLimitTier, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	rows, err := s.db.Query("SELECT id, name, requests_per_minute, requests_per_day, monthly_budget, created_at FROM rate_limit_tiers ORDER BY id ASC")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var tiers []RateLimitTier
+	for rows.Next() {
+		var t RateLimitTier
+		var createdAt sql.NullTime
+		rows.Scan(&t.ID, &t.Name, &t.RequestsPerMin, &t.RequestsPerDay, &t.MonthlyBudget, &createdAt)
+		if createdAt.Valid {
+			t.CreatedAt = createdAt.Time
+		}
+		tiers = append(tiers, t)
+	}
+	return tiers, nil
+}
+
+func (s *Store) DeleteRateLimitTier(id int64) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	_, err := s.db.Exec("DELETE FROM rate_limit_tiers WHERE id = ?", id)
+	return err
+}
+
+func (s *Store) GetRateLimitTierByName(name string) (*RateLimitTier, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	var t RateLimitTier
+	var createdAt sql.NullTime
+	err := s.db.QueryRow("SELECT id, name, requests_per_minute, requests_per_day, monthly_budget, created_at FROM rate_limit_tiers WHERE name = ?", name).
+		Scan(&t.ID, &t.Name, &t.RequestsPerMin, &t.RequestsPerDay, &t.MonthlyBudget, &createdAt)
+	if err != nil {
+		return nil, err
+	}
+	if createdAt.Valid {
+		t.CreatedAt = createdAt.Time
+	}
+	return &t, nil
+}
+
+// ── REQUEST SEARCH ─────────────────────────────────────────────────────────
+
+func (s *Store) SearchRequestLogs(provider, model, virtualKey, status string, limit int) ([]RequestLog, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if limit <= 0 {
+		limit = 100
+	}
+	query := "SELECT id, virtual_key, provider, model, status_code, tokens_in, tokens_out, cost, latency_ms, cache_hit, timestamp FROM request_log WHERE 1=1"
+	var args []interface{}
+	if provider != "" {
+		query += " AND provider = ?"
+		args = append(args, provider)
+	}
+	if model != "" {
+		query += " AND model LIKE ?"
+		args = append(args, "%"+model+"%")
+	}
+	if virtualKey != "" {
+		query += " AND virtual_key = ?"
+		args = append(args, virtualKey)
+	}
+	if status != "" {
+		query += " AND status_code = ?"
+		args = append(args, status)
+	}
+	query += " ORDER BY timestamp DESC LIMIT ?"
+	args = append(args, limit)
+	rows, err := s.db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var logs []RequestLog
+	for rows.Next() {
+		var l RequestLog
+		var timestamp sql.NullTime
+		var cacheHitInt int
+		rows.Scan(&l.ID, &l.VirtualKey, &l.Provider, &l.Model, &l.StatusCode, &l.TokensIn, &l.TokensOut, &l.Cost, &l.Latency, &cacheHitInt, &timestamp)
+		l.CacheHit = cacheHitInt == 1
+		if timestamp.Valid {
+			l.Timestamp = timestamp.Time
+		}
+		logs = append(logs, l)
+	}
+	return logs, nil
+}
+
+// ── COST ANALYTICS ─────────────────────────────────────────────────────────
+
+type CostAnalytics struct {
+	TotalCost    float64           `json:"total_cost"`
+	TotalTokens  int64             `json:"total_tokens"`
+	AvgLatency   float64           `json:"avg_latency"`
+	ByProvider   []ProviderCost    `json:"by_provider"`
+	ByDay        []DayCost         `json:"by_day"`
+	TopModels    []ModelCost       `json:"top_models"`
+}
+
+type ProviderCost struct {
+	Provider string  `json:"provider"`
+	Cost     float64 `json:"cost"`
+	Tokens   int64   `json:"tokens"`
+	Requests int64   `json:"requests"`
+}
+
+type DayCost struct {
+	Date     string  `json:"date"`
+	Cost     float64 `json:"cost"`
+	Requests int64   `json:"requests"`
+}
+
+type ModelCost struct {
+	Model    string  `json:"model"`
+	Provider string  `json:"provider"`
+	Cost     float64 `json:"cost"`
+	Requests int64   `json:"requests"`
+}
+
+func (s *Store) GetCostAnalytics(days int) (*CostAnalytics, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if days <= 0 {
+		days = 30
+	}
+	a := &CostAnalytics{}
+
+	s.db.QueryRow("SELECT COALESCE(SUM(cost),0), COALESCE(SUM(tokens_in+tokens_out),0), COALESCE(AVG(latency_ms),0) FROM request_log WHERE timestamp >= datetime('now', ?)",
+		fmt.Sprintf("-%d days", days)).Scan(&a.TotalCost, &a.TotalTokens, &a.AvgLatency)
+
+	rows, err := s.db.Query("SELECT provider, SUM(cost), SUM(tokens_in+tokens_out), COUNT(*) FROM request_log WHERE timestamp >= datetime('now', ?) GROUP BY provider ORDER BY SUM(cost) DESC",
+		fmt.Sprintf("-%d days", days))
+	if err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var pc ProviderCost
+			rows.Scan(&pc.Provider, &pc.Cost, &pc.Tokens, &pc.Requests)
+			a.ByProvider = append(a.ByProvider, pc)
+		}
+	}
+
+	dayRows, err := s.db.Query("SELECT DATE(timestamp) as d, SUM(cost), COUNT(*) FROM request_log WHERE timestamp >= datetime('now', ?) GROUP BY d ORDER BY d ASC",
+		fmt.Sprintf("-%d days", days))
+	if err == nil {
+		defer dayRows.Close()
+		for dayRows.Next() {
+			var dc DayCost
+			dayRows.Scan(&dc.Date, &dc.Cost, &dc.Requests)
+			a.ByDay = append(a.ByDay, dc)
+		}
+	}
+
+	modelRows, err := s.db.Query("SELECT model, provider, SUM(cost), COUNT(*) FROM request_log WHERE timestamp >= datetime('now', ?) GROUP BY model, provider ORDER BY SUM(cost) DESC LIMIT 10",
+		fmt.Sprintf("-%d days", days))
+	if err == nil {
+		defer modelRows.Close()
+		for modelRows.Next() {
+			var mc ModelCost
+			modelRows.Scan(&mc.Model, &mc.Provider, &mc.Cost, &mc.Requests)
+			a.TopModels = append(a.TopModels, mc)
+		}
+	}
+
+	return a, nil
+}
+
+// ── AUTO-ROTATE KEYS ───────────────────────────────────────────────────────
+
+func (s *Store) GetHealthyKeysByProvider(provider string) ([]APIKey, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	rows, err := s.db.Query(
+		`SELECT id, name, provider, key, model, custom_url, priority, enabled, total_requests, error_requests, total_cost, last_used, created_at
+		FROM api_keys WHERE provider = ? AND enabled = 1 AND error_requests < 10
+		ORDER BY error_requests ASC, priority DESC, id ASC`, provider,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var keys []APIKey
+	for rows.Next() {
+		var k APIKey
+		var lastUsed, createdAt sql.NullTime
+		rows.Scan(&k.ID, &k.Name, &k.Provider, &k.Key, &k.Model, &k.CustomURL, &k.Priority, &k.Enabled, &k.TotalReqs, &k.ErrorReqs, &k.TotalCost, &lastUsed, &createdAt)
+		k.Key = s.keyring.Decrypt(k.Key)
+		if lastUsed.Valid {
+			k.LastUsed = lastUsed.Time
+		}
+		if createdAt.Valid {
+			k.CreatedAt = createdAt.Time
+		}
+		keys = append(keys, k)
+	}
+	return keys, nil
+}
+
+// ── WEEKLY RECAP ───────────────────────────────────────────────────────────
+
+type WeeklyRecap struct {
+	Period        string           `json:"period"`
+	TotalRequests int64            `json:"total_requests"`
+	TotalCost     float64          `json:"total_cost"`
+	CacheHits     int64            `json:"cache_hits"`
+	TopProvider   string           `json:"top_provider"`
+	TopModel      string           `json:"top_model"`
+	AvgLatency    float64          `json:"avg_latency"`
+	ErrorRate     float64          `json:"error_rate"`
+	DailyBreakdown []DayCost       `json:"daily_breakdown"`
+}
+
+func (s *Store) GetWeeklyRecap() (*WeeklyRecap, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	r := &WeeklyRecap{Period: "last 7 days"}
+
+	s.db.QueryRow("SELECT COALESCE(SUM(1),0), COALESCE(SUM(cost),0), COALESCE(AVG(latency_ms),0) FROM request_log WHERE timestamp >= datetime('now', '-7 days')").
+		Scan(&r.TotalRequests, &r.TotalCost, &r.AvgLatency)
+
+	var errors int64
+	s.db.QueryRow("SELECT COUNT(*) FROM request_log WHERE timestamp >= datetime('now', '-7 days') AND status_code >= 400").
+		Scan(&errors)
+	if r.TotalRequests > 0 {
+		r.ErrorRate = float64(errors) / float64(r.TotalRequests) * 100
+	}
+
+	s.db.QueryRow("SELECT COALESCE(SUM(hit_count),0) FROM cache_entries WHERE created_at >= datetime('now', '-7 days')").
+		Scan(&r.CacheHits)
+
+	s.db.QueryRow("SELECT provider FROM request_log WHERE timestamp >= datetime('now', '-7 days') GROUP BY provider ORDER BY COUNT(*) DESC LIMIT 1").
+		Scan(&r.TopProvider)
+
+	s.db.QueryRow("SELECT model FROM request_log WHERE timestamp >= datetime('now', '-7 days') GROUP BY model ORDER BY COUNT(*) DESC LIMIT 1").
+		Scan(&r.TopModel)
+
+	dayRows, err := s.db.Query("SELECT DATE(timestamp) as d, SUM(cost), COUNT(*) FROM request_log WHERE timestamp >= datetime('now', '-7 days') GROUP BY d ORDER BY d ASC")
+	if err == nil {
+		defer dayRows.Close()
+		for dayRows.Next() {
+			var dc DayCost
+			dayRows.Scan(&dc.Date, &dc.Cost, &dc.Requests)
+			r.DailyBreakdown = append(r.DailyBreakdown, dc)
+		}
+	}
+
+	return r, nil
+}
+
+// ── VIRTUAL KEY USAGE BY KEY ───────────────────────────────────────────────
+
+type VKUsageDetail struct {
+	VirtualKey   string  `json:"virtual_key"`
+	VKName       string  `json:"vk_name"`
+	TotalReqs    int64   `json:"total_requests"`
+	TotalCost    float64 `json:"total_cost"`
+	AvgLatency   float64 `json:"avg_latency"`
+	TopProvider  string  `json:"top_provider"`
+	ErrorCount   int64   `json:"error_count"`
+}
+
+func (s *Store) GetVirtualKeyUsageDetail() ([]VKUsageDetail, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	rows, err := s.db.Query(`
+		SELECT virtual_key,
+			COUNT(*) as total,
+			SUM(cost),
+			AVG(latency_ms),
+			(SELECT provider FROM request_log r2 WHERE r2.virtual_key = r1.virtual_key GROUP BY provider ORDER BY COUNT(*) DESC LIMIT 1),
+			COUNT(CASE WHEN status_code >= 400 THEN 1 END)
+		FROM request_log r1
+		WHERE virtual_key != ''
+		GROUP BY virtual_key
+		ORDER BY total DESC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var details []VKUsageDetail
+	for rows.Next() {
+		var d VKUsageDetail
+		rows.Scan(&d.VirtualKey, &d.TotalReqs, &d.TotalCost, &d.AvgLatency, &d.TopProvider, &d.ErrorCount)
+		details = append(details, d)
+	}
+	return details, nil
 }

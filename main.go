@@ -76,6 +76,35 @@ func main() {
 	mux.HandleFunc("/admin/fun-facts", p.HandleFunFacts)
 	mux.HandleFunc("/admin/rumble", p.HandleRumble)
 
+	// Easy fun features
+	mux.HandleFunc("/admin/roulette", p.HandleRoulette)
+	mux.HandleFunc("/admin/roast-logs", p.HandleRoastLogs)
+	mux.HandleFunc("/admin/therapist", p.HandleTherapist)
+	mux.HandleFunc("/admin/vibe-check", p.HandleVibeCheck)
+	mux.HandleFunc("/admin/rap-battle", p.HandleRapBattle)
+
+	// Medium utility features
+	mux.HandleFunc("/admin/webhooks", p.HandleWebhooks)
+	mux.HandleFunc("/admin/webhooks/", p.HandleWebhooks)
+	mux.HandleFunc("/admin/logs/search", p.HandleSearchLogs)
+	mux.HandleFunc("/admin/templates", p.HandleTemplates)
+	mux.HandleFunc("/admin/templates/", p.HandleTemplates)
+	mux.HandleFunc("/admin/poll", p.HandlePoll)
+	mux.HandleFunc("/admin/rate-tiers", p.HandleRateLimitTiers)
+	mux.HandleFunc("/admin/rate-tiers/", p.HandleRateLimitTiers)
+	mux.HandleFunc("/admin/budget-alerts", p.HandleBudgetAlerts)
+	mux.HandleFunc("/admin/budget-alerts/", p.HandleBudgetAlerts)
+
+	// Hard pro features
+	mux.HandleFunc("/admin/vk-usage", p.HandleUsageDashboard)
+	mux.HandleFunc("/admin/vk-usage/", p.HandleUsageDashboard)
+	mux.HandleFunc("/admin/auto-rotate", p.HandleAutoRotate)
+	mux.HandleFunc("/admin/auto-rotate/status", p.HandleAutoRotate)
+	mux.HandleFunc("/admin/playground", p.HandlePlayground)
+	mux.HandleFunc("/admin/recap", p.HandleRecap)
+	mux.HandleFunc("/admin/recap/generate", p.HandleRecap)
+	mux.HandleFunc("/admin/analytics", p.HandleCostAnalytics)
+
 	mux.HandleFunc("/admin/failover", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
