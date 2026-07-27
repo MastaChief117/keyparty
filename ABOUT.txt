@@ -1,0 +1,197 @@
+================================================================================
+                    AI GATEWAY — WHAT MAKES IT DIFFERENT
+================================================================================
+
+This isn't Kong. This isn't Tyk. This isn't AWS API Gateway.
+
+This is for the broke dev spinning up an AI agent at 3AM with $4 in free tier
+credits across three providers, praying one of them doesn't rate-limit them
+mid-demo.
+
+================================================================================
+                        THE PROBLEM WE SOLVE
+================================================================================
+
+You're building an AI agent. You sign up for free tiers on Groq, Nvidia,
+DeepSeek, maybe grab an OpenAI trial. Now you've got:
+
+  - 5 different API endpoints
+  - 5 different auth methods
+  - 5 different rate limits
+  - 5 different ways to get screwed when one goes down
+
+Most API gateways assume you have a DevOps team, a Kubernetes cluster, and a
+budget. We assume you have a Raspberry Pi and a dream.
+
+================================================================================
+                    WHAT MAKES THIS DIFFERENT
+================================================================================
+
+1. IT ACTUALLY KNOWS AI PROVIDERS
+
+   Other gateways treat upstream servers as dumb URLs. This one knows:
+   - Groq uses different auth headers than Anthropic
+   - Nvidia needs special endpoint formatting
+   - DeepSeek has different pricing than OpenAI
+   - Anthropic requires x-api-key AND anthropic-version headers
+
+   You don't configure provider details. You just add a key, pick a provider,
+   and it speaks their dialect natively.
+
+2. IT FIGHTS FOR YOUR FREE TIER CREDITS
+
+   Most gateways just fail over when a provider errors. This one has
+   COMPACTION FAILOVER:
+
+   - Provider returns 402 (out of credits)? 
+   - It summarizes your chat history to fit within cheaper provider limits
+   - Routes to the next provider with full context intact
+   - Logs the failover so you know what happened
+
+   Your $4 just got you through a demo that would've cost $20 on a single
+   provider.
+
+3. IT TRACKS WHAT YOU'RE ACTUALLY SPENDING
+
+   You've got free tier credits scattered across providers. This gateway:
+   - Tracks cost per provider, per virtual key, per day
+   - Shows you exactly where your credits are going
+   - Fires budget alerts before you hit your limit
+   - Estimates how much caching saved you
+   - Generates weekly recaps ("You used $2.37 of your $5 OpenAI trial")
+
+   Other gateways log requests. This one watches your wallet.
+
+4. IT'S A MULTI-KEY MASHUP
+
+   Running out of Groq free tier? The gateway round-robins across all your
+   enabled keys for a provider. Hit the daily limit on one key? It
+   automatically picks the next one.
+
+   You can have 3 Groq keys, 2 Nvidia keys, and a DeepSeek key all behind
+   one endpoint. The gateway figures out which one to use.
+
+5. IT MAKES AI FUN AGAIN
+
+   No other gateway lets you:
+   - Put two AI providers in a ROAST BATTLE via SSE streaming
+   - RAP BATTLE with context memory across rounds
+   - SPIN THE ROULETTE to see which provider handles your request
+   - Get a VIBE CHECK rating on any message
+   - Have an AI THERAPIST when your code won't compile
+   - ROAST YOUR OWN API LOGS
+
+   These aren't toys. They prove the gateway handles multi-provider
+   orchestration, SSE streaming, context threading, and real-time
+   bi-directional communication. They just happen to be hilarious.
+
+6. IT'S SELF-SERVICE FOR TEAMS
+
+   Building a multi-agent system with friends? Give each dev their own
+   virtual key with:
+   - Individual budgets (so nobody burns the group's credits)
+   - Model allowlists (restrict to free tier models only)
+   - Rate limit tiers (free/premium)
+   - Per-user usage dashboards
+
+   One unified API key for the app. Individual keys for accountability.
+
+7. THE PERSONALITY
+
+   Kong's dashboard looks like a bank's admin panel. This one has:
+   - Dark glassmorphism UI
+   - Boxing-themed rumble screens
+   - Provider death notifications
+   - Fun facts that roast your coding habits
+   - A README written by someone who should've been sleeping
+
+   Because infrastructure should be enjoyable.
+
+================================================================================
+                    THE TECH UNDER THE HOOD
+================================================================================
+
+Language:     Go (single binary, no dependencies)
+Database:     SQLite (zero config, portable)
+Encryption:   AES-256-GCM at rest (your API keys are safe)
+Dashboard:    Single HTML file, no build step, no npm install
+Deployment:   ./ai-gateway -port 8080 -admin-pass yourpass
+
+Feature count:
+  - 10 AI provider integrations
+  - Virtual key system with budgets + rate limits
+  - SHA256 response caching
+  - Compaction failover with chat history summarization
+  - Guardrails (PII detection + injection protection)
+  - AES-256-GCM encryption at rest
+  - Race mode (compare providers)
+  - AI Rumble (roast battle)
+  - Rap Battle (SSE streaming)
+  - Model Roulette, Vibe Check, AI Therapist, Roast Logs
+  - Webhooks, Prompt Templates, AI Poll
+  - Rate Limit Tiers, Budget Alerts
+  - VK Usage Dashboard, Auto-Rotate Keys
+  - Chat Playground with SSE streaming
+  - Weekly Recaps, Cost Analytics with bar charts
+  - 30+ store functions, 16+ admin endpoints
+
+================================================================================
+                    WHO THIS IS FOR
+================================================================================
+
+  - Solo devs building AI agents on free tiers
+  - Small teams sharing API credits
+  - Hackathon projects that need multi-provider resilience
+  - Students learning AI/LLM integration
+  - Anyone tired of managing 5 different AI API dashboards
+  - People who think infrastructure can be fun
+
+================================================================================
+                    WHO THIS IS NOT FOR
+================================================================================
+
+  - Enterprises needing horizontal scaling (it's a single binary)
+  - Teams needing RBAC, SSO, or audit logs
+  - Anyone processing millions of requests (SQLite has limits)
+  - People who want a plugin system (no Lua/Go extensions yet)
+  - gRPC-only setups (HTTP only)
+
+================================================================================
+                    THE PHILOSOPHY
+================================================================================
+
+Most API gateways are built for the Fortune 500.
+
+This one is built for the dev who:
+  - Has $4 across three free tiers
+  - Is building an agent that talks to multiple providers
+  - Needs one endpoint, not five
+  - Wants to know exactly where their credits are going
+  - Thinks infrastructure can have personality
+  - Is probably coding at 3AM on a Tuesday
+
+It's not trying to replace Kong. It's building something new:
+  An AI gateway that's as fun to use as it is useful.
+
+================================================================================
+                          THE NUMBERS
+================================================================================
+
+  Total lines of code:  ~8,300 Go + ~2,100 HTML = ~10,400
+  Files:                10 source files
+  Dependencies:         Just Go + SQLite driver
+  Build time:           ~5 seconds
+  Memory usage:         ~20MB
+  Deployment:           Single binary, copy and run
+
+================================================================================
+                          LINKS
+================================================================================
+
+  GitHub:    https://github.com/MastaChief117/ai-gateway
+  Dashboard: http://localhost:8080
+  Proxy:     http://localhost:8080/v1/chat/completions
+
+================================================================================
+          Made by a dude who should've been sleeping. Again.
+================================================================================
