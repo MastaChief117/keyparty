@@ -305,7 +305,7 @@ We take this seriously — not "trust me bro" seriously, actually seriously. Her
 ### Minimum Requirements
 
 - **OS:** Linux, macOS, Windows (any)
-- **RAM:** ~20MB at rest, ~50MB under load
+- **RAM:** 13MB idle, ~33MB under load
 - **Disk:** ~50MB for binary + database grows with usage (~1KB per request logged)
 - **Go:** 1.24+ (only for building, not running)
 
@@ -345,7 +345,7 @@ This is a **self-hosted tool for individuals and small teams.** If you're deploy
 
 ## Tech Stuff
 
-- **Language:** Go 1.24+ (single binary, no deps, ~20MB memory. it's smol.)
+- **Language:** Go 1.24+ (single binary, no deps, 13MB idle RAM. it's smol.)
 - **Database:** SQLite (it just works. no config needed.)
 - **Encryption:** AES-256-GCM (military grade or whatever)
 - **Frontend:** Vanilla HTML/CSS/JS (no React, no Vue, no suffering. just vibes.)
@@ -355,7 +355,7 @@ This is a **self-hosted tool for individuals and small teams.** If you're deploy
 
 ## Performance (we actually tested it)
 
-We stress tested it so you don't have to. Here are real numbers:
+We stress tested it — **16,000 requests, zero provider calls, zero credits burned.** Requests fail at the gateway level when no keys are configured.
 
 ### Binary
 
@@ -366,33 +366,34 @@ We stress tested it so you don't have to. Here are real numbers:
 
 | Stage | RSS (actual RAM) | Virtual Size |
 |-------|-----------------|--------------|
-| Fresh start (idle) | **~11MB** | 1.7GB |
-| After 500 requests | **~23MB** | 2.2GB |
-| After 1,500 requests | **~31MB** | 3.5GB |
+| Fresh start (idle) | **13MB** | 1.9GB |
+| After 1,000 requests | **30MB** | 2.4GB |
+| After 6,000 requests | **33MB** | 2.8GB |
+| After 16,000 requests | **33MB** | 3.2GB |
 
-> RSS = what your OS actually allocates. Virtual size includes Go runtime mappings (not real memory).
-
-### Database Growth
-
-| Stage | DB Size |
-|-------|---------|
-| Fresh | 88KB |
-| After 500 requests | 144KB |
-| After 1,500 requests | 248KB |
-
-**~100 bytes per request logged.** Your database won't blow up.
+> RSS = what your OS actually allocates. Virtual size includes Go runtime mappings (not real memory). Memory stabilizes at ~33MB — no leaks.
 
 ### Throughput
 
-- **~20 RPS** with fast-failing requests (fake keys)
-- With real providers, RPS depends on provider latency — the gateway adds negligible overhead
-- **No memory leaks observed** — RSS grows proportionally to load, not time
+| Concurrent | Requests | RPS |
+|-----------|----------|-----|
+| 50 | 1,000 | **218** |
+| 100 | 5,000 | **234** |
+| 100 | 10,000 | **222** |
+
+Consistent ~220 RPS with fast-failing requests. With real providers, RPS depends on provider latency — the gateway adds negligible overhead.
+
+### Database
+
+- Request logging writes ~100 bytes per entry
+- DB stays at 88KB when requests fail before logging (no provider calls = no logs)
+- With real traffic, expect ~100KB per 1,000 logged requests
 
 ### TL;DR
 
-- **Idle:** ~11MB RAM — lighter than most Electron apps
-- **Under load:** ~20-35MB RAM — very efficient for a Go binary
-- **DB grows slowly:** ~100 bytes per request
+- **Idle:** 13MB RAM — lighter than most Electron apps
+- **Under load:** ~33MB RAM, stabilizes — no memory leaks
+- **Throughput:** ~220 RPS (gateway overhead only)
 - Runs on a potato 🥔
 
 ---
