@@ -268,9 +268,9 @@ We take this seriously — not "trust me bro" seriously, actually seriously. Her
 | 🔐 **Encryption at Rest** | AES-256-GCM via `golang.org/x/crypto`. All API keys encrypted in SQLite. Decrypted only in memory during request handling. Errors propagated, never silently ignored. |
 | 🔑 **Key File** | `.gateway.key` stored with `0600` permissions. Key is a 256-bit random value generated on first run. Lost key = encrypted data is gone forever. |
 | 🛡️ **Guardrails** | PII detection (SSN, email, phone), prompt injection blocking via regex patterns, custom rules configurable per-deployment. |
-| 🚫 **SSRF Protection** | Blocks localhost, private IPs, link-local, IPv6 loopback (`::1`, `fc00:`, `fe80:`, `fd00:`), and cloud metadata endpoints (169.254.169.254). Validates on all outbound requests including webhooks and imports. |
+| 🚫 **SSRF Protection** | Uses `net.ParseIP()` with `IsLoopback()`, `IsPrivate()`, `IsLinkLocalUnicast()`, `IsUnspecified()` — not string matching. Blocks IPv6-mapped (`[::ffff:127.0.0.1]`), decimal IPs (`2130706433`), hex IPs, and cloud metadata endpoints. DNS resolution checked for hostnames. |
 | 🔒 **Admin Auth** | Bearer token auth on all `/admin/*` endpoints. **Refuses to start without a password** (returns 503). Failed attempts logged with IP. |
-| 🕐 **Rate Limiting** | Per-IP rate limiting (spoof-proof: uses `RemoteAddr`, not XFF). Per-virtual-key rate limits enforced. Visitors map capped at 10K entries. |
+| 🕐 **Rate Limiting** | Per-IP brute-force protection on admin auth (5 attempts/min lockout). Per-virtual-key rate limits enforced. Visitors map capped at 10K entries. |
 | 📊 **Request Logging** | Full audit trail — who requested what, when, which provider, cost, latency. DB write errors logged. |
 | 🧠 **Panic Recovery** | All handlers wrapped in recovery middleware. One bad request won't crash the server. |
 | 🔒 **Cache Isolation** | Response cache includes virtual key ID in hash. Different users can't see each other's cached responses. |
@@ -301,7 +301,9 @@ We take this seriously — not "trust me bro" seriously, actually seriously. Her
 
 ### Audit Status
 
-- **28 vulnerabilities found and fixed** in a full security audit (7 critical, 6 high, 5 medium, 6 low).
+- **31 vulnerabilities found and fixed** in security audits (7 critical, 6 high, 8 medium, 6 low).
+- **SSRF blocklist upgraded** from naive string prefix matching to proper `net.ParseIP()` validation. IPv6-mapped, decimal, and hex IP bypasses now blocked.
+- **Brute-force protection** added to admin auth. 5 failed attempts = 5 minute lockout.
 - **Crypto primitives are standard** — AES-256-GCM, well-studied and used by the Go standard library.
 - **No custom crypto** — we use `golang.org/x/crypto`, not hand-rolled anything.
 - **Known remaining limitations:** SQLite contention at high concurrency, no TLS (use reverse proxy), no audit log tamper protection.
@@ -508,6 +510,9 @@ A: Open an issue. I'll fix it. Probably. Eventually. No promises.
 - [x] Add Cost Analytics
 - [x] Full security audit (28 vulnerabilities fixed)
 - [x] Add keyparty.sh setup script
+- [x] Fix SSRF bypass (IPv6-mapped, decimal, hex IP encoding)
+- [x] Add brute-force protection on admin auth
+- [x] Fix GetKeyByID decryption for test-key endpoint
 - [ ] Add semantic caching (when I'm bored again)
 - [ ] Add MCP support (because everyone wants MCP now)
 - [ ] Add A/B testing (for the data nerds)
