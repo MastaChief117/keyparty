@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"strings"
 
@@ -17,26 +16,9 @@ import (
 	"ai-gateway/store"
 )
 
-var ssrfBlocklist = []string{
-	"localhost", "127.", "10.", "192.168.", "172.16.", "172.17.", "172.18.",
-	"172.19.", "172.20.", "172.21.", "172.22.", "172.23.", "172.24.", "172.25.",
-	"172.26.", "172.27.", "172.28.", "172.29.", "172.30.", "172.31.",
-	"169.254.", "0.", "metadata.google", "100.100.100.200",
-	"::1", "fc00:", "fe80:", "fd00:",
-}
-
+// isBlockedURL delegates to proxy.isBlockedURL for consistent SSRF protection
 func isBlockedURL(rawURL string) bool {
-	u, err := url.Parse(rawURL)
-	if err != nil {
-		return true
-	}
-	host := strings.ToLower(u.Hostname())
-	for _, prefix := range ssrfBlocklist {
-		if strings.HasPrefix(host, prefix) || host == prefix {
-			return true
-		}
-	}
-	return host == ""
+	return proxy.IsBlockedURL(rawURL)
 }
 
 func main() {

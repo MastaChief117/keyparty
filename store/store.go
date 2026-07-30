@@ -532,6 +532,7 @@ func (s *Store) GetKeyByID(id int64) (*APIKey, error) {
 	if err != nil {
 		return nil, err
 	}
+	k.Key, _ = s.keyring.Decrypt(k.Key)
 	if lastUsed.Valid {
 		k.LastUsed = lastUsed.Time
 	}

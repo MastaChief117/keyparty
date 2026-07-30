@@ -9,7 +9,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/url"
 	"regexp"
 	"strings"
 	"sync"
@@ -19,14 +18,6 @@ import (
 	"ai-gateway/provider"
 	"ai-gateway/store"
 )
-
-var ssrfBlocklist = []string{
-	"localhost", "127.", "10.", "192.168.", "172.16.", "172.17.", "172.18.",
-	"172.19.", "172.20.", "172.21.", "172.22.", "172.23.", "172.24.", "172.25.",
-	"172.26.", "172.27.", "172.28.", "172.29.", "172.30.", "172.31.",
-	"169.254.", "0.", "metadata.google", "100.100.100.200",
-	"::1", "fc00:", "fe80:", "fd00:",
-}
 
 var piiPatterns = map[string]*regexp.Regexp{
 	"email":     regexp.MustCompile(`[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}`),
@@ -45,23 +36,6 @@ var injectionPatterns = []*regexp.Regexp{
 	regexp.MustCompile(`(?i)override\s+(your|all|the)\s+(instructions|rules|system)`),
 	regexp.MustCompile(`(?i)jailbreak`),
 	regexp.MustCompile(`(?i)\[INST\]|\[/INST\]|<<SYS>>|<</SYS>>`),
-}
-
-func isBlockedURL(rawURL string) bool {
-	u, err := url.Parse(rawURL)
-	if err != nil {
-		return true
-	}
-	host := strings.ToLower(u.Hostname())
-	for _, prefix := range ssrfBlocklist {
-		if strings.HasPrefix(host, prefix) || host == prefix {
-			return true
-		}
-	}
-	if host == "" {
-		return true
-	}
-	return false
 }
 
 func sanitizeError(errMsg string) string {
@@ -451,7 +425,7 @@ func (p *Proxy) HandleChatCompletions(w http.ResponseWriter, r *http.Request) {
 
 	baseURL := provDef.BaseURL
 	if targetKey.CustomURL != "" {
-		if isBlockedURL(targetKey.CustomURL) {
+		if IsBlockedURL(targetKey.CustomURL) {
 			http.Error(w, `{"error":{"message":"Invalid custom URL"}}`, http.StatusBadRequest)
 			return
 		}
@@ -630,7 +604,7 @@ func (p *Proxy) tryFailover(w http.ResponseWriter, r *http.Request, origBody []b
 
 		baseURL := provDef.BaseURL
 		if key.CustomURL != "" {
-			if isBlockedURL(key.CustomURL) {
+			if IsBlockedURL(key.CustomURL) {
 				continue
 			}
 			baseURL = key.CustomURL
@@ -795,7 +769,7 @@ func (p *Proxy) HandleTestKey(w http.ResponseWriter, r *http.Request) {
 
 	baseURL := provDef.BaseURL
 	if req.CustomURL != "" {
-		if isBlockedURL(req.CustomURL) {
+		if IsBlockedURL(req.CustomURL) {
 			json.NewEncoder(w).Encode(map[string]interface{}{"success": false, "error": "Invalid custom URL"})
 			return
 		}
