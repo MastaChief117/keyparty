@@ -183,8 +183,10 @@ tr:hover{background:rgba(59,130,246,0.05)}
 <button class="tab" data-tab="fun-zone">Fun Zone</button>
 <button class="tab" data-tab="rumble">AI Rumble</button>
 <button class="tab" data-tab="new-fun">More Fun</button>
+<button class="tab" data-tab="tournament">Tournament</button>
 <button class="tab" data-tab="utils">Utilities</button>
 <button class="tab" data-tab="pro">Pro Tools</button>
+<button class="tab" data-tab="tools">Tools</button>
 <button class="tab" data-tab="logs">Request Logs</button>
 </div>
 
@@ -233,6 +235,131 @@ tr:hover{background:rgba(59,130,246,0.05)}
 </div>
 <div id="aliases-table"></div>
 </div>
+</div>
+
+<div id="tab-tools" class="tab-content" style="display:none">
+
+<div class="section">
+<div class="section-header"><h2>Token Calculator</h2></div>
+<div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+<div class="form-group" style="flex:1;min-width:120px">
+<label>Input Tokens</label>
+<input type="number" id="calc-tokens-in" value="1000" min="1">
+</div>
+<div class="form-group" style="flex:1;min-width:120px">
+<label>Output Tokens</label>
+<input type="number" id="calc-tokens-out" value="500" min="1">
+</div>
+<button class="btn btn-primary" id="btn-calc" style="align-self:flex-end">Calculate</button>
+</div>
+<div id="calc-results"></div>
+</div>
+
+<div class="section">
+<div class="section-header"><h2>Model Explorer</h2></div>
+<div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+<div class="form-group" style="flex:1;min-width:150px">
+<label>Search</label>
+<input type="text" id="model-search" placeholder="Search models...">
+</div>
+<div class="form-group" style="flex:1;min-width:120px">
+<label>Provider</label>
+<select id="model-provider-filter">
+<option value="">All Providers</option>
+<option value="openai">OpenAI</option>
+<option value="anthropic">Anthropic</option>
+<option value="gemini">Gemini</option>
+<option value="groq">Groq</option>
+<option value="deepseek">DeepSeek</option>
+<option value="mistral">Mistral</option>
+<option value="together">Together</option>
+<option value="fireworks">Fireworks</option>
+<option value="nvidia">NVIDIA</option>
+</select>
+</div>
+<div class="form-group" style="flex:1;min-width:120px">
+<label>Capability</label>
+<select id="model-cap-filter">
+<option value="">All</option>
+<option value="chat">Chat</option>
+<option value="vision">Vision</option>
+<option value="coding">Coding</option>
+<option value="reasoning">Reasoning</option>
+<option value="function_calling">Function Calling</option>
+<option value="long context">Long Context</option>
+</select>
+</div>
+<button class="btn btn-primary" id="btn-model-search" style="align-self:flex-end">Search</button>
+</div>
+<div id="model-explorer-results"></div>
+</div>
+
+<div class="section">
+<div class="section-header"><h2>Model Comparison</h2></div>
+<div class="form-group" style="margin-bottom:10px">
+<label>Prompt</label>
+<textarea id="compare-prompt" rows="3" placeholder="Enter a prompt to compare across providers..."></textarea>
+</div>
+<button class="btn btn-primary" id="btn-compare">Compare Models</button>
+<div id="compare-results" style="margin-top:12px"></div>
+</div>
+
+<div class="section">
+<div class="section-header"><h2>cURL Generator</h2></div>
+<div class="form-group" style="margin-bottom:10px">
+<label>Provider</label>
+<select id="curl-provider">
+<option value="openai">OpenAI</option>
+<option value="anthropic">Anthropic</option>
+<option value="gemini">Gemini</option>
+<option value="groq">Groq</option>
+<option value="deepseek">DeepSeek</option>
+<option value="mistral">Mistral</option>
+</select>
+</div>
+<div class="form-group" style="margin-bottom:10px">
+<label>Model</label>
+<input type="text" id="curl-model" value="gpt-4o" placeholder="Model name">
+</div>
+<div class="form-group" style="margin-bottom:10px">
+<label>Message</label>
+<input type="text" id="curl-message" value="Say hello" placeholder="Your message">
+</div>
+<button class="btn btn-primary" id="btn-gen-curl">Generate cURL</button>
+<div id="curl-output" style="margin-top:10px;display:none">
+<pre style="background:#0f172a;padding:12px;border-radius:8px;font-size:12px;overflow-x:auto;border:1px solid #334155"><code id="curl-code"></code></pre>
+<button class="btn btn-sm btn-secondary" id="btn-copy-curl" style="margin-top:6px">Copy</button>
+</div>
+</div>
+
+<div class="section">
+<div class="section-header"><h2>SDK Snippets</h2></div>
+<div class="form-group" style="margin-bottom:10px">
+<label>Language</label>
+<select id="sdk-lang">
+<option value="python">Python</option>
+<option value="javascript">JavaScript</option>
+<option value="go">Go</option>
+<option value="curl">cURL</option>
+</select>
+</div>
+<div class="form-group" style="margin-bottom:10px">
+<label>Endpoint</label>
+<select id="sdk-endpoint">
+<option value="chat">Chat Completions</option>
+<option value="models">List Models</option>
+<option value="race">Provider Race</option>
+<option value="rumble">AI Rumble</option>
+<option value="roulette">Model Roulette</option>
+</select>
+</div>
+<button class="btn btn-primary" id="btn-gen-sdk">Generate</button>
+<div id="sdk-output" style="margin-top:10px;display:none">
+<pre style="background:#0f172a;padding:12px;border-radius:8px;font-size:12px;overflow-x:auto;border:1px solid #334155"><code id="sdk-code"></code></pre>
+<button class="btn btn-sm btn-secondary" id="btn-copy-sdk" style="margin-top:6px">Copy</button>
+</div>
+</div>
+
 </div>
 
 <div id="tab-logs" class="tab-content" style="display:none">
@@ -415,6 +542,30 @@ tr:hover{background:rgba(59,130,246,0.05)}
 </div>
 
 <div class="rumble-chat" id="rumble-chat" style="display:none"></div>
+</div>
+
+<div id="tab-tournament" class="tab-content" style="display:none">
+<div class="section">
+<div class="section-header"><h2>🏆 AI Tournament</h2></div>
+<p style="font-size:12px;color:#94a3b8;margin-bottom:12px">Bracket-style model battles. Models fight head-to-head, winners advance.</p>
+<div class="form-group" style="margin-bottom:10px">
+<label>Prompt (all models get this)</label>
+<textarea id="tournament-prompt" rows="2" placeholder="Write a short poem about the future of AI.">Write a short poem about the future of AI.</textarea>
+</div>
+<div class="form-group" style="margin-bottom:10px">
+<label>Models (select at least 2)</label>
+<div style="display:flex;flex-wrap:wrap;gap:8px" id="tournament-models">
+<label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer"><input type="checkbox" value="openai/gpt-4o" checked> GPT-4o</label>
+<label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer"><input type="checkbox" value="anthropic/claude-sonnet-4-5" checked> Claude Sonnet 4.5</label>
+<label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer"><input type="checkbox" value="groq/llama-3.3-70b-versatile"> Llama 3.3 70B</label>
+<label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer"><input type="checkbox" value="deepseek/deepseek-chat"> DeepSeek V3</label>
+<label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer"><input type="checkbox" value="gemini/gemini-2.5-flash-preview-06-05"> Gemini Flash</label>
+<label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer"><input type="checkbox" value="mistral/mistral-large-latest"> Mistral Large</label>
+</div>
+</div>
+<button class="btn btn-primary" id="btn-tournament">🏆 Start Tournament</button>
+<div id="tournament-results" style="margin-top:16px"></div>
+</div>
 </div>
 
 <div id="tab-new-fun" class="tab-content" style="display:none">
@@ -2041,6 +2192,7 @@ document.querySelectorAll('.tab').forEach(function(tab) {
     if (tabName === 'rumble') loadRumbleProviders();
     if (tabName === 'utils') { loadWebhooks(); loadTemplates(); loadRateTiers(); loadBudgetAlerts(); }
     if (tabName === 'pro') { loadVKUsage(); loadRotateStatus(); loadAnalytics(); }
+    if (tabName === 'tools') loadModels();
     if (tabName === 'logs') loadLogs();
   });
 });
@@ -2072,6 +2224,223 @@ document.getElementById('btn-save-guardrail').addEventListener('click', addGuard
 document.getElementById('btn-add-alias').addEventListener('click', function() { document.getElementById('add-alias-modal').classList.add('active'); });
 document.getElementById('btn-cancel-alias').addEventListener('click', function() { closeModal('add-alias-modal'); });
 document.getElementById('btn-save-alias').addEventListener('click', addAlias);
+
+// ── Token Calculator ──────────────────────────────────────────────────
+document.getElementById('btn-calc').addEventListener('click', async function() {
+  var tokensIn = parseInt(document.getElementById('calc-tokens-in').value) || 1000;
+  var tokensOut = parseInt(document.getElementById('calc-tokens-out').value) || 500;
+  var el = document.getElementById('calc-results');
+  el.innerHTML = '<div style="color:#94a3b8">Calculating...</div>';
+  try {
+    var res = await adminFetch('/admin/token-calculator', { method: 'POST', body: JSON.stringify({tokens_in: tokensIn, tokens_out: tokensOut}) });
+    var data = await res.json();
+    if (data.error) { el.innerHTML = '<div style="color:#ef4444">' + escHtml(data.error) + '</div>'; return; }
+    var results = data.results || [];
+    var html = '<div style="margin-bottom:10px;font-size:13px;color:#94a3b8">For ' + data.tokens_in.toLocaleString() + ' input + ' + data.tokens_out.toLocaleString() + ' output tokens:</div>';
+    html += '<table><thead><tr><th>Provider</th><th>Model</th><th>Input</th><th>Output</th><th>Total</th></tr></thead><tbody>';
+    results.forEach(function(r, i) {
+      var row = i === 0 ? 'style="background:rgba(34,197,94,0.1)"' : (i === results.length - 1 ? 'style="background:rgba(239,68,68,0.05)"' : '');
+      html += '<tr ' + row + '><td><span class="provider-tag">' + escHtml(r.provider) + '</span></td>';
+      html += '<td class="model-tag">' + escHtml(r.model) + '</td>';
+      html += '<td>$' + r.input_cost.toFixed(6) + '</td>';
+      html += '<td>$' + r.output_cost.toFixed(6) + '</td>';
+      html += '<td style="font-weight:600;' + (i === 0 ? 'color:#22c55e' : (i === results.length - 1 ? 'color:#ef4444' : '')) + '">$' + r.total_cost.toFixed(6) + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    if (data.cheapest) {
+      html += '<div style="margin-top:10px;padding:10px;background:rgba(34,197,94,0.1);border-radius:8px;font-size:13px">Best: <strong>' + escHtml(data.cheapest.provider) + '/' + escHtml(data.cheapest.model) + '</strong> at $' + data.cheapest.total_cost.toFixed(6) + '</div>';
+    }
+    el.innerHTML = html;
+  } catch(e) { el.innerHTML = '<div style="color:#ef4444">Error: ' + escHtml(e.message) + '</div>'; }
+});
+
+// ── Model Explorer ────────────────────────────────────────────────────
+async function loadModels() {
+  var q = document.getElementById('model-search').value;
+  var provider = document.getElementById('model-provider-filter').value;
+  var cap = document.getElementById('model-cap-filter').value;
+  var el = document.getElementById('model-explorer-results');
+  el.innerHTML = '<div style="color:#94a3b8">Loading...</div>';
+  try {
+    var url = '/admin/model-explorer?';
+    if (q) url += 'q=' + encodeURIComponent(q) + '&';
+    if (provider) url += 'provider=' + encodeURIComponent(provider) + '&';
+    if (cap) url += 'capability=' + encodeURIComponent(cap) + '&';
+    var data = await (await adminFetch(url)).json();
+    if (data.error) { el.innerHTML = '<div style="color:#ef4444">' + escHtml(data.error) + '</div>'; return; }
+    var models = data.models || [];
+    if (models.length === 0) { el.innerHTML = '<div class="empty-state">No models match your filters</div>'; return; }
+    var html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px">';
+    models.forEach(function(m) {
+      var caps = (m.capabilities || []).map(function(c) { return '<span class="badge badge-purple">' + escHtml(c) + '</span>'; }).join(' ');
+      var recs = (m.recommended_for || []).map(function(r) { return '<span class="badge badge-green">' + escHtml(r) + '</span>'; }).join(' ');
+      html += '<div style="background:#0f172a;border:1px solid #334155;border-radius:10px;padding:14px">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+      html += '<div style="font-weight:600;font-size:14px">' + escHtml(m.full_name) + '</div>';
+      html += '<span class="provider-tag">' + escHtml(m.provider) + '</span></div>';
+      html += '<div style="font-size:12px;color:#94a3b8;margin-bottom:8px">' + escHtml(m.name) + '</div>';
+      html += '<div style="display:flex;gap:12px;font-size:12px;margin-bottom:8px">';
+      html += '<span>Context: <strong>' + (m.context_window >= 1000000 ? (m.context_window/1000000) + 'M' : (m.context_window/1000) + 'K') + '</strong></span>';
+      html += '<span>Speed: <strong>' + escHtml(m.speed) + '</strong></span>';
+      html += '<span>Max: <strong>' + (m.max_output_tokens >= 1000 ? (m.max_output_tokens/1000) + 'K' : m.max_output_tokens) + '</strong></span></div>';
+      html += '<div style="display:flex;gap:12px;font-size:13px;margin-bottom:8px">';
+      html += '<span style="color:#3b82f6">In: $' + m.input_price.toFixed(2) + '/1M</span>';
+      html += '<span style="color:#f59e0b">Out: $' + m.output_price.toFixed(2) + '/1M</span></div>';
+      html += '<div style="margin-bottom:6px">' + caps + '</div>';
+      html += '<div>' + recs + '</div></div>';
+    });
+    html += '</div>';
+    el.innerHTML = html;
+  } catch(e) { el.innerHTML = '<div style="color:#ef4444">Error: ' + escHtml(e.message) + '</div>'; }
+}
+document.getElementById('btn-model-search').addEventListener('click', loadModels);
+document.getElementById('model-search').addEventListener('keyup', function(e) { if (e.key === 'Enter') loadModels(); });
+
+// ── Model Comparison ──────────────────────────────────────────────────
+document.getElementById('btn-compare').addEventListener('click', async function() {
+  var prompt = document.getElementById('compare-prompt').value;
+  if (!prompt) { alert('Enter a prompt'); return; }
+  var el = document.getElementById('compare-results');
+  el.innerHTML = '<div style="color:#94a3b8">Comparing across providers...</div>';
+  try {
+    var res = await adminFetch('/admin/compare', { method: 'POST', body: JSON.stringify({ message: prompt, max_tokens: 256 }) });
+    var data = await res.json();
+    if (data.error) { el.innerHTML = '<div style="color:#ef4444">' + escHtml(data.error) + '</div>'; return; }
+    var results = data.results || [];
+    var html = '<div style="display:grid;gap:12px">';
+    results.forEach(function(r) {
+      var color = r.error ? '#ef4444' : '#22c55e';
+      html += '<div style="background:#0f172a;border:1px solid #334155;border-radius:10px;padding:14px">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+      html += '<span class="provider-tag">' + escHtml(r.provider) + '</span>';
+      html += '<span style="font-size:12px;color:#94a3b8">' + r.latency_ms + 'ms | ' + r.tokens + ' tokens</span></div>';
+      if (r.error) {
+        html += '<div style="color:#f87171;font-size:13px">' + escHtml(r.error) + '</div>';
+      } else {
+        html += '<div style="font-size:13px;white-space:pre-wrap;line-height:1.5">' + escHtml(r.reply) + '</div>';
+      }
+      html += '</div>';
+    });
+    html += '</div>';
+    el.innerHTML = html;
+  } catch(e) { el.innerHTML = '<div style="color:#ef4444">Error: ' + escHtml(e.message) + '</div>'; }
+});
+
+// ── cURL Generator ────────────────────────────────────────────────────
+document.getElementById('btn-gen-curl').addEventListener('click', function() {
+  var provider = document.getElementById('curl-provider').value;
+  var model = document.getElementById('curl-model').value;
+  var message = document.getElementById('curl-message').value;
+  var baseUrl = window.location.origin;
+  var curl = 'curl ' + baseUrl + '/v1/chat/completions \\\n' +
+    '  -H "Authorization: Bearer YOUR_KEY" \\\n' +
+    '  -H "Content-Type: application/json" \\\n' +
+    '  -d \'' + JSON.stringify({model: model, messages: [{role: "user", content: message}]}, null, 2) + '\'';
+  document.getElementById('curl-code').textContent = curl;
+  document.getElementById('curl-output').style.display = 'block';
+});
+document.getElementById('btn-copy-curl').addEventListener('click', function() {
+  navigator.clipboard.writeText(document.getElementById('curl-code').textContent);
+  showToast('Copied!', 'success');
+});
+
+// ── SDK Snippets ──────────────────────────────────────────────────────
+document.getElementById('btn-gen-sdk').addEventListener('click', function() {
+  var lang = document.getElementById('sdk-lang').value;
+  var endpoint = document.getElementById('sdk-endpoint').value;
+  var baseUrl = window.location.origin;
+  var code = '';
+  if (lang === 'python') {
+    if (endpoint === 'chat') {
+      code = 'import requests\n\nresponse = requests.post(\n    "' + baseUrl + '/v1/chat/completions",\n    headers={"Authorization": "Bearer YOUR_KEY"},\n    json={"model": "gpt-4o", "messages": [{"role": "user", "content": "Hello"}]}\n)\nprint(response.json())';
+    } else if (endpoint === 'models') {
+      code = 'import requests\n\nresponse = requests.get(\n    "' + baseUrl + '/v1/models",\n    headers={"Authorization": "Bearer YOUR_KEY"}\n)\nprint(response.json())';
+    } else if (endpoint === 'race') {
+      code = 'import requests\n\nresponse = requests.post(\n    "' + baseUrl + '/admin/race",\n    headers={"Authorization": "Bearer ADMIN_PASS"},\n    json={"message": "Hello", "providers": ["groq", "openai"]}\n)\nprint(response.json())';
+    } else if (endpoint === 'rumble') {
+      code = 'import requests\n\nresponse = requests.post(\n    "' + baseUrl + '/admin/rumble",\n    headers={"Authorization": "Bearer ADMIN_PASS"},\n    json={"rounds": 3},\n    stream=True\n)\nfor line in response.iter_lines():\n    if line:\n        print(line.decode())';
+    } else if (endpoint === 'roulette') {
+      code = 'import requests\n\nresponse = requests.post(\n    "' + baseUrl + '/admin/roulette",\n    headers={"Authorization": "Bearer ADMIN_PASS"},\n    json={"message": "Say something chaotic"}\n)\nprint(response.json())';
+    }
+  } else if (lang === 'javascript') {
+    if (endpoint === 'chat') {
+      code = 'const response = await fetch("' + baseUrl + '/v1/chat/completions", {\n  method: "POST",\n  headers: {\n    "Authorization": "Bearer YOUR_KEY",\n    "Content-Type": "application/json"\n  },\n  body: JSON.stringify({\n    model: "gpt-4o",\n    messages: [{ role: "user", content: "Hello" }]\n  })\n});\nconsole.log(await response.json());';
+    } else if (endpoint === 'models') {
+      code = 'const response = await fetch("' + baseUrl + '/v1/models", {\n  headers: { "Authorization": "Bearer YOUR_KEY" }\n});\nconsole.log(await response.json());';
+    } else if (endpoint === 'race') {
+      code = 'const response = await fetch("' + baseUrl + '/admin/race", {\n  method: "POST",\n  headers: {\n    "Authorization": "Bearer ADMIN_PASS",\n    "Content-Type": "application/json"\n  },\n  body: JSON.stringify({ message: "Hello", providers: ["groq", "openai"] })\n});\nconsole.log(await response.json());';
+    } else if (endpoint === 'rumble') {
+      code = 'const response = await fetch("' + baseUrl + '/admin/rumble", {\n  method: "POST",\n  headers: {\n    "Authorization": "Bearer ADMIN_PASS",\n    "Content-Type": "application/json"\n  },\n  body: JSON.stringify({ rounds: 3 })\n});\nconst reader = response.body.getReader();\nconst decoder = new TextDecoder();\nwhile (true) {\n  const { done, value } = await reader.read();\n  if (done) break;\n  console.log(decoder.decode(value));\n}';
+    } else if (endpoint === 'roulette') {
+      code = 'const response = await fetch("' + baseUrl + '/admin/roulette", {\n  method: "POST",\n  headers: {\n    "Authorization": "Bearer ADMIN_PASS",\n    "Content-Type": "application/json"\n  },\n  body: JSON.stringify({ message: "Say something chaotic" })\n});\nconsole.log(await response.json());';
+    }
+  } else if (lang === 'go') {
+    if (endpoint === 'chat') {
+      code = 'package main\n\nimport (\n    "bytes"\n    "encoding/json"\n    "fmt"\n    "net/http"\n)\n\nfunc main() {\n    body, _ := json.Marshal(map[string]interface{}{\n        "model": "gpt-4o",\n        "messages": []map[string]string{{"role": "user", "content": "Hello"}},\n    })\n    req, _ := http.NewRequest("POST", "' + baseUrl + '/v1/chat/completions", bytes.NewReader(body))\n    req.Header.Set("Authorization", "Bearer YOUR_KEY")\n    req.Header.Set("Content-Type", "application/json")\n    resp, _ := http.DefaultClient.Do(req)\n    defer resp.Body.Close()\n    fmt.Println(resp.Status)\n}';
+    } else {
+      code = '// Go SDK - see Python/JS examples for endpoint details';
+    }
+  } else if (lang === 'curl') {
+    if (endpoint === 'chat') {
+      code = 'curl ' + baseUrl + '/v1/chat/completions \\\n  -H "Authorization: Bearer YOUR_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d \'{"model":"gpt-4o","messages":[{"role":"user","content":"Hello"}]}\'';
+    } else if (endpoint === 'models') {
+      code = 'curl ' + baseUrl + '/v1/models \\\n  -H "Authorization: Bearer YOUR_KEY"';
+    } else if (endpoint === 'race') {
+      code = 'curl ' + baseUrl + '/admin/race \\\n  -H "Authorization: Bearer ADMIN_PASS" \\\n  -H "Content-Type: application/json" \\\n  -d \'{"message":"Hello","providers":["groq","openai"]}\'';
+    } else if (endpoint === 'rumble') {
+      code = 'curl ' + baseUrl + '/admin/rumble \\\n  -H "Authorization: Bearer ADMIN_PASS" \\\n  -H "Content-Type: application/json" \\\n  -d \'{"rounds":3}\'';
+    } else if (endpoint === 'roulette') {
+      code = 'curl ' + baseUrl + '/admin/roulette \\\n  -H "Authorization: Bearer ADMIN_PASS" \\\n  -H "Content-Type: application/json" \\\n  -d \'{"message":"Say something chaotic"}\'';
+    }
+  }
+  document.getElementById('sdk-code').textContent = code;
+  document.getElementById('sdk-output').style.display = 'block';
+});
+document.getElementById('btn-copy-sdk').addEventListener('click', function() {
+  navigator.clipboard.writeText(document.getElementById('sdk-code').textContent);
+  showToast('Copied!', 'success');
+});
+
+// ── AI Tournament ──────────────────────────────────────────────────────
+document.getElementById('btn-tournament').addEventListener('click', async function() {
+  var prompt = document.getElementById('tournament-prompt').value;
+  var models = [];
+  document.querySelectorAll('#tournament-models input:checked').forEach(function(cb) { models.push(cb.value); });
+  if (models.length < 2) { alert('Select at least 2 models'); return; }
+  var el = document.getElementById('tournament-results');
+  el.innerHTML = '<div style="color:#94a3b8">Running tournament... this may take a moment</div>';
+  try {
+    var res = await adminFetch('/admin/tournament', { method: 'POST', body: JSON.stringify({ message: prompt, models: models }) });
+    var data = await res.json();
+    if (data.error) { el.innerHTML = '<div style="color:#ef4444">' + escHtml(data.error) + '</div>'; return; }
+    var html = '';
+    (data.brackets || []).forEach(function(bracket) {
+      html += '<div style="margin-bottom:16px"><h3 style="font-size:14px;color:#f59e0b;margin-bottom:8px">Round ' + bracket.round + '</h3>';
+      html += '<div style="display:grid;gap:8px">';
+      (bracket.matches || []).forEach(function(m) {
+        var borderColor = m.winner ? '#22c55e' : '#334155';
+        html += '<div style="background:#0f172a;border:1px solid ' + borderColor + ';border-radius:8px;padding:12px">';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+        html += '<span class="provider-tag">' + escHtml(m.model) + '</span>';
+        html += '<span style="font-size:12px;color:#94a3b8">' + m.latency_ms + 'ms' + (m.winner ? ' 🏆' : '') + '</span></div>';
+        if (m.error) {
+          html += '<div style="color:#f87171;font-size:12px">' + escHtml(m.error) + '</div>';
+        } else {
+          html += '<div style="font-size:12px;color:#e2e8f0;white-space:pre-wrap;max-height:120px;overflow-y:auto">' + escHtml(m.reply.substring(0, 300)) + (m.reply.length > 300 ? '...' : '') + '</div>';
+        }
+        html += '</div>';
+      });
+      html += '</div></div>';
+    });
+    if (data.champion) {
+      html += '<div style="padding:16px;background:linear-gradient(135deg,#1e3a5f,#1e1b4b);border:2px solid #f59e0b;border-radius:12px;text-align:center">';
+      html += '<div style="font-size:24px;margin-bottom:8px">🏆</div>';
+      html += '<div style="font-size:16px;font-weight:700;color:#f59e0b">' + escHtml(data.champion) + '</div>';
+      html += '<div style="font-size:12px;color:#94a3b8;margin-top:4px">Tournament Champion</div></div>';
+    }
+    el.innerHTML = html;
+  } catch(e) { el.innerHTML = '<div style="color:#ef4444">Error: ' + escHtml(e.message) + '</div>'; }
+});
 
 askPassword().then(function(pass) {
   ADMIN_PASS = pass;

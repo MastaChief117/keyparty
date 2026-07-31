@@ -78,6 +78,21 @@ func main() {
 	mux.HandleFunc("/admin/budget-alerts", p.HandleBudgetAlerts)
 	mux.HandleFunc("/admin/budget-alerts/", p.HandleBudgetAlerts)
 
+	// New features
+	mux.HandleFunc("/admin/token-calculator", p.HandleTokenCalculator)
+	mux.HandleFunc("/admin/model-explorer", p.HandleModelExplorer)
+	mux.HandleFunc("/admin/compare", p.HandleModelCompare)
+	mux.HandleFunc("/admin/template-search", p.HandleTemplateSearch)
+	mux.HandleFunc("/admin/share", p.HandleShareLink)
+	mux.HandleFunc("/admin/routing-profiles", p.HandleRoutingProfiles)
+	mux.HandleFunc("/admin/provider-profiles", p.HandleProviderProfiles)
+	mux.HandleFunc("/admin/tournament", p.HandleTournament)
+	mux.HandleFunc("/admin/key-expiry", p.HandleSetKeyExpiry)
+	mux.HandleFunc("/admin/ip-allowlist", p.HandleIPAllowlist)
+	mux.HandleFunc("/admin/template-versions", p.HandleTemplateVersions)
+	mux.HandleFunc("/admin/replay", p.HandleRequestReplay)
+	mux.HandleFunc("/admin/inspect-stream", p.HandleStreamingInspect)
+
 	// Hard pro features
 	mux.HandleFunc("/admin/vk-usage", p.HandleUsageDashboard)
 	mux.HandleFunc("/admin/vk-usage/", p.HandleUsageDashboard)
