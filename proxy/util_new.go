@@ -422,7 +422,7 @@ func (p *Proxy) HandlePoll(w http.ResponseWriter, r *http.Request) {
 
 			reply := ""
 			if len(chatResp.Choices) > 0 {
-				reply = chatResp.Choices[0].Message.Content
+				reply = stripThinking(chatResp.Choices[0].Message.Content)
 			}
 
 			mu.Lock()

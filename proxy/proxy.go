@@ -233,7 +233,7 @@ func (p *Proxy) compactHistory(messages []interface{}, compactModel string) ([]i
 		return messages, 0, 0
 	}
 
-	summary := result.Choices[0].Message.Content
+	summary := stripThinking(result.Choices[0].Message.Content)
 	origTokens := 0
 	for _, m := range messages {
 		if msg, ok := m.(map[string]interface{}); ok {
@@ -842,7 +842,7 @@ func (p *Proxy) HandleTestKey(w http.ResponseWriter, r *http.Request) {
 
 	reply := ""
 	if len(chatResp.Choices) > 0 {
-		reply = chatResp.Choices[0].Message.Content
+		reply = stripThinking(chatResp.Choices[0].Message.Content)
 	}
 
 	json.NewEncoder(w).Encode(map[string]interface{}{
@@ -982,7 +982,7 @@ func (p *Proxy) HandleRace(w http.ResponseWriter, r *http.Request) {
 
 			reply := ""
 			if len(chatResp.Choices) > 0 {
-				reply = chatResp.Choices[0].Message.Content
+				reply = stripThinking(chatResp.Choices[0].Message.Content)
 			}
 
 			mu.Lock()
@@ -1597,7 +1597,7 @@ func (p *Proxy) HandleRumble(w http.ResponseWriter, r *http.Request) {
 		}
 		json.Unmarshal(respBody, &chatResp)
 		if len(chatResp.Choices) > 0 {
-			return chatResp.Choices[0].Message.Content, nil
+			return stripThinking(chatResp.Choices[0].Message.Content), nil
 		}
 		return "", fmt.Errorf("empty response from %s", providerName)
 	}

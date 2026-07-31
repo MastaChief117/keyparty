@@ -7,12 +7,23 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
 	"ai-gateway/provider"
 	"ai-gateway/store"
 )
+
+var thinkingTagRe = regexp.MustCompile(`(?s)<thinking>.*?</thinking>|<think>.*?</think>`)
+var thinkMarkerRe = regexp.MustCompile(`(?s)\*\*Thinking:\*\*.*?(?:\*\*Answer:\*\*|\*\*Response:\*\*)`)
+
+func stripThinking(s string) string {
+	s = thinkingTagRe.ReplaceAllString(s, "")
+	s = thinkMarkerRe.ReplaceAllString(s, "")
+	s = strings.TrimSpace(s)
+	return s
+}
 
 // ── MODEL ROULETTE ─────────────────────────────────────────────────────────
 
@@ -110,7 +121,7 @@ func (p *Proxy) HandleRoulette(w http.ResponseWriter, r *http.Request) {
 
 	reply := ""
 	if len(chatResp.Choices) > 0 {
-		reply = chatResp.Choices[0].Message.Content
+		reply = stripThinking(chatResp.Choices[0].Message.Content)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -209,7 +220,7 @@ func (p *Proxy) HandleRoastLogs(w http.ResponseWriter, r *http.Request) {
 
 	reply := ""
 	if len(chatResp.Choices) > 0 {
-		reply = chatResp.Choices[0].Message.Content
+		reply = stripThinking(chatResp.Choices[0].Message.Content)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -320,7 +331,7 @@ func (p *Proxy) HandleTherapist(w http.ResponseWriter, r *http.Request) {
 
 	reply := ""
 	if len(chatResp.Choices) > 0 {
-		reply = chatResp.Choices[0].Message.Content
+		reply = stripThinking(chatResp.Choices[0].Message.Content)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -417,7 +428,7 @@ func (p *Proxy) HandleVibeCheck(w http.ResponseWriter, r *http.Request) {
 
 	reply := ""
 	if len(chatResp.Choices) > 0 {
-		reply = chatResp.Choices[0].Message.Content
+		reply = stripThinking(chatResp.Choices[0].Message.Content)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -561,7 +572,7 @@ func (p *Proxy) HandleRapBattle(w http.ResponseWriter, r *http.Request) {
 		}
 		json.Unmarshal(respBody, &chatResp)
 		if len(chatResp.Choices) > 0 {
-			return chatResp.Choices[0].Message.Content, nil
+			return stripThinking(chatResp.Choices[0].Message.Content), nil
 		}
 		return "", fmt.Errorf("empty response")
 	}

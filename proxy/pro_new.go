@@ -70,7 +70,7 @@ func (p *Proxy) callProviderForPro(providerName string, key store.APIKey, model 
 
 	reply := ""
 	if len(chatResp.Choices) > 0 {
-		reply = chatResp.Choices[0].Message.Content
+		reply = stripThinking(chatResp.Choices[0].Message.Content)
 	}
 	return reply, chatResp.Usage.PromptTokens, chatResp.Usage.CompletionTokens, nil
 }
@@ -442,7 +442,7 @@ func (p *Proxy) HandlePlayground(w http.ResponseWriter, r *http.Request) {
 
 	reply := ""
 	if len(chatResp.Choices) > 0 {
-		reply = chatResp.Choices[0].Message.Content
+		reply = stripThinking(chatResp.Choices[0].Message.Content)
 	}
 
 	json.NewEncoder(w).Encode(map[string]interface{}{
