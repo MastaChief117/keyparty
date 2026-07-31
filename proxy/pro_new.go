@@ -482,7 +482,7 @@ func (p *Proxy) HandleRecap(w http.ResponseWriter, r *http.Request) {
 
 		model := getDefaultModel(providerName)
 		messages := []map[string]string{
-			{"role": "system", "content": "You are a snarky stats bot. Generate a funny weekly recap report based on these API gateway stats. Use emojis and memes. Keep it under 300 words."},
+			{"role": "system", "content": "You are a snarky stats bot. Generate a funny weekly recap report based on these API gateway stats. Use emojis and memes. Keep it under 300 words. Do NOT show reasoning or steps — output ONLY the final recap."},
 			{"role": "user", "content": string(recapBytes)},
 		}
 

@@ -185,7 +185,7 @@ func (p *Proxy) HandleRoastLogs(w http.ResponseWriter, r *http.Request) {
 	body := map[string]interface{}{
 		"model":      getDefaultModel(chosen.Provider),
 		"messages": []map[string]string{
-			{"role": "system", "content": "You are a savage AI. Roast this user's API usage logs. Be funny and brutal. Max 200 words."},
+			{"role": "system", "content": "You are a savage AI. Roast this user's API usage logs. Be funny and brutal. Max 200 words. Do NOT show reasoning or steps — output ONLY the final roast."},
 			{"role": "user", "content": summary.String()},
 		},
 		"max_tokens": 300,
@@ -296,7 +296,7 @@ func (p *Proxy) HandleTherapist(w http.ResponseWriter, r *http.Request) {
 	body := map[string]interface{}{
 		"model": model,
 		"messages": []map[string]string{
-			{"role": "system", "content": "You are a wise, calming AI therapist. Give thoughtful, empathetic but slightly sarcastic advice. Keep it under 150 words."},
+			{"role": "system", "content": "You are a wise, calming AI therapist. Give thoughtful, empathetic but slightly sarcastic advice. Keep it under 150 words. Do NOT show reasoning or steps — output ONLY the final advice."},
 			{"role": "user", "content": reqBody.Message},
 		},
 		"max_tokens": 300,
@@ -393,7 +393,7 @@ func (p *Proxy) HandleVibeCheck(w http.ResponseWriter, r *http.Request) {
 	body := map[string]interface{}{
 		"model": model,
 		"messages": []map[string]string{
-			{"role": "system", "content": "You are a vibe checker. Respond to the user's message with a 'vibe rating' from 1-10, a one-word vibe description (like 'chaotic', 'zen', 'cursed', 'legendary'), and a one-sentence explanation. Format exactly: 'Vibe: [rating]/10 — [word]\n[explanation]'"},
+			{"role": "system", "content": "You are a vibe checker. Respond to the user's message with a 'vibe rating' from 1-10, a one-word vibe description (like 'chaotic', 'zen', 'cursed', 'legendary'), and a one-sentence explanation. Format exactly: 'Vibe: [rating]/10 — [word]\n[explanation]'. Do NOT show reasoning, steps, or chain-of-thought. Output ONLY the final formatted response."},
 			{"role": "user", "content": reqBody.Message},
 		},
 		"max_tokens": 150,
