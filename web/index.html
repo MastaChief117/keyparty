@@ -2280,8 +2280,8 @@ async function loadModels() {
       html += '<span>Speed: <strong>' + escHtml(m.speed) + '</strong></span>';
       html += '<span>Max: <strong>' + (m.max_output_tokens >= 1000 ? (m.max_output_tokens/1000) + 'K' : m.max_output_tokens) + '</strong></span></div>';
       html += '<div style="display:flex;gap:12px;font-size:13px;margin-bottom:8px">';
-      html += '<span style="color:#3b82f6">In: $' + m.input_price.toFixed(2) + '/1M</span>';
-      html += '<span style="color:#f59e0b">Out: $' + m.output_price.toFixed(2) + '/1M</span></div>';
+      html += '<span style="color:#3b82f6">In: $' + (m.input_price_per_1m || 0).toFixed(2) + '/1M</span>';
+      html += '<span style="color:#f59e0b">Out: $' + (m.output_price_per_1m || 0).toFixed(2) + '/1M</span></div>';
       html += '<div style="margin-bottom:6px">' + caps + '</div>';
       html += '<div>' + recs + '</div></div>';
     });
