@@ -1096,8 +1096,15 @@ func estimateCost(provider, model string, tokensIn, tokensOut int) float64 {
 			"claude-opus-4-5":   {15 / 1000000, 75 / 1000000},
 		},
 		"gemini": {
-			"gemini-2.5-flash-preview-06-05": {0.15 / 1000000, 0.6 / 1000000},
-			"gemini-2.5-pro-preview-06-05":   {1.25 / 1000000, 10 / 1000000},
+			"gemini-3.6-flash":              {0.10 / 1000000, 0.40 / 1000000},
+			"gemini-3.5-flash":              {0.15 / 1000000, 0.60 / 1000000},
+			"gemini-3.5-flash-lite":         {0.075 / 1000000, 0.30 / 1000000},
+			"gemini-3.1-flash-lite":         {0.075 / 1000000, 0.30 / 1000000},
+			"gemini-3.1-pro-preview":        {2.00 / 1000000, 12.00 / 1000000},
+			"gemini-3-flash-preview":        {0.50 / 1000000, 3.00 / 1000000},
+			"gemini-2.5-pro":                {1.25 / 1000000, 10.00 / 1000000},
+			"gemini-2.5-flash":              {0.15 / 1000000, 0.60 / 1000000},
+			"gemini-2.5-flash-lite":         {0.075 / 1000000, 0.30 / 1000000},
 		},
 		"groq": {
 			"llama-3.3-70b-versatile": {0.59 / 1000000, 0.79 / 1000000},

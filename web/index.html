@@ -553,14 +553,9 @@ tr:hover{background:rgba(59,130,246,0.05)}
 <textarea id="tournament-prompt" rows="2" placeholder="Write a short poem about the future of AI.">Write a short poem about the future of AI.</textarea>
 </div>
 <div class="form-group" style="margin-bottom:10px">
-<label>Models (select at least 2)</label>
+<label>Models from your saved keys (select at least 2)</label>
 <div style="display:flex;flex-wrap:wrap;gap:8px" id="tournament-models">
-<label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer"><input type="checkbox" value="openai/gpt-4o" checked> GPT-4o</label>
-<label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer"><input type="checkbox" value="anthropic/claude-sonnet-4-5" checked> Claude Sonnet 4.5</label>
-<label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer"><input type="checkbox" value="groq/llama-3.3-70b-versatile"> Llama 3.3 70B</label>
-<label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer"><input type="checkbox" value="deepseek/deepseek-chat"> DeepSeek V3</label>
-<label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer"><input type="checkbox" value="gemini/gemini-2.5-flash-preview-06-05"> Gemini Flash</label>
-<label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer"><input type="checkbox" value="mistral/mistral-large-latest"> Mistral Large</label>
+<div style="color:#94a3b8;font-size:13px">Loading available models...</div>
 </div>
 </div>
 <button class="btn btn-primary" id="btn-tournament">🏆 Start Tournament</button>
@@ -2193,6 +2188,7 @@ document.querySelectorAll('.tab').forEach(function(tab) {
     if (tabName === 'utils') { loadWebhooks(); loadTemplates(); loadRateTiers(); loadBudgetAlerts(); }
     if (tabName === 'pro') { loadVKUsage(); loadRotateStatus(); loadAnalytics(); }
     if (tabName === 'tools') loadModels();
+    if (tabName === 'tournament') loadTournamentModels();
     if (tabName === 'logs') loadLogs();
   });
 });
@@ -2402,6 +2398,27 @@ document.getElementById('btn-copy-sdk').addEventListener('click', function() {
 });
 
 // ── AI Tournament ──────────────────────────────────────────────────────
+async function loadTournamentModels() {
+  var el = document.getElementById('tournament-models');
+  try {
+    var data = await (await adminFetch('/admin/tournament/models')).json();
+    var models = data.models || [];
+    if (models.length === 0) {
+      el.innerHTML = '<div style="color:#f87171;font-size:13px">No enabled keys found. Add API keys first.</div>';
+      return;
+    }
+    var html = '';
+    models.forEach(function(m, i) {
+      html += '<label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer">';
+      html += '<input type="checkbox" value="' + escHtml(m.value) + '"' + (i < 2 ? ' checked' : '') + '> ' + escHtml(m.label);
+      html += '</label>';
+    });
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = '<div style="color:#f87171;font-size:13px">Failed to load models</div>';
+  }
+}
+
 document.getElementById('btn-tournament').addEventListener('click', async function() {
   var prompt = document.getElementById('tournament-prompt').value;
   var models = [];

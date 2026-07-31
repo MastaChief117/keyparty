@@ -87,6 +87,7 @@ func main() {
 	mux.HandleFunc("/admin/routing-profiles", p.HandleRoutingProfiles)
 	mux.HandleFunc("/admin/provider-profiles", p.HandleProviderProfiles)
 	mux.HandleFunc("/admin/tournament", p.HandleTournament)
+	mux.HandleFunc("/admin/tournament/models", p.HandleTournamentModels)
 	mux.HandleFunc("/admin/key-expiry", p.HandleSetKeyExpiry)
 	mux.HandleFunc("/admin/ip-allowlist", p.HandleIPAllowlist)
 	mux.HandleFunc("/admin/template-versions", p.HandleTemplateVersions)

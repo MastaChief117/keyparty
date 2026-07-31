@@ -51,9 +51,15 @@ func (p *Proxy) HandleTokenCalculator(w http.ResponseWriter, r *http.Request) {
 			"claude-opus-4-5":   {15 / 1000000, 75 / 1000000},
 		},
 		"gemini": {
-			"gemini-2.5-flash-preview-06-05": {0.15 / 1000000, 0.6 / 1000000},
-			"gemini-2.5-pro-preview-06-05":   {1.25 / 1000000, 10 / 1000000},
-			"gemini-2.0-flash":               {0.1 / 1000000, 0.4 / 1000000},
+			"gemini-3.6-flash":         {0.10 / 1000000, 0.40 / 1000000},
+			"gemini-3.5-flash":         {0.15 / 1000000, 0.60 / 1000000},
+			"gemini-3.5-flash-lite":    {0.075 / 1000000, 0.30 / 1000000},
+			"gemini-3.1-flash-lite":    {0.075 / 1000000, 0.30 / 1000000},
+			"gemini-3.1-pro-preview":   {2.00 / 1000000, 12.00 / 1000000},
+			"gemini-3-flash-preview":   {0.50 / 1000000, 3.00 / 1000000},
+			"gemini-2.5-pro":           {1.25 / 1000000, 10.00 / 1000000},
+			"gemini-2.5-flash":         {0.15 / 1000000, 0.60 / 1000000},
+			"gemini-2.5-flash-lite":    {0.075 / 1000000, 0.30 / 1000000},
 		},
 		"groq": {
 			"llama-3.3-70b-versatile": {0.59 / 1000000, 0.79 / 1000000},
@@ -155,9 +161,14 @@ func (p *Proxy) HandleModelExplorer(w http.ResponseWriter, r *http.Request) {
 		{Name: "claude-sonnet-4-5", Provider: "anthropic", FullName: "Claude Sonnet 4.5", ContextWindow: 200000, InputPrice: 3.00, OutputPrice: 15.00, Capabilities: []string{"chat", "vision", "coding", "analysis"}, RecommendedFor: []string{"coding", "analysis", "writing"}, Speed: "fast", MaxOutput: 16384},
 		{Name: "claude-haiku-4-5", Provider: "anthropic", FullName: "Claude Haiku 4.5", ContextWindow: 200000, InputPrice: 0.80, OutputPrice: 4.00, Capabilities: []string{"chat", "vision", "coding"}, RecommendedFor: []string{"quick tasks", "cost-sensitive"}, Speed: "very fast", MaxOutput: 8192},
 		{Name: "claude-opus-4-5", Provider: "anthropic", FullName: "Claude Opus 4.5", ContextWindow: 200000, InputPrice: 15.00, OutputPrice: 75.00, Capabilities: []string{"chat", "vision", "coding", "analysis", "reasoning"}, RecommendedFor: []string{"highest quality", "complex tasks"}, Speed: "slow", MaxOutput: 32768},
-		{Name: "gemini-2.5-pro-preview-06-05", Provider: "gemini", FullName: "Gemini 2.5 Pro", ContextWindow: 1048576, InputPrice: 1.25, OutputPrice: 10.00, Capabilities: []string{"chat", "vision", "long context", "coding"}, RecommendedFor: []string{"long documents", "analysis", "coding"}, Speed: "fast", MaxOutput: 65536},
-		{Name: "gemini-2.5-flash-preview-06-05", Provider: "gemini", FullName: "Gemini 2.5 Flash", ContextWindow: 1048576, InputPrice: 0.15, OutputPrice: 0.60, Capabilities: []string{"chat", "vision", "long context"}, RecommendedFor: []string{"fast cheap tasks", "high volume"}, Speed: "very fast", MaxOutput: 65536},
-		{Name: "gemini-2.0-flash", Provider: "gemini", FullName: "Gemini 2.0 Flash", ContextWindow: 1048576, InputPrice: 0.10, OutputPrice: 0.40, Capabilities: []string{"chat", "vision", "function_calling"}, RecommendedFor: []string{"ultra cheap", "simple tasks"}, Speed: "very fast", MaxOutput: 8192},
+		{Name: "gemini-3.6-flash", Provider: "gemini", FullName: "Gemini 3.6 Flash", ContextWindow: 1048576, InputPrice: 0.10, OutputPrice: 0.40, Capabilities: []string{"chat", "vision", "long context"}, RecommendedFor: []string{"fastest, latest stable"}, Speed: "very fast", MaxOutput: 65536},
+		{Name: "gemini-3.5-flash", Provider: "gemini", FullName: "Gemini 3.5 Flash", ContextWindow: 1048576, InputPrice: 0.15, OutputPrice: 0.60, Capabilities: []string{"chat", "vision", "long context"}, RecommendedFor: []string{"balanced speed/quality"}, Speed: "very fast", MaxOutput: 65536},
+		{Name: "gemini-3.5-flash-lite", Provider: "gemini", FullName: "Gemini 3.5 Flash Lite", ContextWindow: 1048576, InputPrice: 0.075, OutputPrice: 0.30, Capabilities: []string{"chat", "vision", "long context"}, RecommendedFor: []string{"ultra cheap", "high volume"}, Speed: "very fast", MaxOutput: 65536},
+		{Name: "gemini-3.1-flash-lite", Provider: "gemini", FullName: "Gemini 3.1 Flash Lite", ContextWindow: 1048576, InputPrice: 0.075, OutputPrice: 0.30, Capabilities: []string{"chat", "vision", "long context"}, RecommendedFor: []string{"cost-effective stable"}, Speed: "very fast", MaxOutput: 65536},
+		{Name: "gemini-3.1-pro-preview", Provider: "gemini", FullName: "Gemini 3.1 Pro Preview", ContextWindow: 1048576, InputPrice: 2.00, OutputPrice: 12.00, Capabilities: []string{"chat", "vision", "reasoning", "long context", "coding"}, RecommendedFor: []string{"complex reasoning", "analysis"}, Speed: "medium", MaxOutput: 65536},
+		{Name: "gemini-3-flash-preview", Provider: "gemini", FullName: "Gemini 3 Flash Preview", ContextWindow: 1048576, InputPrice: 0.50, OutputPrice: 3.00, Capabilities: []string{"chat", "vision", "long context"}, RecommendedFor: []string{"fast Gemini 3 preview"}, Speed: "fast", MaxOutput: 65536},
+		{Name: "gemini-2.5-pro", Provider: "gemini", FullName: "Gemini 2.5 Pro", ContextWindow: 1048576, InputPrice: 1.25, OutputPrice: 10.00, Capabilities: []string{"chat", "vision", "long context", "coding", "reasoning"}, RecommendedFor: []string{"long documents", "analysis"}, Speed: "fast", MaxOutput: 65536},
+		{Name: "gemini-2.5-flash", Provider: "gemini", FullName: "Gemini 2.5 Flash", ContextWindow: 1048576, InputPrice: 0.15, OutputPrice: 0.60, Capabilities: []string{"chat", "vision", "long context"}, RecommendedFor: []string{"balanced, production stable"}, Speed: "very fast", MaxOutput: 65536},
 		{Name: "llama-3.3-70b-versatile", Provider: "groq", FullName: "Llama 3.3 70B (Groq)", ContextWindow: 128000, InputPrice: 0.59, OutputPrice: 0.79, Capabilities: []string{"chat", "function_calling"}, RecommendedFor: []string{"fast inference", "cost-effective"}, Speed: "very fast", MaxOutput: 32768},
 		{Name: "llama-3.1-8b-instant", Provider: "groq", FullName: "Llama 3.1 8B (Groq)", ContextWindow: 128000, InputPrice: 0.05, OutputPrice: 0.08, Capabilities: []string{"chat"}, RecommendedFor: []string{"ultra fast", "simple tasks"}, Speed: "blazing fast", MaxOutput: 8192},
 		{Name: "deepseek-chat", Provider: "deepseek", FullName: "DeepSeek V3", ContextWindow: 128000, InputPrice: 0.14, OutputPrice: 0.28, Capabilities: []string{"chat", "coding"}, RecommendedFor: []string{"coding", "cheap quality"}, Speed: "fast", MaxOutput: 8192},
@@ -473,6 +484,57 @@ func (p *Proxy) HandleProviderProfiles(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"providers": profiles,
+	})
+}
+
+// ── Tournament: Get Available Models from Saved Keys ───────────────────
+
+func (p *Proxy) HandleTournamentModels(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	keys, err := p.store.GetKeys()
+	if err != nil {
+		http.Error(w, `{"error":"Failed to get keys"}`, 500)
+		return
+	}
+
+	type modelOption struct {
+		Value    string `json:"value"`
+		Label    string `json:"label"`
+		Provider string `json:"provider"`
+		Model    string `json:"model"`
+	}
+
+	seen := map[string]bool{}
+	var options []modelOption
+	for _, k := range keys {
+		if !k.Enabled || k.Provider == "custom" {
+			continue
+		}
+		model := k.Model
+		if model == "" {
+			model = "default"
+		}
+		key := k.Provider + "/" + model
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		options = append(options, modelOption{
+			Value:    key,
+			Label:    k.Name + " (" + k.Provider + "/" + model + ")",
+			Provider: k.Provider,
+			Model:    model,
+		})
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"models": options,
+		"total":  len(options),
 	})
 }
 
