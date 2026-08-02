@@ -323,6 +323,8 @@ func (p *Proxy) HandleChatCompletions(w http.ResponseWriter, r *http.Request) {
 
 	modelName, _ := reqBody["model"].(string)
 	isStream, _ := reqBody["stream"].(bool)
+	overrideProvider := r.Header.Get("X-Gateway-Provider")
+	overrideModel := r.Header.Get("X-Gateway-Model")
 
 	if vk != nil {
 		if vk.MonthlyBudget > 0 && vk.UsedThisMonth >= vk.MonthlyBudget {
@@ -391,8 +393,18 @@ func (p *Proxy) HandleChatCompletions(w http.ResponseWriter, r *http.Request) {
 
 	var targetKey *store.APIKey
 
-	if k, err := p.store.GetKeyByModel(modelName); err == nil {
-		targetKey = k
+	if overrideProvider != "" {
+		keys, err := p.store.GetKeysByProvider(overrideProvider)
+		if err == nil && len(keys) > 0 {
+			idx := p.getRoundRobinIndex(overrideProvider)
+			targetKey = &keys[idx%int64(len(keys))]
+		}
+	}
+
+	if targetKey == nil {
+		if k, err := p.store.GetKeyByModel(modelName); err == nil {
+			targetKey = k
+		}
 	}
 
 	if targetKey == nil {
@@ -464,6 +476,9 @@ func (p *Proxy) HandleChatCompletions(w http.ResponseWriter, r *http.Request) {
 	actualModel := targetKey.Model
 	if actualModel == "" {
 		actualModel = stripProviderPrefix(modelName)
+	}
+	if overrideModel != "" {
+		actualModel = overrideModel
 	}
 	reqBody["model"] = actualModel
 
