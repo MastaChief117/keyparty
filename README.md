@@ -50,6 +50,30 @@ Dashboard: **http://localhost:8080**
 
 No Docker. No npm. No sacrifice to the JavaScript gods. The script handles Go, builds the binary, and optionally sets up a Cloudflare tunnel.
 
+### Provider/Model Override
+
+Route requests to any saved provider using request headers, even if the model name would normally go elsewhere:
+
+```bash
+# Default routing → auto-matches model to provider
+curl http://localhost:8080/v1/chat/completions \
+  -H "Authorization: Bearer YOUR_UNIFIED_KEY" \
+  -d '{"model":"llama-3.3-70b-versatile","messages":[{"role":"user","content":"Hello"}]}'
+
+# Force a specific provider
+curl http://localhost:8080/v1/chat/completions \
+  -H "Authorization: Bearer YOUR_UNIFIED_KEY" \
+  -H "X-Gateway-Provider: gemini" \
+  -d '{"model":"llama-3.3-70b-versatile","messages":[{"role":"user","content":"Hello"}]}'
+
+# Force provider + override model name
+curl http://localhost:8080/v1/chat/completions \
+  -H "Authorization: Bearer YOUR_UNIFIED_KEY" \
+  -H "X-Gateway-Provider: nvidia" \
+  -H "X-Gateway-Model: nvidia/nemotron-3-nano-30b-a3b" \
+  -d '{"model":"llama-3.3-70b-versatile","messages":[{"role":"user","content":"Hello"}]}'
+```
+
 ### Manual build
 
 ```bash
@@ -100,7 +124,9 @@ One client → one KeyParty endpoint → any provider. That's it. [Full architec
 |---------|-------------|
 | Multi-Provider Routing | OpenAI, Anthropic, Gemini, Groq, NVIDIA, Together, DeepSeek, OpenRouter, Fireworks, Mistral — one endpoint |
 | Round-Robin Rotation | Spreads requests across multiple keys per provider |
-| Compaction Failover | When quota dies (402), summarizes chat history and sends to backup provider |
+| Provider/Model Override | Route to any saved provider via `X-Gateway-Provider` header, override model via `X-Gateway-Model` |
+| Compaction Failover | When quota dies (429/402), summarizes chat history and fails over to backup provider |
+| Model-Based Routing | Send `model: "llama-3.3-70b-versatile"` and it auto-matches to the right provider |
 | Provider Race Mode | Sends to multiple providers simultaneously, returns the fastest |
 | Guardrails | PII detection, prompt injection blocking, custom regex rules |
 | Virtual Keys | Consumer-facing keys with budgets, rate limits, and model allowlists |
@@ -254,6 +280,9 @@ A: Because it's a party for your API keys. They finally get to hang out together
 - [x] Full security audit (31 vulnerabilities fixed)
 - [x] SSRF bypass fix (IPv6-mapped, decimal, hex IPs)
 - [x] Brute-force protection on admin auth
+- [x] Provider/Model override via request headers
+- [x] Model-based auto-routing (send model name, gateway finds the right provider)
+- [x] Compaction rollover verified working (429 → compact → failover)
 - [ ] Semantic caching
 - [ ] MCP support
 - [ ] A/B testing

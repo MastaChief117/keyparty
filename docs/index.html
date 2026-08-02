@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KeyParty — One Endpoint. Ten Providers. Zero Budget.</title>
+<meta name="description" content="Self-hosted AI gateway for broke devs. Route requests across 10 LLM providers with one endpoint.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --text: #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary: #94a3b8;
+  --border: #e2e8f0;
+  --border-hover: #cbd5e1;
+  --accent: #3b82f6;
+  --accent-hover: #2563eb;
+  --accent-light: #eff6ff;
+  --purple: #8b5cf6;
+  --purple-light: #f5f3ff;
+  --green: #22c55e;
+  --green-light: #f0fdf4;
+  --orange: #f59e0b;
+  --orange-light: #fffbeb;
+  --red: #ef4444;
+  --red-light: #fef2f2;
+  --code-bg: #f8fafc;
+  --card-bg: #ffffff;
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --card-shadow-hover: 0 10px 25px rgba(0,0,0,0.08), 0 4px 10px rgba(0,0,0,0.04);
+  --nav-bg: rgba(255,255,255,0.85);
+  --hero-gradient: linear-gradient(135deg, #eff6ff 0%, #f5f3ff 50%, #f0fdf4 100%);
+  --badge-bg: #f1f5f9;
+}
+
+[data-theme="dark"] {
+  --bg: #0a0a1a;
+  --bg-secondary: #111827;
+  --bg-tertiary: #1e293b;
+  --text: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-tertiary: #64748b;
+  --border: #1e293b;
+  --border-hover: #334155;
+  --accent: #60a5fa;
+  --accent-hover: #93bbfd;
+  --accent-light: #1e293b;
+  --purple: #a78bfa;
+  --purple-light: #1e293b;
+  --green: #4ade80;
+  --green-light: #1e293b;
+  --orange: #fbbf24;
+  --orange-light: #1e293b;
+  --red: #f87171;
+  --red-light: #1e293b;
+  --code-bg: #111827;
+  --card-bg: #111827;
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  --card-shadow-hover: 0 10px 25px rgba(0,0,0,0.4);
+  --nav-bg: rgba(10,10,26,0.9);
+  --hero-gradient: linear-gradient(135deg, #0a0a1a 0%, #111827 50%, #0a0a1a 100%);
+  --badge-bg: #1e293b;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  transition: background 0.3s, color 0.3s;
+}
+
+/* ─── NAV ──────────────────────────────────────────────────── */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--nav-bg);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  transition: background 0.3s, border 0.3s;
+}
+.nav-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.nav-logo {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nav-logo span { color: var(--accent); }
+.nav-links { display: flex; gap: 32px; align-items: center; }
+.nav-links a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--text); }
+.theme-toggle {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background 0.3s, border 0.3s;
+  color: var(--text);
+}
+.theme-toggle:hover { border-color: var(--border-hover); }
+.nav-cta {
+  background: var(--accent);
+  color: #fff !important;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.nav-cta:hover { background: var(--accent-hover); }
+.mobile-menu { display: none; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text); }
+
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .mobile-menu { display: block; }
+  .nav-links.open {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 64px;
+    left: 0;
+    right: 0;
+    background: var(--nav-bg);
+    backdrop-filter: blur(12px);
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    gap: 16px;
+  }
+}
+
+/* ─── HERO ─────────────────────────────────────────────────── */
+.hero {
+  padding: 140px 24px 80px;
+  text-align: center;
+  background: var(--hero-gradient);
+  transition: background 0.3s;
+}
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--badge-bg);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+}
+.hero-badge .dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; }
+.hero h1 {
+  font-size: clamp(36px, 6vw, 64px);
+  font-weight: 900;
+  line-height: 1.1;
+  margin-bottom: 16px;
+  letter-spacing: -0.03em;
+}
+.hero h1 .gradient {
+  background: linear-gradient(135deg, var(--accent), var(--purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero p {
+  font-size: clamp(16px, 2vw, 20px);
+  color: var(--text-secondary);
+  max-width: 600px;
+  margin: 0 auto 32px;
+  line-height: 1.6;
+}
+.hero-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+.btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+.btn-secondary:hover { border-color: var(--border-hover); transform: translateY(-1px); }
+.hero-code {
+  max-width: 700px;
+  margin: 48px auto 0;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  text-align: left;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  color: var(--text-secondary);
+  overflow-x: auto;
+  transition: background 0.3s, border 0.3s;
+}
+.hero-code .prompt { color: var(--green); }
+.hero-code .flag { color: var(--purple); }
+.hero-code .string { color: var(--orange); }
+.hero-code .comment { color: var(--text-tertiary); }
+
+/* ─── SECTIONS ─────────────────────────────────────────────── */
+section { padding: 80px 24px; }
+.section-inner { max-width: 1200px; margin: 0 auto; }
+.section-header { text-align: center; margin-bottom: 48px; }
+.section-header h2 {
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 800;
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+}
+.section-header p { color: var(--text-secondary); font-size: 17px; max-width: 600px; margin: 0 auto; }
+.section-alt { background: var(--bg-secondary); }
+.section-alt .section-header p { color: var(--text-secondary); }
+
+/* ─── STATS BAR ────────────────────────────────────────────── */
+.stats-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  max-width: 800px;
+  margin: -40px auto 0;
+  position: relative;
+  z-index: 2;
+}
+.stat {
+  background: var(--card-bg);
+  padding: 24px;
+  text-align: center;
+}
+.stat-number { font-size: 28px; font-weight: 800; color: var(--accent); }
+.stat-label { font-size: 13px; color: var(--text-tertiary); margin-top: 4px; }
+@media (max-width: 600px) { .stats-bar { grid-template-columns: repeat(2, 1fr); } }
+
+/* ─── FEATURE GRID ─────────────────────────────────────────── */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+.feature-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px;
+  transition: all 0.3s;
+}
+.feature-card:hover {
+  border-color: var(--accent);
+  box-shadow: var(--card-shadow-hover);
+  transform: translateY(-2px);
+}
+.feature-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  margin-bottom: 16px;
+}
+.feature-icon.blue { background: var(--accent-light); }
+.feature-icon.purple { background: var(--purple-light); }
+.feature-icon.green { background: var(--green-light); }
+.feature-icon.orange { background: var(--orange-light); }
+.feature-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+.feature-card p { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+
+/* ─── PROVIDERS ────────────────────────────────────────────── */
+.provider-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+.provider-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 16px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.provider-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.provider-card .icon { font-size: 24px; margin-bottom: 8px; }
+
+/* ─── CODE BLOCKS ──────────────────────────────────────────── */
+.code-block {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: background 0.3s, border 0.3s;
+}
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+.code-header .dots { display: flex; gap: 6px; }
+.code-header .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); }
+.code-body {
+  padding: 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  overflow-x: auto;
+  color: var(--text-secondary);
+}
+.code-body .kw { color: var(--purple); }
+.code-body .str { color: var(--orange); }
+.code-body .fn { color: var(--accent); }
+.code-body .cm { color: var(--text-tertiary); }
+.code-body .num { color: var(--green); }
+
+/* ─── ARCHITECTURE ─────────────────────────────────────────── */
+.arch-diagram {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 20px;
+}
+.arch-box {
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  min-width: 200px;
+}
+.arch-client { background: var(--accent-light); color: var(--accent); border: 1px solid var(--accent); }
+.arch-gateway { background: var(--purple-light); color: var(--purple); border: 2px solid var(--purple); font-size: 16px; padding: 16px 32px; }
+.arch-providers {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.arch-provider { background: var(--green-light); color: var(--green); border: 1px solid var(--green); font-size: 12px; padding: 8px 16px; }
+.arch-arrow { font-size: 20px; color: var(--text-tertiary); }
+
+/* ─── COMPARISON TABLE ─────────────────────────────────────── */
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.comparison-table th, .comparison-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.comparison-table th {
+  background: var(--bg-secondary);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.comparison-table td { color: var(--text-secondary); }
+.comparison-table tr:last-child td { border-bottom: none; }
+.comparison-table tr:hover td { background: var(--bg-secondary); }
+.check { color: var(--green); font-weight: bold; }
+.cross { color: var(--text-tertiary); }
+
+/* ─── TABS ──────────────────────────────────────────────────── */
+.tabs { margin-bottom: 24px; display: flex; gap: 4px; flex-wrap: wrap; }
+.tab-btn {
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.tab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.tab-btn:hover:not(.active) { border-color: var(--border-hover); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ─── FAQ ───────────────────────────────────────────────────── */
+.faq-item {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  transition: border 0.2s;
+}
+.faq-q {
+  padding: 16px 20px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--card-bg);
+  transition: background 0.2s;
+}
+.faq-q:hover { background: var(--bg-secondary); }
+.faq-q .arrow { transition: transform 0.2s; font-size: 12px; color: var(--text-tertiary); }
+.faq-item.open .faq-q .arrow { transform: rotate(180deg); }
+.faq-a {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s, padding 0.3s;
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+.faq-item.open .faq-a { max-height: 500px; padding: 0 20px 16px; }
+
+/* ─── FOOTER ───────────────────────────────────────────────── */
+footer {
+  padding: 48px 24px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: 14px;
+}
+footer a { color: var(--accent); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+.footer-links { display: flex; gap: 24px; justify-content: center; margin-bottom: 16px; flex-wrap: wrap; }
+
+/* ─── ANIMATIONS ───────────────────────────────────────────── */
+.fade-in {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ─── DOCS SECTION ─────────────────────────────────────────── */
+.doc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+.doc-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 24px;
+  text-decoration: none;
+  color: var(--text);
+  transition: all 0.2s;
+}
+.doc-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--card-shadow-hover); }
+.doc-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+.doc-card p { font-size: 13px; color: var(--text-secondary); }
+</style>
+</head>
+<body>
+
+<!-- ─── NAV ──────────────────────────────────────────────── -->
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="nav-logo"><span>K</span>KeyParty</a>
+    <button class="mobile-menu" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#providers">Providers</a>
+      <a href="#quickstart">Quick Start</a>
+      <a href="#docs">Docs</a>
+      <a href="#guides">Guides</a>
+      <a href="#faq">FAQ</a>
+      <a href="https://github.com/MastaChief117/keyparty" class="nav-cta">GitHub</a>
+      <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">&#9789;</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ─── HERO ─────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="hero-badge"><span class="dot"></span> Open source &middot; MIT License</div>
+  <h1>One Endpoint.<br><span class="gradient">Ten Providers.</span><br>Zero Budget.</h1>
+  <p>Route AI requests across OpenAI, Anthropic, Gemini, Groq, NVIDIA, and more. Single binary. No dependencies. Runs on a potato.</p>
+  <div class="hero-buttons">
+    <a href="#quickstart" class="btn btn-primary">Get Started</a>
+    <a href="https://github.com/MastaChief117/keyparty" class="btn btn-secondary">&#9733; Star on GitHub</a>
+  </div>
+  <div class="hero-code">
+    <span class="comment"># One endpoint, any provider</span><br>
+    <span class="prompt">$</span> curl http://localhost:8080/v1/chat/completions \<br>
+    &nbsp;&nbsp;<span class="flag">-H</span> <span class="string">"Authorization: Bearer YOUR_KEY"</span> \<br>
+    &nbsp;&nbsp;<span class="flag">-d</span> <span class="string">'{"model":"gpt-4o","messages":[{"role":"user","content":"Hello"}]}'</span>
+  </div>
+</section>
+
+<!-- ─── STATS ────────────────────────────────────────────── -->
+<div class="stats-bar fade-in">
+  <div class="stat"><div class="stat-number">10</div><div class="stat-label">Providers</div></div>
+  <div class="stat"><div class="stat-number">16MB</div><div class="stat-label">Binary Size</div></div>
+  <div class="stat"><div class="stat-number">13MB</div><div class="stat-label">RAM Idle</div></div>
+  <div class="stat"><div class="stat-number">220+</div><div class="stat-label">Requests/sec</div></div>
+</div>
+
+<!-- ─── FEATURES ─────────────────────────────────────────── -->
+<section id="features" class="section-alt">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2>Everything you need</h2>
+      <p>Multi-provider routing, failover, encryption, and a dashboard. Plus AI rumble and rap battles.</p>
+    </div>
+    <div class="feature-grid">
+      <div class="feature-card fade-in">
+        <div class="feature-icon blue">&#9889;</div>
+        <h3>Multi-Provider Routing</h3>
+        <p>One endpoint for OpenAI, Anthropic, Gemini, Groq, NVIDIA, Together, DeepSeek, OpenRouter, Fireworks, and Mistral.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon purple">&#8644;</div>
+        <h3>Provider/Model Override</h3>
+        <p>Use <code>X-Gateway-Provider</code> and <code>X-Gateway-Model</code> headers to route any request to any saved provider.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon green">&#9854;</div>
+        <h3>Compaction Failover</h3>
+        <p>When a provider dies (429/402), chat history is summarized and rerouted to a backup provider automatically.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon orange">&#127922;</div>
+        <h3>Provider Race Mode</h3>
+        <p>Send the same prompt to multiple providers simultaneously. First response wins. The fastest AI wins the race.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon blue">&#128272;</div>
+        <h3>Virtual Keys</h3>
+        <p>Consumer-facing keys with per-key budgets, rate limits, and model allowlists. Perfect for multi-tenant setups.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon purple">&#128200;</div>
+        <h3>Cost Tracking</h3>
+        <p>Track every penny across all providers. Per-model, per-day, per-key cost analytics with visual breakdowns.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon green">&#128737;</div>
+        <h3>Guardrails</h3>
+        <p>PII detection, prompt injection blocking, custom regex rules. Keep your users safe and your API secure.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon orange">&#128274;</div>
+        <h3>Encryption at Rest</h3>
+        <p>AES-256-GCM encryption for all API keys. Master key stored with 0600 permissions. No hand-rolled crypto.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon blue">&#128640;</div>
+        <h3>Auto-Rotate Keys</h3>
+        <p>Pick the healthiest key per provider automatically. No more manual key shuffling when one goes down.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon purple">&#127916;</div>
+        <h3>AI Rumble & Rap Battle</h3>
+        <p>Two providers roast each other in real-time via SSE. Or drop bars. It's exactly as chaotic as it sounds.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon green">&#128196;</div>
+        <h3>Prompt Templates</h3>
+        <p>Save and manage system prompts. Version them. Use them across requests. No more copy-pasting prompts.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon orange">&#128276;</div>
+        <h3>Webhooks</h3>
+        <p>Get notified on events: request completions, errors, failovers, budget alerts. Push to Slack, Discord, or anywhere.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── PROVIDERS ────────────────────────────────────────── -->
+<section id="providers">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2>10 providers. One endpoint.</h2>
+      <p>Bring your own keys. Route to whichever provider is currently breathing.</p>
+    </div>
+    <div class="provider-grid fade-in">
+      <div class="provider-card"><div class="icon">&#9889;</div>OpenAI</div>
+      <div class="provider-card"><div class="icon">&#129302;</div>Anthropic</div>
+      <div class="provider-card"><div class="icon">&#127760;</div>Gemini</div>
+      <div class="provider-card"><div class="icon">&#9889;</div>Groq</div>
+      <div class="provider-card"><div class="icon">&#129504;</div>NVIDIA</div>
+      <div class="provider-card"><div class="icon">&#128293;</div>Fireworks</div>
+      <div class="provider-card"><div class="icon">&#128101;</div>Together</div>
+      <div class="provider-card"><div class="icon">&#128126;</div>DeepSeek</div>
+      <div class="provider-card"><div class="icon">&#127760;</div>OpenRouter</div>
+      <div class="provider-card"><div class="icon">&#128008;</div>Mistral</div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── QUICK START ──────────────────────────────────────── -->
+<section id="quickstart" class="section-alt">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2>Quick Start</h2>
+      <p>Up and running in 30 seconds. No Docker. No npm. No JavaScript gods.</p>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab('tab-install')">Install</button>
+      <button class="tab-btn" onclick="showTab('tab-provider-override')">Provider Override</button>
+      <button class="tab-btn" onclick="showTab('tab-failover')">Failover</button>
+      <button class="tab-btn" onclick="showTab('tab-virtual-keys')">Virtual Keys</button>
+    </div>
+
+    <div id="tab-install" class="tab-panel active">
+      <div class="code-block">
+        <div class="code-header"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>terminal</div>
+        <div class="code-body">
+<span class="cm"># Clone and build</span>
+<span class="kw">git clone</span> https://github.com/MastaChief117/keyparty.git
+<span class="kw">cd</span> keyparty
+<span class="kw">go build</span> -o keyparty .
+
+<span class="cm"># Run it</span>
+./keyparty -port <span class="num">8080</span> -admin-pass <span class="str">your-password</span>
+
+<span class="cm"># Dashboard: http://localhost:8080</span>
+<span class="cm"># Add your API keys in the dashboard, then start making requests.</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-provider-override" class="tab-panel">
+      <div class="code-block">
+        <div class="code-header"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>provider override</div>
+        <div class="code-body">
+<span class="cm"># Default routing — auto-matches model to provider</span>
+curl http://localhost:8080/v1/chat/completions \
+  -H <span class="str">"Authorization: Bearer YOUR_KEY"</span> \
+  -d <span class="str">'{"model":"llama-3.3-70b-versatile","messages":[...]}'</span>
+
+<span class="cm"># Override provider — same request goes to Gemini instead</span>
+curl http://localhost:8080/v1/chat/completions \
+  -H <span class="str">"Authorization: Bearer YOUR_KEY"</span> \
+  -H <span class="str">"X-Gateway-Provider: gemini"</span> \
+  -d <span class="str">'{"model":"llama-3.3-70b-versatile","messages":[...]}'</span>
+
+<span class="cm"># Override both provider and model</span>
+curl http://localhost:8080/v1/chat/completions \
+  -H <span class="str">"Authorization: Bearer YOUR_KEY"</span> \
+  -H <span class="str">"X-Gateway-Provider: nvidia"</span> \
+  -H <span class="str">"X-Gateway-Model: nvidia/nemotron-3-nano-30b-a3b"</span> \
+  -d <span class="str">'{"model":"llama-3.3-70b-versatile","messages":[...]}'</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-failover" class="tab-panel">
+      <div class="code-block">
+        <div class="code-header"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>failover &amp; compaction</div>
+        <div class="code-body">
+<span class="cm"># When your primary provider returns 429 or 402:</span>
+<span class="cm"># 1. Chat history is summarized by a cheap provider (compaction)</span>
+<span class="cm"># 2. Request is rerouted to the configured backup provider</span>
+<span class="cm"># 3. User gets a response — conversation survives</span>
+
+<span class="cm"># Configure via dashboard or API:</span>
+curl -X POST http://localhost:8080/admin/failover \
+  -H <span class="str">"Authorization: Bearer ADMIN_PASS"</span> \
+  -d <span class="str">'{"key":"enabled","value":"true"}'</span>
+curl -X POST http://localhost:8080/admin/failover \
+  -H <span class="str">"Authorization: Bearer ADMIN_PASS"</span> \
+  -d <span class="str">'{"key":"triggers","value":"402,429"}'</span>
+curl -X POST http://localhost:8080/admin/failover \
+  -H <span class="str">"Authorization: Bearer ADMIN_PASS"</span> \
+  -d <span class="str">'{"key":"compact","value":"true"}'</span>
+curl -X POST http://localhost:8080/admin/failover \
+  -H <span class="str">"Authorization: Bearer ADMIN_PASS"</span> \
+  -d <span class="str">'{"key":"provider","value":"gemini"}'</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-virtual-keys" class="tab-panel">
+      <div class="code-block">
+        <div class="code-header"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>virtual keys</div>
+        <div class="code-body">
+<span class="cm"># Virtual keys give you per-consumer control:</span>
+<span class="cm"># - Monthly budget limits</span>
+<span class="cm"># - Rate limiting (requests per minute)</span>
+<span class="cm"># - Model allowlists (which models they can use)</span>
+
+<span class="cm"># Create via dashboard or API:</span>
+curl -X POST http://localhost:8080/admin/virtual-keys \
+  -H <span class="str">"Authorization: Bearer ADMIN_PASS"</span> \
+  -d <span class="str">'{"name":"my-app-user","monthly_budget":10,"rate_limit":10,"allowed_models":["gpt-4o","claude-sonnet-4-5"]}'</span>
+
+<span class="cm"># Use the virtual key like a regular API key:</span>
+curl http://localhost:8080/v1/chat/completions \
+  -H <span class="str">"Authorization: Bearer vk-your-virtual-key"</span> \
+  -d <span class="str">'{"model":"gpt-4o","messages":[...]}'</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── ARCHITECTURE ─────────────────────────────────────── -->
+<section id="architecture">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2>How it works</h2>
+      <p>One client. One gateway. Ten providers. Automatic failover.</p>
+    </div>
+    <div class="arch-diagram fade-in">
+      <div class="arch-box arch-client">Your App</div>
+      <div class="arch-arrow">&#8595;</div>
+      <div class="arch-box arch-gateway">KeyParty Gateway<br><small style="font-weight:400;opacity:0.7">routing &middot; caching &middot; encryption &middot; failover</small></div>
+      <div class="arch-arrow">&#8595;</div>
+      <div class="arch-providers">
+        <div class="arch-provider">OpenAI</div>
+        <div class="arch-provider">Anthropic</div>
+        <div class="arch-provider">Gemini</div>
+        <div class="arch-provider">Groq</div>
+        <div class="arch-provider">NVIDIA</div>
+        <div class="arch-provider">Fireworks</div>
+        <div class="arch-provider">Together</div>
+        <div class="arch-provider">DeepSeek</div>
+        <div class="arch-provider">OpenRouter</div>
+        <div class="arch-provider">Mistral</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── COMPARISON ───────────────────────────────────────── -->
+<section class="section-alt">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2>How it compares</h2>
+      <p>KeyParty vs the alternatives. We're the broke dev's choice.</p>
+    </div>
+    <div style="overflow-x:auto" class="fade-in">
+      <table class="comparison-table">
+        <thead>
+          <tr><th>Feature</th><th>KeyParty</th><th>LiteLLM</th><th>OpenRouter</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Self-hosted</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="cross">&#10007;</td></tr>
+          <tr><td>Free & open source</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="cross">&#10007;</td></tr>
+          <tr><td>Single binary (no deps)</td><td class="check">&#10003;</td><td class="cross">&#10007;</td><td>N/A</td></tr>
+          <tr><td>Virtual Keys</td><td class="check">&#10003;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td></tr>
+          <tr><td>Provider/Model Override</td><td class="check">&#10003;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td></tr>
+          <tr><td>AI Rumble / Rap Battle</td><td class="check">&#10003;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td></tr>
+          <tr><td>Model Roulette</td><td class="check">&#10003;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td></tr>
+          <tr><td>Compaction Failover</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+          <tr><td>Cost Tracking</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+          <tr><td>Budget Alerts</td><td class="check">&#10003;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td></tr>
+          <tr><td>Auto-Rotate Keys</td><td class="check">&#10003;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td></tr>
+          <tr><td>Setup Script</td><td class="check">&#10003;</td><td class="cross">&#10007;</td><td>N/A</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ─── DOCS ─────────────────────────────────────────────── -->
+<section id="docs">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2>Documentation</h2>
+      <p>Everything you need to get started, integrate, and deploy.</p>
+    </div>
+    <div class="doc-grid fade-in">
+      <a href="api.md" class="doc-card"><h3>&#128196; API Reference</h3><p>Full HTTP API docs with examples for every endpoint.</p></a>
+      <a href="architecture.md" class="doc-card"><h3>&#128736; Architecture</h3><p>How KeyParty works under the hood: routing, caching, encryption.</p></a>
+      <a href="routing.md" class="doc-card"><h3>&#128256; Routing &amp; Failover</h3><p>Provider override headers, model-based routing, compaction rollover.</p></a>
+      <a href="providers.md" class="doc-card"><h3>&#127760; Supported Providers</h3><p>Setup guides for all 10 supported LLM providers.</p></a>
+      <a href="security.md" class="doc-card"><h3>&#128737; Security</h3><p>Threat model, encryption, SSRF protection, brute-force lockout.</p></a>
+    </div>
+  </div>
+</section>
+
+<!-- ─── GUIDES ───────────────────────────────────────────── -->
+<section id="guides" class="section-alt">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2>Guides</h2>
+      <p>Step-by-step tutorials for common use cases.</p>
+    </div>
+    <div class="doc-grid fade-in">
+      <div class="doc-card">
+        <h3>&#128640; Getting Started</h3>
+        <p>Install KeyParty, add your first API key, and make your first request in under 2 minutes.</p>
+      </div>
+      <div class="doc-card">
+        <h3>&#128256; Multi-Provider Failover</h3>
+        <p>Configure automatic failover with chat compaction so your users never see a rate limit error.</p>
+      </div>
+      <div class="doc-card">
+        <h3>&#128100; Multi-Tenant with Virtual Keys</h3>
+        <p>Give each user their own API key with budgets, rate limits, and model restrictions.</p>
+      </div>
+      <div class="doc-card">
+        <h3>&#128176; Cost Optimization</h3>
+        <p>Use provider race mode and model comparison to find the cheapest provider for your workload.</p>
+      </div>
+      <div class="doc-card">
+        <h3>&#128737; Security Hardening</h3>
+        <p>Enable guardrails, set up IP allowlists, and configure prompt injection blocking.</p>
+      </div>
+      <div class="doc-card">
+        <h3>&#128241; Integrate with Your App</h3>
+        <p>Use the OpenAI-compatible endpoint with any existing client library (Python, JS, Go, etc).</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FAQ ──────────────────────────────────────────────── -->
+<section id="faq">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2>Frequently Asked Questions</h2>
+    </div>
+    <div style="max-width:700px;margin:0 auto">
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">What is KeyParty?<span class="arrow">&#9660;</span></div>
+        <div class="faq-a">An AI gateway for broke devs. One endpoint, ten providers, zero budget. It routes your requests across multiple LLM providers, handles failover, and tracks costs.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">How much does it cost?<span class="arrow">&#9660;</span></div>
+        <div class="faq-a">Free. MIT license. No "enterprise tier," no "contact sales." You just pay for your API keys to the providers you use.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">What happens when a provider dies?<span class="arrow">&#9660;</span></div>
+        <div class="faq-a">It fails over to another one. Chat history is compacted (summarized) to fit cheaper provider limits. Your conversation survives. We're basically life support for your chats.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Is my data safe?<span class="arrow">&#9660;</span></div>
+        <div class="faq-a">AES-256-GCM encryption at rest for all API keys. Standard Go crypto libraries. No hand-rolled crypto. Gateway doesn't store your messages. See the full threat model in our security docs.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Can I use this with Claude Code / Cursor / other tools?<span class="arrow">&#9660;</span></div>
+        <div class="faq-a">Yes. KeyParty is OpenAI-compatible. Point any tool that supports custom API base URLs at your gateway endpoint.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Can I run this on a Raspberry Pi?<span class="arrow">&#9660;</span></div>
+        <div class="faq-a">Yes. It's a single 16MB Go binary. It'll run on anything that compiles Go. Idle memory is 13MB.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Can two AIs roast each other?<span class="arrow">&#9660;</span></div>
+        <div class="faq-a">Yes. AI Rumble and Rap Battle are built in. Two providers go head-to-head via SSE streaming. It's exactly as chaotic as it sounds.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">What's the catch?<span class="arrow">&#9660;</span></div>
+        <div class="faq-a">There is no catch. It's free, open source, MIT license. We just vibes.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CTA ──────────────────────────────────────────────── -->
+<section class="section-alt" style="text-align:center">
+  <div class="section-inner">
+    <h2 style="font-size:clamp(24px,4vw,36px);font-weight:800;margin-bottom:12px">Ready to party?</h2>
+    <p style="color:var(--text-secondary);margin-bottom:24px;font-size:17px">Install KeyParty and stop managing 5 different AI dashboards.</p>
+    <div class="hero-buttons">
+      <a href="#quickstart" class="btn btn-primary">Get Started</a>
+      <a href="https://github.com/MastaChief117/keyparty" class="btn btn-secondary">&#9733; Star on GitHub</a>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FOOTER ───────────────────────────────────────────── -->
+<footer>
+  <div class="footer-links">
+    <a href="https://github.com/MastaChief117/keyparty">GitHub</a>
+    <a href="api.md">API Docs</a>
+    <a href="security.md">Security</a>
+    <a href="architecture.md">Architecture</a>
+    <a href="routing.md">Routing</a>
+    <a href="providers.md">Providers</a>
+  </div>
+  <p>MIT License &middot; Made by <a href="https://github.com/MastaChief117">MastaChief117</a> &middot; One endpoint. Ten providers. Zero budget.</p>
+</footer>
+
+<script>
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+}
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+  else if (window.matchMedia('(prefers-color-scheme: dark)').matches)
+    document.documentElement.setAttribute('data-theme', 'dark');
+})();
+
+function showTab(id) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+document.querySelectorAll('.nav-links a').forEach(a => {
+  a.addEventListener('click', () => {
+    document.querySelector('.nav-links').classList.remove('open');
+  });
+});
+</script>
+</body>
+</html>
