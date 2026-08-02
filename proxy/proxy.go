@@ -381,8 +381,23 @@ func (p *Proxy) HandleChatCompletions(w http.ResponseWriter, r *http.Request) {
 
 	var targetKey *store.APIKey
 
-	if k, err := p.store.GetKeyByName(modelName); err == nil {
+	if k, err := p.store.GetKeyByModel(modelName); err == nil {
 		targetKey = k
+	}
+
+	if targetKey == nil {
+		stripped := stripProviderPrefix(modelName)
+		if stripped != modelName {
+			if k, err := p.store.GetKeyByModel(stripped); err == nil {
+				targetKey = k
+			}
+		}
+	}
+
+	if targetKey == nil {
+		if k, err := p.store.GetKeyByName(modelName); err == nil {
+			targetKey = k
+		}
 	}
 
 	if targetKey == nil {

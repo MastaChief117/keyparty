@@ -342,6 +342,25 @@ func (s *Store) GetKeysMasked() ([]APIKey, error) {
 	return keys, nil
 }
 
+func (s *Store) GetAvailableProviders() ([]string, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	rows, err := s.db.Query("SELECT DISTINCT provider FROM api_keys WHERE enabled = 1 ORDER BY provider")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var providers []string
+	for rows.Next() {
+		var p string
+		if err := rows.Scan(&p); err != nil {
+			continue
+		}
+		providers = append(providers, p)
+	}
+	return providers, nil
+}
+
 func (s *Store) GetKeysByProvider(provider string) ([]APIKey, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -371,6 +390,27 @@ func (s *Store) GetKeysByProvider(provider string) ([]APIKey, error) {
 		keys = append(keys, k)
 	}
 	return keys, nil
+}
+
+func (s *Store) GetKeyByModel(model string) (*APIKey, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	var k APIKey
+	var lastUsed, createdAt sql.NullTime
+	err := s.db.QueryRow(
+		"SELECT id, name, provider, key, model, custom_url, priority, enabled, total_requests, error_requests, total_cost, last_used, created_at FROM api_keys WHERE model = ? AND enabled = 1", model,
+	).Scan(&k.ID, &k.Name, &k.Provider, &k.Key, &k.Model, &k.CustomURL, &k.Priority, &k.Enabled, &k.TotalReqs, &k.ErrorReqs, &k.TotalCost, &lastUsed, &createdAt)
+	if err != nil {
+		return nil, err
+	}
+	k.Key, _ = s.keyring.Decrypt(k.Key)
+	if lastUsed.Valid {
+		k.LastUsed = lastUsed.Time
+	}
+	if createdAt.Valid {
+		k.CreatedAt = createdAt.Time
+	}
+	return &k, nil
 }
 
 func (s *Store) GetKeyByName(name string) (*APIKey, error) {

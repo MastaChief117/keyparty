@@ -93,6 +93,7 @@ func main() {
 	mux.HandleFunc("/admin/template-versions", p.HandleTemplateVersions)
 	mux.HandleFunc("/admin/replay", p.HandleRequestReplay)
 	mux.HandleFunc("/admin/inspect-stream", p.HandleStreamingInspect)
+	mux.HandleFunc("/admin/providers", p.HandleGetProviders)
 
 	// Hard pro features
 	mux.HandleFunc("/admin/vk-usage", p.HandleUsageDashboard)

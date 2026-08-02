@@ -932,3 +932,17 @@ func (p *Proxy) HandleStreamingInspect(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "data: [DONE]\n\n")
 	flusher.Flush()
 }
+
+func (p *Proxy) HandleGetProviders(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	providers, err := p.store.GetAvailableProviders()
+	if err != nil {
+		http.Error(w, `{"error":"failed to get providers"}`, http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(providers)
+}

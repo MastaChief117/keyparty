@@ -947,6 +947,27 @@ async function adminFetch(url, opts) {
   return fetch(url, opts);
 }
 
+async function loadProviders() {
+  try {
+    var res = await adminFetch('/admin/providers');
+    var providers = await res.json();
+    var labels = {openai:'OpenAI',anthropic:'Anthropic',gemini:'Gemini',groq:'Groq',deepseek:'DeepSeek',mistral:'Mistral',together:'Together',fireworks:'Fireworks',nvidia:'NVIDIA',openrouter:'OpenRouter',custom:'Custom'};
+    var selects = document.querySelectorAll('[id*="provider"]');
+    selects.forEach(function(sel) {
+      if (sel.tagName !== 'SELECT') return;
+      var first = sel.options[0];
+      sel.innerHTML = '';
+      sel.appendChild(first);
+      providers.forEach(function(p) {
+        var opt = document.createElement('option');
+        opt.value = p;
+        opt.textContent = labels[p] || p;
+        sel.appendChild(opt);
+      });
+    });
+  } catch(e) {}
+}
+
 function escHtml(s) {
   const d = document.createElement('div');
   d.textContent = String(s);
@@ -2464,6 +2485,7 @@ askPassword().then(function(pass) {
   setBaseUrl();
   onProviderChange();
   loadUnifiedKey();
+  loadProviders();
   loadKeys();
   loadStats();
   setInterval(loadStats, 5000);
