@@ -170,26 +170,34 @@ func (p *Proxy) compactHistory(messages []interface{}, compactModel string) ([]i
 		},
 	}
 
-	fallKeys, err := p.store.GetKeysByProvider("groq")
+	fallKeys, err := p.store.GetKeysByProvider("nvidia")
 	if err != nil || len(fallKeys) == 0 {
-		fallKeys, err = p.store.GetKeysByProvider("nvidia")
+		fallKeys, err = p.store.GetKeysByProvider("gemini")
+	}
+	if err != nil || len(fallKeys) == 0 {
+		fallKeys, err = p.store.GetKeysByProvider("deepseek")
 	}
 	if err != nil || len(fallKeys) == 0 {
 		return messages, 0, 0
 	}
 
 	key := fallKeys[0]
-	log.Printf("COMPACTION WARNING: Conversation history being sent to %s for summarization (different from original provider)", key.Provider)
 	provDef, ok := provider.GetByName(key.Provider)
 	if !ok {
 		return messages, 0, 0
 	}
 
-	endpoint := provDef.BaseURL + "chat/completions"
-	actualModel := compactModel
-	if actualModel == "" {
-		actualModel = key.Model
+	endpoint := provDef.BaseURL
+	if !strings.HasSuffix(endpoint, "/") {
+		endpoint += "/"
 	}
+	endpoint += "chat/completions"
+	actualModel := key.Model
+	if actualModel == "" {
+		actualModel = compactModel
+	}
+
+	log.Printf("COMPACTION WARNING: Conversation history being sent to %s model=%s endpoint=%s", key.Provider, actualModel, endpoint)
 
 	body := map[string]interface{}{
 		"model":    actualModel,
@@ -207,15 +215,17 @@ func (p *Proxy) compactHistory(messages []interface{}, compactModel string) ([]i
 
 	resp, err := p.client.Do(proxyReq)
 	if err != nil {
+		log.Printf("COMPACTION: request failed: %v", err)
 		return messages, 0, 0
 	}
 	defer resp.Body.Close()
 
+	respBody, _ := io.ReadAll(resp.Body)
+
 	if resp.StatusCode >= 400 {
+		log.Printf("COMPACTION: provider returned HTTP %d: %s", resp.StatusCode, string(respBody))
 		return messages, 0, 0
 	}
-
-	respBody, _ := io.ReadAll(resp.Body)
 
 	var result struct {
 		Choices []struct {
@@ -602,7 +612,7 @@ func (p *Proxy) tryFailover(w http.ResponseWriter, r *http.Request, origBody []b
 
 	if config["compact"] == "true" && len(messages) > 0 {
 		messages, origTokens, compTokens = p.compactHistory(messages, config["compact_model"])
-		compacted = true
+		compacted = origTokens > 0 && compTokens > 0
 		reqBody["messages"] = messages
 	}
 
