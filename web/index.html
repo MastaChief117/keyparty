@@ -180,6 +180,11 @@ tr:hover{background:rgba(59,130,246,0.05)}
 <button class="tab" data-tab="guardrails">Guardrails</button>
 <button class="tab" data-tab="aliases">Aliases</button>
 <button class="tab" data-tab="failover">Failover</button>
+<button class="tab" data-tab="firewall">Firewall</button>
+<button class="tab" data-tab="health">Health</button>
+<button class="tab" data-tab="ab-test">A/B Test</button>
+<button class="tab" data-tab="queue">Queue</button>
+<button class="tab" data-tab="budgets-prov">Provider Budgets</button>
 <button class="tab" data-tab="fun-zone">Fun Zone</button>
 <button class="tab" data-tab="rumble">AI Rumble</button>
 <button class="tab" data-tab="new-fun">More Fun</button>
@@ -443,6 +448,80 @@ tr:hover{background:rgba(59,130,246,0.05)}
 <div class="section">
 <div class="section-header"><h2>Failover Log</h2></div>
 <div id="failover-log-list"></div>
+</div>
+</div>
+
+<div id="tab-firewall" class="tab-content" style="display:none">
+<div class="fun-grid">
+<div class="section">
+<div class="section-header"><h2>🛡️ Prompt Firewall</h2><p style="font-size:12px;color:#94a3b8">Block outbound PII/secrets before they reach providers</p></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+<div class="form-group"><label>Enabled</label><select id="fw-enabled"><option value="false">Disabled</option><option value="true">Enabled</option></select></div>
+<div class="form-group"><label>Action</label><select id="fw-action"><option value="warn">Warn (redact & send)</option><option value="block">Block (reject request)</option></select></div>
+</div>
+<button class="btn btn-sm btn-primary" onclick="saveFirewall()">Save Config</button>
+<div id="fw-status" style="margin-top:10px;font-size:13px"></div>
+<h3 style="margin-top:16px;font-size:13px;color:#94a3b8">What it detects:</h3>
+<ul style="font-size:12px;color:#94a3b8;margin-top:6px;padding-left:16px">
+<li>Email addresses</li><li>Phone numbers</li><li>SSNs</li><li>Credit card numbers</li><li>API keys & secrets</li><li>Passwords</li><li>Private keys</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div id="tab-health" class="tab-content" style="display:none">
+<div class="section">
+<div class="section-header"><h2>💓 Provider Health Dashboard</h2><button class="btn btn-sm btn-secondary" onclick="loadHealth()">Refresh</button></div>
+<div id="health-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px"></div>
+</div>
+</div>
+
+<div id="tab-ab-test" class="tab-content" style="display:none">
+<div class="fun-grid">
+<div class="section">
+<div class="section-header"><h2>⚖️ A/B Testing</h2><p style="font-size:12px;color:#94a3b8">Send same prompt to 2 providers, vote on the better response</p></div>
+<div class="form-group"><label>Test Name</label><input type="text" id="ab-name" placeholder="My A/B Test"></div>
+<div class="form-group"><label>Prompt</label><textarea id="ab-prompt" rows="2" placeholder="Explain quantum computing in one paragraph."></textarea></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<div class="form-group"><label>Provider A</label><select id="ab-prov-a"></select></div>
+<div class="form-group"><label>Model A</label><input type="text" id="ab-model-a" placeholder="model (optional)"></div>
+<div class="form-group"><label>Provider B</label><select id="ab-prov-b"></select></div>
+<div class="form-group"><label>Model B</label><input type="text" id="ab-model-b" placeholder="model (optional)"></div>
+</div>
+<button class="btn btn-sm btn-primary" onclick="startABTest()">Start A/B Test</button>
+<div id="ab-results" style="margin-top:16px"></div>
+</div>
+<div class="section">
+<div class="section-header"><h2>📊 Test History</h2><button class="btn btn-sm btn-secondary" onclick="loadABTests()">Refresh</button></div>
+<div id="ab-history"></div>
+</div>
+</div>
+</div>
+
+<div id="tab-queue" class="tab-content" style="display:none">
+<div class="fun-grid">
+<div class="section">
+<div class="section-header"><h2>📋 Request Queue</h2><p style="font-size:12px;color:#94a3b8">Queue requests & auto-retry on 429</p></div>
+<div id="queue-stats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px"></div>
+<button class="btn btn-sm btn-secondary" onclick="loadQueue()">Refresh</button>
+<div id="queue-list" style="margin-top:10px"></div>
+</div>
+</div>
+</div>
+
+<div id="tab-budgets-prov" class="tab-content" style="display:none">
+<div class="fun-grid">
+<div class="section">
+<div class="section-header"><h2>💰 Provider Token Budgets</h2><p style="font-size:12px;color:#94a3b8">Monthly caps per provider — tokens & cost</p></div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+<div class="form-group"><label>Provider</label><select id="pb-provider"></select></div>
+<div class="form-group"><label>Monthly Tokens</label><input type="number" id="pb-tokens" value="1000000"></div>
+<div class="form-group"><label>Monthly Cost ($)</label><input type="number" id="pb-cost" step="0.01" value="10"></div>
+<div class="form-group"><label>Reset Day</label><input type="number" id="pb-reset" value="1" min="1" max="28"></div>
+</div>
+<button class="btn btn-sm btn-primary" onclick="addProviderBudget()">Add Budget</button>
+<div id="prov-budgets-list" style="margin-top:12px"></div>
+</div>
 </div>
 </div>
 
@@ -2192,6 +2271,171 @@ async function loadAnalytics() {
   } catch(e) {}
 }
 
+// ── FIREWALL ──────────────────────────────────────────────────────────────
+async function loadFirewall() {
+  try {
+    var r = await adminFetch('/admin/firewall');
+    var d = await r.json();
+    document.getElementById('fw-enabled').value = d.enabled || 'false';
+    document.getElementById('fw-action').value = d.action || 'warn';
+    document.getElementById('fw-status').innerHTML = '<span class="badge ' + (d.enabled === 'true' ? 'badge-green' : 'badge-red') + '">' + (d.enabled === 'true' ? 'ENABLED' : 'DISABLED') + '</span> Action: ' + (d.action || 'warn');
+  } catch(e) {}
+}
+async function saveFirewall() {
+  var enabled = document.getElementById('fw-enabled').value;
+  var action = document.getElementById('fw-action').value;
+  await adminFetch('/admin/firewall', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({key:'enabled',value:enabled})});
+  await adminFetch('/admin/firewall', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({key:'action',value:action})});
+  toast('Firewall config saved');
+  loadFirewall();
+}
+
+// ── HEALTH DASHBOARD ──────────────────────────────────────────────────────
+async function loadHealth() {
+  try {
+    var r = await adminFetch('/admin/health-dashboard');
+    var d = await r.json();
+    var html = '';
+    (d.providers || []).forEach(function(p) {
+      var statusColor = p.error_rate_24h < 5 ? '#22c55e' : p.error_rate_24h < 20 ? '#f59e0b' : '#ef4444';
+      html += '<div style="background:#1e293b;border:1px solid #334155;border-radius:10px;padding:16px;border-left:4px solid ' + statusColor + '">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+      html += '<h3 style="font-size:14px;text-transform:uppercase">' + p.provider + '</h3>';
+      html += '<span class="badge ' + (p.uptime_24h >= 99 ? 'badge-green' : p.uptime_24h >= 95 ? 'badge-yellow' : 'badge-red') + '">' + p.uptime_24h.toFixed(1) + '% uptime</span>';
+      html += '</div>';
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;color:#94a3b8">';
+      html += '<div>Requests (7d): <strong style="color:#e2e8f0">' + p.total_requests + '</strong></div>';
+      html += '<div>Errors (7d): <strong style="color:#ef4444">' + p.error_requests + '</strong></div>';
+      html += '<div>Avg Latency: <strong style="color:#e2e8f0">' + p.avg_latency_ms.toFixed(0) + 'ms</strong></div>';
+      html += '<div>P95 Latency: <strong style="color:#e2e8f0">' + p.p95_latency_ms.toFixed(0) + 'ms</strong></div>';
+      html += '<div>P99 Latency: <strong style="color:#e2e8f0">' + p.p99_latency_ms.toFixed(0) + 'ms</strong></div>';
+      html += '<div>Success Rate: <strong style="color:#22c55e">' + p.success_rate.toFixed(1) + '%</strong></div>';
+      html += '<div>Active Keys: <strong style="color:#e2e8f0">' + p.active_keys + '</strong></div>';
+      html += '<div>Error Rate (24h): <strong style="color:' + statusColor + '">' + p.error_rate_24h.toFixed(1) + '%</strong></div>';
+      html += '</div></div>';
+    });
+    document.getElementById('health-grid').innerHTML = html || '<div class="empty-state">No provider data yet. Send some requests first.</div>';
+  } catch(e) {}
+}
+
+// ── A/B TESTING ───────────────────────────────────────────────────────────
+async function loadABProviders() {
+  try {
+    var r = await adminFetch('/admin/providers');
+    var d = await r.json();
+    var html = '<option value="">Select provider...</option>';
+    (d || []).forEach(function(p) { html += '<option value="' + p + '">' + p + '</option>'; });
+    document.getElementById('ab-prov-a').innerHTML = html;
+    document.getElementById('ab-prov-b').innerHTML = html;
+  } catch(e) {}
+}
+async function startABTest() {
+  var name = document.getElementById('ab-name').value;
+  var prompt = document.getElementById('ab-prompt').value;
+  var provA = document.getElementById('ab-prov-a').value;
+  var modelA = document.getElementById('ab-model-a').value;
+  var provB = document.getElementById('ab-prov-b').value;
+  var modelB = document.getElementById('ab-model-b').value;
+  if (!provA || !provB) { alert('Select both providers'); return; }
+  document.getElementById('ab-results').innerHTML = '<p style="color:#94a3b8">Running A/B test...</p>';
+  try {
+    var r = await adminFetch('/admin/ab-test', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name:name,prompt:prompt,provider_a:provA,model_a:modelA,provider_b:provB,model_b:modelB})});
+    var d = await r.json();
+    toast('A/B Test started: ' + d.name);
+    setTimeout(loadABTests, 5000);
+  } catch(e) { alert('Error: ' + e.message); }
+}
+async function loadABTests() {
+  try {
+    var r = await adminFetch('/admin/ab-test');
+    var d = await r.json();
+    var html = '';
+    (d || []).forEach(function(t) {
+      html += '<div style="background:#0f172a;border:1px solid #334155;border-radius:8px;padding:12px;margin-bottom:10px">';
+      html += '<div style="display:flex;justify-content:space-between;margin-bottom:8px"><strong>' + (t.name || 'Untitled') + '</strong><span class="badge ' + (t.status === 'ready' ? 'badge-green' : 'badge-yellow') + '">' + t.status + '</span></div>';
+      html += '<div style="font-size:12px;color:#94a3b8;margin-bottom:8px">Prompt: ' + t.prompt.substring(0, 80) + (t.prompt.length > 80 ? '...' : '') + '</div>';
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
+      html += '<div style="background:#1e293b;padding:10px;border-radius:6px"><div style="font-size:11px;color:#3b82f6;margin-bottom:4px;font-weight:600">' + t.provider_a + ' (' + t.latency_a + 'ms) | Votes: ' + t.votes_a + '</div><div style="font-size:12px;color:#e2e8f0;white-space:pre-wrap;max-height:120px;overflow-y:auto">' + (t.reply_a || 'Pending...') + '</div></div>';
+      html += '<div style="background:#1e293b;padding:10px;border-radius:6px"><div style="font-size:11px;color:#ef4444;margin-bottom:4px;font-weight:600">' + t.provider_b + ' (' + t.latency_b + 'ms) | Votes: ' + t.votes_b + '</div><div style="font-size:12px;color:#e2e8f0;white-space:pre-wrap;max-height:120px;overflow-y:auto">' + (t.reply_b || 'Pending...') + '</div></div>';
+      html += '</div>';
+      if (t.status === 'ready') {
+        html += '<div style="margin-top:8px;display:flex;gap:8px"><button class="btn btn-sm btn-primary" onclick="voteAB(' + t.id + ',\'a\')" style="background:#3b82f6">Vote A</button><button class="btn btn-sm" onclick="voteAB(' + t.id + ',\'b\')" style="background:#ef4444;color:white">Vote B</button></div>';
+      }
+      if (t.winner) html += '<div style="margin-top:6px;font-size:12px;color:#f59e0b">Winner: ' + t.winner.toUpperCase() + '</div>';
+      html += '</div>';
+    });
+    document.getElementById('ab-results').innerHTML = html || '<div class="empty-state">No A/B tests yet</div>';
+    document.getElementById('ab-history').innerHTML = html || '<div class="empty-state">No tests</div>';
+  } catch(e) {}
+}
+async function voteAB(id, winner) {
+  await adminFetch('/admin/ab-test/vote', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({test_id:id,winner:winner})});
+  toast('Vote recorded!');
+  loadABTests();
+}
+
+// ── REQUEST QUEUE ─────────────────────────────────────────────────────────
+async function loadQueue() {
+  try {
+    var statsR = await adminFetch('/admin/queue/stats');
+    var stats = await statsR.json();
+    var statsHtml = '';
+    ['pending','processing','done','failed'].forEach(function(s) {
+      var color = s === 'pending' ? '#f59e0b' : s === 'processing' ? '#3b82f6' : s === 'done' ? '#22c55e' : '#ef4444';
+      statsHtml += '<div style="background:#0f172a;padding:12px;border-radius:8px;text-align:center"><div style="font-size:20px;font-weight:700;color:' + color + '">' + (stats[s] || 0) + '</div><div style="font-size:11px;color:#94a3b8;text-transform:uppercase">' + s + '</div></div>';
+    });
+    document.getElementById('queue-stats').innerHTML = statsHtml;
+    var r = await adminFetch('/admin/queue');
+    var d = await r.json();
+    var html = '<table><tr><th>ID</th><th>Provider</th><th>Model</th><th>Status</th><th>Retries</th><th>Error</th><th>Time</th></tr>';
+    (d || []).forEach(function(q) {
+      var badge = q.status === 'done' ? 'badge-green' : q.status === 'failed' ? 'badge-red' : q.status === 'processing' ? 'badge-purple' : 'badge-yellow';
+      html += '<tr><td>' + q.id + '</td><td>' + q.provider + '</td><td>' + (q.model||'-') + '</td><td><span class="badge ' + badge + '">' + q.status + '</span></td><td>' + q.retries + '/' + q.max_retries + '</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">' + (q.error||'-') + '</td><td>' + (q.created_at||'') + '</td></tr>';
+    });
+    html += '</table>';
+    document.getElementById('queue-list').innerHTML = html || '<div class="empty-state">Queue empty</div>';
+  } catch(e) {}
+}
+
+// ── PROVIDER BUDGETS ──────────────────────────────────────────────────────
+async function loadProvBudgetProviders() {
+  try {
+    var r = await adminFetch('/admin/providers');
+    var d = await r.json();
+    var html = '';
+    (d || []).forEach(function(p) { html += '<option value="' + p + '">' + p + '</option>'; });
+    document.getElementById('pb-provider').innerHTML = html;
+  } catch(e) {}
+}
+async function addProviderBudget() {
+  var provider = document.getElementById('pb-provider').value;
+  var monthly_tokens = parseInt(document.getElementById('pb-tokens').value) || 0;
+  var monthly_cost = parseFloat(document.getElementById('pb-cost').value) || 0;
+  var reset_day = parseInt(document.getElementById('pb-reset').value) || 1;
+  if (!provider) { alert('Select a provider'); return; }
+  await adminFetch('/admin/provider-budgets', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({provider:provider,monthly_tokens:monthly_tokens,monthly_cost:monthly_cost,reset_day:reset_day})});
+  toast('Budget added for ' + provider);
+  loadProvBudgets();
+}
+async function loadProvBudgets() {
+  try {
+    var r = await adminFetch('/admin/provider-budgets');
+    var d = await r.json();
+    var html = '<table><tr><th>Provider</th><th>Token Budget</th><th>Used</th><th>Cost Budget</th><th>Used</th><th>Reset</th><th></th></tr>';
+    (d || []).forEach(function(b) {
+      var tokenPct = b.monthly_tokens > 0 ? (b.used_this_month / b.monthly_tokens * 100).toFixed(1) : '-';
+      var costPct = b.monthly_cost > 0 ? (b.used_cost / b.monthly_cost * 100).toFixed(1) : '-';
+      html += '<tr><td><strong>' + b.provider + '</strong></td><td>' + (b.monthly_tokens > 0 ? b.monthly_tokens.toLocaleString() : '∞') + '</td><td>' + b.used_this_month.toLocaleString() + (tokenPct !== '-' ? ' (' + tokenPct + '%)' : '') + '</td><td>' + (b.monthly_cost > 0 ? '$' + b.monthly_cost.toFixed(2) : '∞') + '</td><td>$' + b.used_cost.toFixed(4) + (costPct !== '-' ? ' (' + costPct + '%)' : '') + '</td><td>Day ' + b.reset_day + '</td><td><button class="btn btn-sm btn-danger" onclick="deleteProvBudget(' + b.id + ')">×</button></td></tr>';
+    });
+    html += '</table>';
+    document.getElementById('prov-budgets-list').innerHTML = html || '<div class="empty-state">No provider budgets configured</div>';
+  } catch(e) {}
+}
+async function deleteProvBudget(id) {
+  await adminFetch('/admin/provider-budgets', {method:'DELETE', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id})});
+  loadProvBudgets();
+}
+
 document.querySelectorAll('.tab').forEach(function(tab) {
   tab.addEventListener('click', function() {
     document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
@@ -2204,6 +2448,11 @@ document.querySelectorAll('.tab').forEach(function(tab) {
     if (tabName === 'guardrails') { loadGuardrails(); loadBlocked(); }
     if (tabName === 'aliases') loadAliases();
     if (tabName === 'failover') { loadFailoverConfig(); loadFailoverLogs(); }
+    if (tabName === 'firewall') loadFirewall();
+    if (tabName === 'health') loadHealth();
+    if (tabName === 'ab-test') { loadABProviders(); loadABTests(); }
+    if (tabName === 'queue') loadQueue();
+    if (tabName === 'budgets-prov') { loadProvBudgets(); loadProvBudgetProviders(); }
     if (tabName === 'fun-zone') { loadLeaderboard(); loadSavings(); }
     if (tabName === 'rumble') loadRumbleProviders();
     if (tabName === 'utils') { loadWebhooks(); loadTemplates(); loadRateTiers(); loadBudgetAlerts(); }

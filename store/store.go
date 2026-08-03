@@ -1149,6 +1149,67 @@ func (s *Store) migrateNewTables() error {
 			monthly_budget REAL DEFAULT 0,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		);
+		CREATE TABLE IF NOT EXISTS ip_allowlist (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			key_id INTEGER NOT NULL,
+			ip TEXT NOT NULL,
+			enabled INTEGER DEFAULT 1,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		);
+		CREATE TABLE IF NOT EXISTS provider_budgets (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			provider TEXT NOT NULL UNIQUE,
+			monthly_tokens INTEGER DEFAULT 0,
+			used_this_month INTEGER DEFAULT 0,
+			monthly_cost REAL DEFAULT 0,
+			used_cost REAL DEFAULT 0,
+			reset_day INTEGER DEFAULT 1,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		);
+		CREATE TABLE IF NOT EXISTS request_queue (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			virtual_key TEXT DEFAULT '',
+			provider TEXT NOT NULL,
+			model TEXT DEFAULT '',
+			body TEXT DEFAULT '',
+			priority INTEGER DEFAULT 0,
+			max_retries INTEGER DEFAULT 3,
+			retries INTEGER DEFAULT 0,
+			status TEXT DEFAULT 'pending',
+			error TEXT DEFAULT '',
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			process_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		);
+		CREATE TABLE IF NOT EXISTS ab_tests (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT DEFAULT '',
+			prompt TEXT DEFAULT '',
+			provider_a TEXT DEFAULT '',
+			model_a TEXT DEFAULT '',
+			provider_b TEXT DEFAULT '',
+			model_b TEXT DEFAULT '',
+			reply_a TEXT DEFAULT '',
+			reply_b TEXT DEFAULT '',
+			tokens_a INTEGER DEFAULT 0,
+			tokens_b INTEGER DEFAULT 0,
+			latency_a INTEGER DEFAULT 0,
+			latency_b INTEGER DEFAULT 0,
+			votes_a INTEGER DEFAULT 0,
+			votes_b INTEGER DEFAULT 0,
+			winner TEXT DEFAULT '',
+			status TEXT DEFAULT 'pending',
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		);
+		CREATE TABLE IF NOT EXISTS semantic_cache (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			query TEXT DEFAULT '',
+			embedding TEXT DEFAULT '',
+			response TEXT DEFAULT '',
+			model TEXT DEFAULT '',
+			hit_count INTEGER DEFAULT 0,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			expires_at DATETIME
+		);
 	`)
 	return err
 }
@@ -1700,4 +1761,673 @@ func (s *Store) GetVirtualKeyUsageDetail() ([]VKUsageDetail, error) {
 		details = append(details, d)
 	}
 	return details, nil
+}
+
+// ── IP ALLOWLIST ──────────────────────────────────────────────────────────
+
+type IPAllowlist struct {
+	ID        int64     `json:"id"`
+	KeyID     int64     `json:"key_id"`
+	KeyName   string    `json:"key_name"`
+	IP        string    `json:"ip"`
+	Enabled   bool      `json:"enabled"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+func (s *Store) AddIPToAllowlist(keyID int64, ip string) (int64, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	result, err := s.db.Exec(
+		"INSERT INTO ip_allowlist (key_id, ip, enabled) VALUES (?, ?, 1)", keyID, ip,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.LastInsertId()
+}
+
+func (s *Store) GetIPAllowlist(keyID int64) ([]IPAllowlist, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	rows, err := s.db.Query(`
+		SELECT ia.id, ia.key_id, COALESCE(ak.name,''), ia.ip, ia.enabled, ia.created_at
+		FROM ip_allowlist ia LEFT JOIN api_keys ak ON ia.key_id = ak.id
+		WHERE ia.key_id = ? ORDER BY ia.id ASC`, keyID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var list []IPAllowlist
+	for rows.Next() {
+		var item IPAllowlist
+		var createdAt sql.NullTime
+		var enabled int
+		rows.Scan(&item.ID, &item.KeyID, &item.KeyName, &item.IP, &enabled, &createdAt)
+		item.Enabled = enabled == 1
+		if createdAt.Valid {
+			item.CreatedAt = createdAt.Time
+		}
+		list = append(list, item)
+	}
+	return list, nil
+}
+
+func (s *Store) GetAllIPAllowlists() ([]IPAllowlist, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	rows, err := s.db.Query(`
+		SELECT ia.id, ia.key_id, COALESCE(ak.name,''), ia.ip, ia.enabled, ia.created_at
+		FROM ip_allowlist ia LEFT JOIN api_keys ak ON ia.key_id = ak.id
+		ORDER BY ia.id ASC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var list []IPAllowlist
+	for rows.Next() {
+		var item IPAllowlist
+		var createdAt sql.NullTime
+		var enabled int
+		rows.Scan(&item.ID, &item.KeyID, &item.KeyName, &item.IP, &enabled, &createdAt)
+		item.Enabled = enabled == 1
+		if createdAt.Valid {
+			item.CreatedAt = createdAt.Time
+		}
+		list = append(list, item)
+	}
+	return list, nil
+}
+
+func (s *Store) DeleteIPAllowlist(id int64) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	_, err := s.db.Exec("DELETE FROM ip_allowlist WHERE id = ?", id)
+	return err
+}
+
+func (s *Store) IsIPAllowed(keyID int64, ip string) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	var count int
+	s.db.QueryRow("SELECT COUNT(*) FROM ip_allowlist WHERE key_id = ? AND ip = ? AND enabled = 1", keyID, ip).Scan(&count)
+	if count > 0 {
+		return true
+	}
+	var total int
+	s.db.QueryRow("SELECT COUNT(*) FROM ip_allowlist WHERE key_id = ? AND enabled = 1", keyID).Scan(&total)
+	return total == 0
+}
+
+// ── PROVIDER TOKEN BUDGETS ────────────────────────────────────────────────
+
+type ProviderBudget struct {
+	ID             int64     `json:"id"`
+	Provider       string    `json:"provider"`
+	MonthlyTokens  int64     `json:"monthly_tokens"`
+	UsedThisMonth  int64     `json:"used_this_month"`
+	MonthlyCost    float64   `json:"monthly_cost"`
+	UsedCost       float64   `json:"used_cost"`
+	ResetDay       int       `json:"reset_day"`
+	CreatedAt      time.Time `json:"created_at"`
+}
+
+func (s *Store) AddProviderBudget(provider string, monthlyTokens int64, monthlyCost float64, resetDay int) (int64, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if resetDay <= 0 || resetDay > 28 {
+		resetDay = 1
+	}
+	result, err := s.db.Exec(
+		`INSERT OR REPLACE INTO provider_budgets (provider, monthly_tokens, monthly_cost, reset_day)
+		VALUES (?, ?, ?, ?)`, provider, monthlyTokens, monthlyCost, resetDay,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.LastInsertId()
+}
+
+func (s *Store) GetProviderBudgets() ([]ProviderBudget, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	rows, err := s.db.Query("SELECT id, provider, monthly_tokens, used_this_month, monthly_cost, used_cost, reset_day, created_at FROM provider_budgets ORDER BY id ASC")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var budgets []ProviderBudget
+	for rows.Next() {
+		var b ProviderBudget
+		var createdAt sql.NullTime
+		rows.Scan(&b.ID, &b.Provider, &b.MonthlyTokens, &b.UsedThisMonth, &b.MonthlyCost, &b.UsedCost, &b.ResetDay, &createdAt)
+		if createdAt.Valid {
+			b.CreatedAt = createdAt.Time
+		}
+		budgets = append(budgets, b)
+	}
+	return budgets, nil
+}
+
+func (s *Store) GetProviderBudget(provider string) (*ProviderBudget, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	var b ProviderBudget
+	var createdAt sql.NullTime
+	err := s.db.QueryRow(
+		"SELECT id, provider, monthly_tokens, used_this_month, monthly_cost, used_cost, reset_day, created_at FROM provider_budgets WHERE provider = ?", provider,
+	).Scan(&b.ID, &b.Provider, &b.MonthlyTokens, &b.UsedThisMonth, &b.MonthlyCost, &b.UsedCost, &b.ResetDay, &createdAt)
+	if err != nil {
+		return nil, err
+	}
+	if createdAt.Valid {
+		b.CreatedAt = createdAt.Time
+	}
+	return &b, nil
+}
+
+func (s *Store) DeleteProviderBudget(id int64) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	_, err := s.db.Exec("DELETE FROM provider_budgets WHERE id = ?", id)
+	return err
+}
+
+func (s *Store) CheckProviderBudget(provider string, estimatedTokens int64) (bool, string) {
+	budget, err := s.GetProviderBudget(provider)
+	if err != nil || budget == nil {
+		return true, ""
+	}
+	if budget.MonthlyTokens > 0 && budget.UsedThisMonth+estimatedTokens > budget.MonthlyTokens {
+		return false, fmt.Sprintf("Provider '%s' monthly token budget exceeded (%d/%d)", provider, budget.UsedThisMonth, budget.MonthlyTokens)
+	}
+	if budget.MonthlyCost > 0 && budget.UsedCost >= budget.MonthlyCost {
+		return false, fmt.Sprintf("Provider '%s' monthly cost budget exceeded ($%.4f/$%.4f)", provider, budget.UsedCost, budget.MonthlyCost)
+	}
+	return true, ""
+}
+
+func (s *Store) RecordProviderUsage(provider string, tokens int64, cost float64) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.db.Exec("UPDATE provider_budgets SET used_this_month = used_this_month + ?, used_cost = used_cost + ? WHERE provider = ?", tokens, cost, provider)
+}
+
+func (s *Store) ResetProviderBudgets() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	_, err := s.db.Exec("UPDATE provider_budgets SET used_this_month = 0, used_cost = 0")
+	return err
+}
+
+// ── REQUEST QUEUE ─────────────────────────────────────────────────────────
+
+type QueuedRequest struct {
+	ID          int64     `json:"id"`
+	VirtualKey  string    `json:"virtual_key"`
+	Provider    string    `json:"provider"`
+	Model       string    `json:"model"`
+	Body        string    `json:"body"`
+	Priority    int       `json:"priority"`
+	MaxRetries  int       `json:"max_retries"`
+	Retries     int       `json:"retries"`
+	Status      string    `json:"status"`
+	Error       string    `json:"error,omitempty"`
+	CreatedAt   time.Time `json:"created_at"`
+	ProcessAt   time.Time `json:"process_at"`
+}
+
+func (s *Store) EnqueueRequest(vk, provider, model, body string, priority, maxRetries int) (int64, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	result, err := s.db.Exec(
+		`INSERT INTO request_queue (virtual_key, provider, model, body, priority, max_retries, retries, status, process_at)
+		VALUES (?, ?, ?, ?, ?, ?, 0, 'pending', datetime('now'))`, vk, provider, model, body, priority, maxRetries,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.LastInsertId()
+}
+
+func (s *Store) DequeueRequests(limit int) ([]QueuedRequest, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if limit <= 0 {
+		limit = 10
+	}
+	rows, err := s.db.Query(
+		`SELECT id, virtual_key, provider, model, body, priority, max_retries, retries, status, error, created_at, process_at
+		FROM request_queue WHERE status = 'pending' AND process_at <= datetime('now')
+		ORDER BY priority DESC, id ASC LIMIT ?`, limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var reqs []QueuedRequest
+	for rows.Next() {
+		var r QueuedRequest
+		var createdAt, processAt sql.NullTime
+		rows.Scan(&r.ID, &r.VirtualKey, &r.Provider, &r.Model, &r.Body, &r.Priority, &r.MaxRetries, &r.Retries, &r.Status, &r.Error, &createdAt, &processAt)
+		if createdAt.Valid {
+			r.CreatedAt = createdAt.Time
+		}
+		if processAt.Valid {
+			r.ProcessAt = processAt.Time
+		}
+		reqs = append(reqs, r)
+	}
+	return reqs, nil
+}
+
+func (s *Store) MarkQueueProcessing(id int64) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.db.Exec("UPDATE request_queue SET status = 'processing' WHERE id = ?", id)
+}
+
+func (s *Store) MarkQueueDone(id int64) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.db.Exec("UPDATE request_queue SET status = 'done' WHERE id = ?", id)
+}
+
+func (s *Store) MarkQueueFailed(id int64, errMsg string, retryDelaySec int) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	var retries, maxRetries int
+	s.db.QueryRow("SELECT retries, max_retries FROM request_queue WHERE id = ?", id).Scan(&retries, &maxRetries)
+	if retries+1 < maxRetries {
+		s.db.Exec("UPDATE request_queue SET retries = retries + 1, status = 'pending', error = ?, process_at = datetime('now', '+' || ? || ' seconds') WHERE id = ?",
+			errMsg, retryDelaySec*(retries+1), id)
+		return nil
+	}
+	s.db.Exec("UPDATE request_queue SET status = 'failed', error = ? WHERE id = ?", errMsg, id)
+	return fmt.Errorf("max retries exceeded")
+}
+
+func (s *Store) GetQueueStats() (map[string]int64, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	stats := map[string]int64{"pending": 0, "processing": 0, "done": 0, "failed": 0}
+	for status := range stats {
+		var count int64
+		s.db.QueryRow("SELECT COUNT(*) FROM request_queue WHERE status = ?", status).Scan(&count)
+		stats[status] = count
+	}
+	return stats, nil
+}
+
+func (s *Store) GetQueueLogs(limit int) ([]QueuedRequest, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if limit <= 0 {
+		limit = 50
+	}
+	rows, err := s.db.Query(
+		`SELECT id, virtual_key, provider, model, '', priority, max_retries, retries, status, error, created_at, process_at
+		FROM request_queue ORDER BY id DESC LIMIT ?`, limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var reqs []QueuedRequest
+	for rows.Next() {
+		var r QueuedRequest
+		var createdAt, processAt sql.NullTime
+		rows.Scan(&r.ID, &r.VirtualKey, &r.Provider, &r.Model, &r.Body, &r.Priority, &r.MaxRetries, &r.Retries, &r.Status, &r.Error, &createdAt, &processAt)
+		if createdAt.Valid {
+			r.CreatedAt = createdAt.Time
+		}
+		if processAt.Valid {
+			r.ProcessAt = processAt.Time
+		}
+		reqs = append(reqs, r)
+	}
+	return reqs, nil
+}
+
+// ── PROVIDER HEALTH ───────────────────────────────────────────────────────
+
+type ProviderHealth struct {
+	Provider      string  `json:"provider"`
+	TotalReqs     int64   `json:"total_requests"`
+	ErrorReqs     int64   `json:"error_requests"`
+	AvgLatency    float64 `json:"avg_latency_ms"`
+	P50Latency    float64 `json:"p50_latency_ms"`
+	P95Latency    float64 `json:"p95_latency_ms"`
+	P99Latency    float64 `json:"p99_latency_ms"`
+	SuccessRate   float64 `json:"success_rate"`
+	LastChecked   string  `json:"last_checked"`
+	Uptime24h     float64 `json:"uptime_24h"`
+	ErrorRate24h  float64 `json:"error_rate_24h"`
+}
+
+func (s *Store) GetProviderHealth() ([]ProviderHealth, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	rows, err := s.db.Query(`
+		SELECT provider,
+			COUNT(*) as total,
+			COUNT(CASE WHEN status_code >= 400 THEN 1 END) as errors,
+			COALESCE(AVG(latency_ms), 0),
+			MAX(timestamp)
+		FROM request_log
+		WHERE timestamp >= datetime('now', '-7 days')
+		GROUP BY provider
+		ORDER BY total DESC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var healths []ProviderHealth
+	for rows.Next() {
+		var h ProviderHealth
+		var lastChecked sql.NullTime
+		rows.Scan(&h.Provider, &h.TotalReqs, &h.ErrorReqs, &h.AvgLatency, &lastChecked)
+		if lastChecked.Valid {
+			h.LastChecked = lastChecked.Time.Format(time.RFC3339)
+		}
+		if h.TotalReqs > 0 {
+			h.SuccessRate = float64(h.TotalReqs-h.ErrorReqs) / float64(h.TotalReqs) * 100
+		}
+
+		s.db.QueryRow(`
+			SELECT COALESCE(AVG(latency_ms), 0) FROM request_log
+			WHERE provider = ? AND timestamp >= datetime('now', '-1 day')`, h.Provider).Scan(&h.AvgLatency)
+
+		var p50, p95, p99 float64
+		s.db.QueryRow(`
+			SELECT COALESCE(latency_ms, 0) FROM (
+				SELECT latency_ms, ROW_NUMBER() OVER (ORDER BY latency_ms) as rn, COUNT(*) OVER () as cnt
+				FROM request_log WHERE provider = ? AND timestamp >= datetime('now', '-7 days')
+			) WHERE rn = CAST(cnt * 0.5 AS INT) + 1 LIMIT 1`, h.Provider).Scan(&p50)
+		h.P50Latency = p50
+
+		s.db.QueryRow(`
+			SELECT COALESCE(latency_ms, 0) FROM (
+				SELECT latency_ms, ROW_NUMBER() OVER (ORDER BY latency_ms) as rn, COUNT(*) OVER () as cnt
+				FROM request_log WHERE provider = ? AND timestamp >= datetime('now', '-7 days')
+			) WHERE rn = CAST(cnt * 0.95 AS INT) + 1 LIMIT 1`, h.Provider).Scan(&p95)
+		h.P95Latency = p95
+
+		s.db.QueryRow(`
+			SELECT COALESCE(latency_ms, 0) FROM (
+				SELECT latency_ms, ROW_NUMBER() OVER (ORDER BY latency_ms) as rn, COUNT(*) OVER () as cnt
+				FROM request_log WHERE provider = ? AND timestamp >= datetime('now', '-7 days')
+			) WHERE rn = CAST(cnt * 0.99 AS INT) + 1 LIMIT 1`, h.Provider).Scan(&p99)
+		h.P99Latency = p99
+
+		var total24, errors24 int64
+		s.db.QueryRow("SELECT COUNT(*), COUNT(CASE WHEN status_code >= 400 THEN 1 END) FROM request_log WHERE provider = ? AND timestamp >= datetime('now', '-1 day')", h.Provider).Scan(&total24, &errors24)
+		if total24 > 0 {
+			h.Uptime24h = float64(total24-errors24) / float64(total24) * 100
+			h.ErrorRate24h = float64(errors24) / float64(total24) * 100
+		} else {
+			h.Uptime24h = 100
+		}
+
+		healths = append(healths, h)
+	}
+	return healths, nil
+}
+
+// ── A/B TEST RESULTS ──────────────────────────────────────────────────────
+
+type ABTest struct {
+	ID          int64     `json:"id"`
+	Name        string    `json:"name"`
+	Prompt      string    `json:"prompt"`
+	ProviderA   string    `json:"provider_a"`
+	ModelA      string    `json:"model_a"`
+	ProviderB   string    `json:"provider_b"`
+	ModelB      string    `json:"model_b"`
+	ReplyA      string    `json:"reply_a"`
+	ReplyB      string    `json:"reply_b"`
+	TokensA     int       `json:"tokens_a"`
+	TokensB     int       `json:"tokens_b"`
+	LatencyA    int64     `json:"latency_a"`
+	LatencyB    int64     `json:"latency_b"`
+	VotesA      int       `json:"votes_a"`
+	VotesB      int       `json:"votes_b"`
+	Winner      string    `json:"winner"`
+	Status      string    `json:"status"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
+func (s *Store) CreateABTest(name, prompt, providerA, modelA, providerB, modelB string) (int64, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	result, err := s.db.Exec(
+		`INSERT INTO ab_tests (name, prompt, provider_a, model_a, provider_b, model_b, status, votes_a, votes_b)
+		VALUES (?, ?, ?, ?, ?, ?, 'pending', 0, 0)`, name, prompt, providerA, modelA, providerB, modelB,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.LastInsertId()
+}
+
+func (s *Store) UpdateABTestReplies(id int64, replyA, replyB string, tokensA, tokensB int, latencyA, latencyB int64) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	_, err := s.db.Exec(
+		`UPDATE ab_tests SET reply_a = ?, reply_b = ?, tokens_a = ?, tokens_b = ?, latency_a = ?, latency_b = ?, status = 'ready'
+		WHERE id = ?`, replyA, replyB, tokensA, tokensB, latencyA, latencyB, id,
+	)
+	return err
+}
+
+func (s *Store) VoteABTest(id int64, winner string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if winner == "a" {
+		_, err := s.db.Exec("UPDATE ab_tests SET votes_a = votes_a + 1, winner = CASE WHEN votes_a + 1 > votes_b THEN 'a' WHEN votes_a + 1 = votes_b THEN 'tie' ELSE winner END WHERE id = ?", id)
+		return err
+	} else if winner == "b" {
+		_, err := s.db.Exec("UPDATE ab_tests SET votes_b = votes_b + 1, winner = CASE WHEN votes_b + 1 > votes_a THEN 'b' WHEN votes_b + 1 = votes_a THEN 'tie' ELSE winner END WHERE id = ?", id)
+		return err
+	}
+	return nil
+}
+
+func (s *Store) GetABTests(limit int) ([]ABTest, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if limit <= 0 {
+		limit = 20
+	}
+	rows, err := s.db.Query(
+		`SELECT id, name, prompt, provider_a, model_a, provider_b, model_b, reply_a, reply_b,
+		tokens_a, tokens_b, latency_a, latency_b, votes_a, votes_b, winner, status, created_at
+		FROM ab_tests ORDER BY id DESC LIMIT ?`, limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var tests []ABTest
+	for rows.Next() {
+		var t ABTest
+		var createdAt sql.NullTime
+		rows.Scan(&t.ID, &t.Name, &t.Prompt, &t.ProviderA, &t.ModelA, &t.ProviderB, &t.ModelB,
+			&t.ReplyA, &t.ReplyB, &t.TokensA, &t.TokensB, &t.LatencyA, &t.LatencyB,
+			&t.VotesA, &t.VotesB, &t.Winner, &t.Status, &createdAt)
+		if createdAt.Valid {
+			t.CreatedAt = createdAt.Time
+		}
+		tests = append(tests, t)
+	}
+	return tests, nil
+}
+
+// ── SEMANTIC CACHE ────────────────────────────────────────────────────────
+
+type SemanticCacheEntry struct {
+	ID          int64     `json:"id"`
+	Query       string    `json:"query"`
+	Embedding   string    `json:"embedding"`
+	Response    string    `json:"response"`
+	Model       string    `json:"model"`
+	HitCount    int64     `json:"hit_count"`
+	Similarity  float64   `json:"similarity"`
+	CreatedAt   time.Time `json:"created_at"`
+	ExpiresAt   time.Time `json:"expires_at"`
+}
+
+func (s *Store) SetSemanticCache(query, embedding, response, model string, ttlMinutes int) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	_, err := s.db.Exec(
+		`INSERT INTO semantic_cache (query, embedding, response, model, hit_count, expires_at)
+		VALUES (?, ?, ?, ?, 0, datetime('now', '+' || ? || ' minutes'))`, query, embedding, response, model, ttlMinutes,
+	)
+	return err
+}
+
+func (s *Store) GetSemanticCacheEntries() ([]SemanticCacheEntry, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	rows, err := s.db.Query(
+		`SELECT id, query, embedding, response, model, hit_count, created_at, expires_at
+		FROM semantic_cache WHERE expires_at IS NULL OR expires_at > datetime('now')
+		ORDER BY hit_count DESC LIMIT 100`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var entries []SemanticCacheEntry
+	for rows.Next() {
+		var e SemanticCacheEntry
+		var createdAt, expiresAt sql.NullTime
+		rows.Scan(&e.ID, &e.Query, &e.Embedding, &e.Response, &e.Model, &e.HitCount, &createdAt, &expiresAt)
+		if createdAt.Valid {
+			e.CreatedAt = createdAt.Time
+		}
+		if expiresAt.Valid {
+			e.ExpiresAt = expiresAt.Time
+		}
+		entries = append(entries, e)
+	}
+	return entries, nil
+}
+
+func (s *Store) GetSemanticCacheByEmbedding(embedding string, threshold float64) (*SemanticCacheEntry, float64) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	rows, err := s.db.Query(
+		`SELECT id, query, embedding, response, model, hit_count, created_at, expires_at
+		FROM semantic_cache WHERE expires_at IS NULL OR expires_at > datetime('now')`)
+	if err != nil {
+		return nil, 0
+	}
+	defer rows.Close()
+
+	var bestEntry *SemanticCacheEntry
+	var bestSim float64
+
+	for rows.Next() {
+		var e SemanticCacheEntry
+		var createdAt, expiresAt sql.NullTime
+		rows.Scan(&e.ID, &e.Query, &e.Embedding, &e.Response, &e.Model, &e.HitCount, &createdAt, &expiresAt)
+		if createdAt.Valid {
+			e.CreatedAt = createdAt.Time
+		}
+		if expiresAt.Valid {
+			e.ExpiresAt = expiresAt.Time
+		}
+		sim := cosineSimilarity(embedding, e.Embedding)
+		if sim > bestSim {
+			bestSim = sim
+			bestEntry = &e
+		}
+	}
+
+	if bestEntry != nil && bestSim >= threshold {
+		return bestEntry, bestSim
+	}
+	return nil, 0
+}
+
+func (s *Store) IncrementSemanticCacheHit(id int64) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.db.Exec("UPDATE semantic_cache SET hit_count = hit_count + 1 WHERE id = ?", id)
+}
+
+func cosineSimilarity(a, b string) float64 {
+	aVec := parseEmbedding(a)
+	bVec := parseEmbedding(b)
+	if len(aVec) == 0 || len(bVec) == 0 || len(aVec) != len(bVec) {
+		return 0
+	}
+	var dotProduct, normA, normB float64
+	for i := range aVec {
+		dotProduct += aVec[i] * bVec[i]
+		normA += aVec[i] * aVec[i]
+		normB += bVec[i] * bVec[i]
+	}
+	if normA == 0 || normB == 0 {
+		return 0
+	}
+	return dotProduct / (sqrt(normA) * sqrt(normB))
+}
+
+func parseEmbedding(s string) []float64 {
+	s = strings.Trim(s, "[]")
+	if s == "" {
+		return nil
+	}
+	parts := strings.Split(s, ",")
+	var vec []float64
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		var v float64
+		fmt.Sscanf(p, "%f", &v)
+		vec = append(vec, v)
+	}
+	return vec
+}
+
+func sqrt(x float64) float64 {
+	if x <= 0 {
+		return 0
+	}
+	z := x
+	for i := 0; i < 10; i++ {
+		z = (z + x/z) / 2
+	}
+	return z
+}
+
+// ── FIREWALL CONFIG ───────────────────────────────────────────────────────
+
+func (s *Store) GetFirewallConfig() (map[string]string, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	config := make(map[string]string)
+	rows, err := s.db.Query("SELECT key, value FROM settings WHERE key LIKE 'firewall_%'")
+	if err != nil {
+		return config, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var k, v string
+		rows.Scan(&k, &v)
+		config[strings.TrimPrefix(k, "firewall_")] = v
+	}
+	return config, nil
+}
+
+func (s *Store) SetFirewallConfig(key, value string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	_, err := s.db.Exec(
+		"INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)",
+		"firewall_"+key, value,
+	)
+	return err
 }

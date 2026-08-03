@@ -89,7 +89,6 @@ func main() {
 	mux.HandleFunc("/admin/tournament", p.HandleTournament)
 	mux.HandleFunc("/admin/tournament/models", p.HandleTournamentModels)
 	mux.HandleFunc("/admin/key-expiry", p.HandleSetKeyExpiry)
-	mux.HandleFunc("/admin/ip-allowlist", p.HandleIPAllowlist)
 	mux.HandleFunc("/admin/template-versions", p.HandleTemplateVersions)
 	mux.HandleFunc("/admin/replay", p.HandleRequestReplay)
 	mux.HandleFunc("/admin/inspect-stream", p.HandleStreamingInspect)
@@ -104,6 +103,43 @@ func main() {
 	mux.HandleFunc("/admin/recap", p.HandleRecap)
 	mux.HandleFunc("/admin/recap/generate", p.HandleRecap)
 	mux.HandleFunc("/admin/analytics", p.HandleCostAnalytics)
+
+	// New feature endpoints
+	mux.HandleFunc("/admin/firewall", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.Method {
+		case "GET":
+			config := p.GetFirewallConfig()
+			json.NewEncoder(w).Encode(config)
+		case "POST":
+			var req struct {
+				Key   string `json:"key"`
+				Value string `json:"value"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				http.Error(w, `{"error":"Invalid JSON"}`, 400)
+				return
+			}
+			if err := p.SetFirewallConfig(req.Key, req.Value); err != nil {
+				http.Error(w, `{"error":"Failed"}`, 500)
+				return
+			}
+			json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+		default:
+			http.Error(w, "Method not allowed", 405)
+		}
+	})
+	mux.HandleFunc("/admin/ip-allowlist", p.HandleIPAllowlist)
+	mux.HandleFunc("/admin/provider-budgets", p.HandleProviderBudgets)
+	mux.HandleFunc("/admin/queue", p.HandleQueue)
+	mux.HandleFunc("/admin/queue/stats", p.HandleQueue)
+	mux.HandleFunc("/admin/health-dashboard", p.HandleHealthDashboard)
+	mux.HandleFunc("/admin/ab-test", p.HandleABTest)
+	mux.HandleFunc("/admin/ab-test/vote", p.HandleABVote)
+	mux.HandleFunc("/admin/semantic-cache", p.HandleSemanticCache)
+
+	// Start queue processor
+	go p.ProcessQueue()
 
 	mux.HandleFunc("/admin/failover", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
