@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Routing & Failover — KeyParty</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/docs.css">
+</head>
+<body>
+<nav>
+<div class="nav-in">
+  <a href="index.html" class="nav-logo"><b>K</b>eyParty</a>
+  <div class="nav-right">
+    <a href="getting-started.html">Get Started</a>
+    <a href="api.html">API</a>
+    <a href="providers.html">Providers</a>
+    <a href="routing.html">Routing</a>
+    <a href="security.html">Security</a>
+    <a href="architecture.html">Architecture</a>
+    <button class="theme-btn" onclick="toggle()" title="Toggle theme">&#9789;</button>
+    <a href="https://github.com/MastaChief117/keyparty">GitHub</a>
+  </div>
+</div>
+</nav>
+
+<div class="page">
+<h1>Routing & Failover</h1>
+<p class="subtitle">How requests get routed, what happens when providers fail, and why your users never see the 429.</p>
+
+<h2>How Routing Works</h2>
+<p>Every API key is linked to a provider. When you send a request:</p>
+<ol>
+<li>KeyParty decrypts your API key</li>
+<li>Looks up which provider that key belongs to</li>
+<li>Forwards the request to that provider</li>
+</ol>
+
+<p>That's it. No magic. If you have 3 Groq keys, they all route to Groq. If you want Gemini, use a Gemini key.</p>
+
+<h3>Model Routing</h3>
+<p>Two ways to specify the model:</p>
+<ul>
+<li><strong>In the request body:</strong> <code>"model": "groq/llama-3.3-70b-versatile"</code> — KeyParty parses the provider prefix</li>
+<li><strong>Via headers:</strong> <code>X-Gateway-Provider: groq</code> + <code>X-Gateway-Model: llama-3.3-70b-versatile</code> — overrides everything</li>
+</ul>
+
+<div class="callout callout-info">
+<strong>Pro tip:</strong> Use the header approach. It lets you change providers without touching your app code. Great for A/B testing.
+</div>
+
+<h2>Failover</h2>
+<p>When a provider returns 402 (quota exhausted) or 429 (rate limited), KeyParty can automatically reroute to a backup provider.</p>
+
+<h3>Configuration</h3>
+<table class="tbl">
+<tr><th>Setting</th><th>Description</th><th>Default</th></tr>
+<tr><td><code>failover_enabled</code></td><td>Enable/disable failover</td><td><code>false</code></td></tr>
+<tr><td><code>failover_provider</code></td><td>Backup provider slug</td><td><code>gemini</code></td></tr>
+<tr><td><code>failover_model</code></td><td>Backup model name</td><td><code>gemini-2.5-flash</code></td></tr>
+<tr><td><code>failover_compact</code></td><td>Summarize chat history on failover</td><td><code>true</code></td></tr>
+<tr><td><code>failover_triggers</code></td><td>HTTP status codes that trigger failover</td><td><code>402,429</code></td></tr>
+</table>
+
+<h3>Via Dashboard</h3>
+<p>Go to <strong>Settings</strong> tab in the dashboard. Toggle failover on, pick your backup provider and model, done.</p>
+
+<h3>Via API</h3>
+<pre><code>curl -X PUT http://localhost:8080/admin/settings \
+  -H "Authorization: Bearer your-admin-password" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "failover_enabled": true,
+    "failover_provider": "gemini",
+    "failover_model": "gemini-2.5-flash",
+    "failover_compact": true,
+    "failover_triggers": "402,429"
+  }'</code></pre>
+
+<h3>Failover Flow</h3>
+<pre><code>Request → Groq → 429 (rate limited)
+    │
+    ▼
+┌─────────────────┐
+│ Failover enabled? │── no ── return error to client
+└────────┬────────┘
+         │ yes
+         ▼
+┌─────────────────┐
+│ Compact enabled? │── no ── retry with backup provider
+└────────┬────────┘
+         │ yes
+         ▼
+┌─────────────────┐
+│ Summarize chat   │ ── send history to backup model
+│ history          │     get condensed summary
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ Retry with       │ ── send summarized history + new message
+│ backup provider  │
+└─────────────────┘</code></pre>
+
+<h3>Compaction</h3>
+<p>When failover triggers with compaction enabled:</p>
+<ol>
+<li>Your full chat history is sent to the backup model</li>
+<li>The backup model summarizes it into ~200 tokens</li>
+<li>The summarized history is sent to the backup provider</li>
+<li>Your conversation continues seamlessly</li>
+</ol>
+
+<p>The compacted result is cached to avoid re-summarizing the same conversation.</p>
+
+<div class="callout callout-warn">
+<strong>Note:</strong> Compaction means some context is lost. The summary captures the gist, not every detail. For critical conversations, consider disabling compaction.
+</div>
+
+<h2>Provider Headers</h2>
+<p>Override routing per-request without changing your app:</p>
+
+<table class="tbl">
+<tr><th>Header</th><th>Description</th><th>Example</th></tr>
+<tr><td><code>X-Gateway-Provider</code></td><td>Force a specific provider</td><td><code>gemini</code></td></tr>
+<tr><td><code>X-Gateway-Model</code></td><td>Override the model name</td><td><code>gemini-2.5-flash</code></td></tr>
+</table>
+
+<p>When these headers are present, the <code>model</code> field in the request body is ignored.</p>
+
+<h2>Request Queuing</h2>
+<p>When a provider returns 429 and failover is disabled, KeyParty can queue the request and retry automatically.</p>
+
+<pre><code>Request → Groq → 429
+    │
+    ▼
+┌─────────────────┐
+│ Queue request     │ ── store in DB with retry count
+└────────┬────────┘
+         │
+    (exponential backoff)
+         │
+         ▼
+┌─────────────────┐
+│ Retry request     │ ── 5s, 15s, 45s, 135s...
+└────────┬────────┘
+         │
+    max retries hit?
+         │ yes
+         ▼
+┌─────────────────┐
+│ Return 429       │
+│ to client        │
+└─────────────────┘</code></pre>
+
+<h3>Queue Configuration</h3>
+<p>View queue status:</p>
+<pre><code>curl http://localhost:8080/admin/queue \
+  -H "Authorization: Bearer your-admin-password"</code></pre>
+
+<h2>Semantic Cache</h2>
+<p>Similar prompts can be cached using embedding-based similarity matching. If two prompts are semantically similar, the cached response is returned without hitting the provider.</p>
+
+<pre><code>curl http://localhost:8080/admin/semantic-cache \
+  -H "Authorization: Bearer your-admin-password"</code></pre>
+
+<h2>A/B Testing</h2>
+<p>Send the same prompt to two providers and compare responses side by side.</p>
+
+<pre><code>curl -X POST http://localhost:8080/admin/ab-test \
+  -H "Authorization: Bearer your-admin-password" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "Explain quantum computing in simple terms",
+    "provider_a": "groq",
+    "model_a": "llama-3.3-70b-versatile",
+    "provider_b": "gemini",
+    "model_b": "gemini-2.5-flash"
+  }'</code></pre>
+
+<p>Vote on the better response:</p>
+<pre><code>curl -X POST http://localhost:8080/admin/ab-test/vote \
+  -H "Authorization: Bearer your-admin-password" \
+  -H "Content-Type: application/json" \
+  -d '{"test_id": "1", "winner": "a"}'</code></pre>
+
+<h2>Health Dashboard</h2>
+<p>Real-time provider health metrics — uptime, latency percentiles, error rates.</p>
+
+<pre><code>curl http://localhost:8080/admin/health-dashboard \
+  -H "Authorization: Bearer your-admin-password"</code></pre>
+
+<p>Response includes p50/p95/p99 latency, error rates, and uptime percentage per provider.</p>
+
+</div>
+
+<footer>
+  <p>MIT &middot; made by <a href="https://github.com/MastaChief117">MastaChief117</a> &middot; one endpoint, ten providers, zero budget</p>
+</footer>
+
+<script>
+function toggle(){const h=document.documentElement,n=h.getAttribute('data-theme')==='dark'?'light':'dark';h.setAttribute('data-theme',n);localStorage.setItem('theme',n)}
+(function(){const s=localStorage.getItem('theme');if(s)document.documentElement.setAttribute('data-theme',s);else if(window.matchMedia('(prefers-color-scheme:dark)').matches)document.documentElement.setAttribute('data-theme','dark')})();
+</script>
+</body>
+</html>

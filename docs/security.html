@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Security — KeyParty</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/docs.css">
+</head>
+<body>
+<nav>
+<div class="nav-in">
+  <a href="index.html" class="nav-logo"><b>K</b>eyParty</a>
+  <div class="nav-right">
+    <a href="getting-started.html">Get Started</a>
+    <a href="api.html">API</a>
+    <a href="providers.html">Providers</a>
+    <a href="routing.html">Routing</a>
+    <a href="security.html">Security</a>
+    <a href="architecture.html">Architecture</a>
+    <button class="theme-btn" onclick="toggle()" title="Toggle theme">&#9789;</button>
+    <a href="https://github.com/MastaChief117/keyparty">GitHub</a>
+  </div>
+</div>
+</nav>
+
+<div class="page">
+<h1>Security</h1>
+<p class="subtitle">How we protect your keys, your requests, and your sanity.</p>
+
+<h2>Encryption</h2>
+<p>All API keys are encrypted at rest with <strong>AES-256-GCM</strong>:</p>
+<ul>
+<li>32-byte master key stored in <code>.gateway.key</code> (chmod <code>0600</code>)</li>
+<li>Each key gets a random 12-byte nonce per encryption</li>
+<li>Keys are decrypted in-memory only when needed for provider requests</li>
+<li>Master key derived from SHA-256 hash of key file contents</li>
+</ul>
+
+<div class="callout callout-warn">
+<strong>Important:</strong> If you lose <code>.gateway.key</code>, your API keys are gone forever. Back it up securely.
+</div>
+
+<h2>Authentication</h2>
+
+<h3>Unified API Key</h3>
+<p>Your clients authenticate with <code>Authorization: Bearer &lt;unified-key&gt;</code>. The key is decrypted to look up the provider, then used for the provider request.</p>
+
+<h3>Admin Authentication</h3>
+<p>Admin endpoints require either:</p>
+<ul>
+<li><code>X-Admin-Key: &lt;password&gt;</code> header</li>
+<li><code>Authorization: Bearer &lt;password&gt;</code> header</li>
+</ul>
+
+<h3>Brute-Force Protection</h3>
+<p>After <strong>5 failed admin auth attempts</strong> from the same IP:</p>
+<ul>
+<li>IP is blocked for <strong>1 hour</strong></li>
+<li>All subsequent requests from that IP return 403</li>
+<li>Block status tracked in memory (resets on restart)</li>
+</ul>
+
+<h2>Prompt Firewall</h2>
+<p>Block or redact outbound requests that contain sensitive data before they reach providers.</p>
+
+<h3>Features</h3>
+<ul>
+<li><strong>PII Detection:</strong> Emails, phone numbers, SSNs, credit card numbers</li>
+<li><strong>Secret Detection:</strong> API keys, tokens, passwords in prompt content</li>
+<li><strong>Custom Patterns:</strong> Regex-based rules for organization-specific patterns</li>
+<li><strong>Actions:</strong> Block the request entirely, or redact matched content</li>
+</ul>
+
+<h3>Configuration</h3>
+<pre><code>curl -X PUT http://localhost:8080/admin/firewall \
+  -H "Authorization: Bearer your-admin-password" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "enabled": true,
+    "block_pii": true,
+    "block_secrets": true,
+    "action": "block"
+  }'</code></pre>
+
+<h3>Blocked Content Patterns</h3>
+<table class="tbl">
+<tr><th>Pattern</th><th>Example Match</th></tr>
+<tr><td>Email addresses</td><td><code>user@example.com</code></td></tr>
+<tr><td>Phone numbers</td><td><code>+1-555-123-4567</code></td></tr>
+<tr><td>Credit card numbers</td><td><code>4111-1111-1111-1111</code></td></tr>
+<tr><td>SSN patterns</td><td><code>123-45-6789</code></td></tr>
+<tr><td>API key patterns</td><td><code>sk-xxxx</code>, <code>gsk_xxxx</code></td></tr>
+<tr><td>Bearer tokens</td><td><code>Bearer eyJhbG...</code></td></tr>
+</table>
+
+<h2>IP Allowlist</h2>
+<p>Restrict which IPs can use a specific API key.</p>
+
+<pre><code>curl -X POST http://localhost:8080/admin/ip-allowlist \
+  -H "Authorization: Bearer your-admin-password" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "key_id": 1,
+    "allowed_ips": ["192.168.1.0/24", "10.0.0.1"]
+  }'</code></pre>
+
+<p>Requests from non-allowed IPs get a <code>403 Forbidden</code>.</p>
+
+<h2>Virtual Key Security</h2>
+<ul>
+<li>Virtual keys are prefixed with <code>vk-</code> to distinguish from real keys</li>
+<li>Monthly token budget enforcement</li>
+<li>Per-minute rate limiting</li>
+<li>Model allowlist per key</li>
+<li>Usage tracking with cost estimation</li>
+</ul>
+
+<h2>File Permissions</h2>
+<table class="tbl">
+<tr><th>File</th><th>Permissions</th><th>Purpose</th></tr>
+<tr><td><code>.gateway.key</code></td><td><code>0600</code></td><td>Master encryption key</td></tr>
+<tr><td><code>gateway.db</code></td><td><code>0600</code></td><td>SQLite database (encrypted keys)</td></tr>
+</table>
+
+<h2>SSRF Protection</h2>
+<p>The gateway validates all outbound requests to prevent Server-Side Request Forgery:</p>
+<ul>
+<li>Provider URLs are validated before requests</li>
+<li>Private/internal IPs are blocked from provider targets</li>
+<li>Only configured provider base URLs are allowed</li>
+</ul>
+
+<h2>What We Don't Do</h2>
+<ul>
+<li>We don't store plaintext API keys</li>
+<li>We don't send your data anywhere except the configured providers</li>
+<li>We don't phone home or track you</li>
+<li>We don't use cookies or sessions</li>
+<li>We don't have analytics or telemetry</li>
+</ul>
+
+<div class="callout callout-success">
+<strong>That's the whole security model.</strong> Encrypt at rest, authenticate on access, firewall outbound, allowlist IPs. No complexity theater.
+</div>
+
+<h2>Reporting Security Issues</h2>
+<p>Found a vulnerability? Open an issue on <a href="https://github.com/MastaChief117/keyparty">GitHub</a> or contact the maintainer directly.</p>
+
+</div>
+
+<footer>
+  <p>MIT &middot; made by <a href="https://github.com/MastaChief117">MastaChief117</a> &middot; one endpoint, ten providers, zero budget</p>
+</footer>
+
+<script>
+function toggle(){const h=document.documentElement,n=h.getAttribute('data-theme')==='dark'?'light':'dark';h.setAttribute('data-theme',n);localStorage.setItem('theme',n)}
+(function(){const s=localStorage.getItem('theme');if(s)document.documentElement.setAttribute('data-theme',s);else if(window.matchMedia('(prefers-color-scheme:dark)').matches)document.documentElement.setAttribute('data-theme','dark')})();
+</script>
+</body>
+</html>

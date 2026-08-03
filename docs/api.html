@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API Reference — KeyParty</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/docs.css">
+</head>
+<body>
+<nav>
+<div class="nav-in">
+  <a href="index.html" class="nav-logo"><b>K</b>eyParty</a>
+  <div class="nav-right">
+    <a href="getting-started.html">Get Started</a>
+    <a href="api.html">API</a>
+    <a href="providers.html">Providers</a>
+    <a href="routing.html">Routing</a>
+    <a href="security.html">Security</a>
+    <a href="architecture.html">Architecture</a>
+    <button class="theme-btn" onclick="toggle()" title="Toggle theme">&#9789;</button>
+    <a href="https://github.com/MastaChief117/keyparty">GitHub</a>
+  </div>
+</div>
+</nav>
+
+<div class="page">
+<h1>API Reference</h1>
+<p class="subtitle">Every endpoint. Every parameter. Every response. No fluff.</p>
+
+<h2>Chat Completions (OpenAI-Compatible)</h2>
+<p>This is the main endpoint. Your apps talk to this.</p>
+
+<table class="tbl">
+<tr><th>Method</th><td><code>POST</code></td></tr>
+<tr><th>Endpoint</th><td><code>/v1/chat/completions</code></td></tr>
+<tr><th>Auth</th><td>Unified API key via <code>Authorization: Bearer &lt;key&gt;</code></td></tr>
+</table>
+
+<h3>Request Body</h3>
+<table class="tbl">
+<tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td><code>model</code></td><td>string</td><td>yes</td><td>Model name. Format: <code>provider/model</code> or just <code>model</code> (auto-routed)</td></tr>
+<tr><td><code>messages</code></td><td>array</td><td>yes</td><td>Array of message objects <code>[{"role":"user","content":"hello"}]</code></td></tr>
+<tr><td><code>temperature</code></td><td>number</td><td>no</td><td>0.0-2.0 (default: varies by provider)</td></tr>
+<tr><td><code>max_tokens</code></td><td>integer</td><td>no</td><td>Max output tokens</td></tr>
+<tr><td><code>stream</code></td><td>boolean</td><td>no</td><td>Enable SSE streaming</td></tr>
+<tr><td><code>top_p</code></td><td>number</td><td>no</td><td>Nucleus sampling</td></tr>
+</table>
+
+<h3>Request Headers</h3>
+<table class="tbl">
+<tr><th>Header</th><th>Required</th><th>Description</th></tr>
+<tr><td><code>Authorization</code></td><td>yes</td><td><code>Bearer YOUR_UNIFIED_KEY</code></td></tr>
+<tr><td><code>Content-Type</code></td><td>yes</td><td><code>application/json</code></td></tr>
+<tr><td><code>X-Gateway-Provider</code></td><td>no</td><td>Force a specific provider (e.g. <code>groq</code>)</td></tr>
+<tr><td><code>X-Gateway-Model</code></td><td>no</td><td>Override the model name (e.g. <code>llama-3.3-70b-versatile</code>)</td></tr>
+</table>
+
+<h3>Response</h3>
+<pre><code>{
+  "id": "chatcmpl-abc123",
+  "object": "chat.completion",
+  "model": "groq/llama-3.3-70b-versatile",
+  "choices": [{
+    "index": 0,
+    "message": {"role": "assistant", "content": "Hello!"},
+    "finish_reason": "stop"
+  }],
+  "usage": {
+    "prompt_tokens": 12,
+    "completion_tokens": 3,
+    "total_tokens": 15
+  }
+}</code></pre>
+
+<h3>Streaming Response</h3>
+<p>When <code>"stream": true</code>, returns SSE events:</p>
+<pre><code>data: {"choices":[{"delta":{"content":"Hello"},"index":0}]}
+
+data: {"choices":[{"delta":{"content":"!"},"index":0}]}
+
+data: [DONE]</code></pre>
+
+<h2>Virtual Keys</h2>
+<p>Create API keys for friends/users without sharing your real provider keys.</p>
+
+<h3>Create Virtual Key</h3>
+<table class="tbl">
+<tr><th>Method</th><td><code>POST</code></td></tr>
+<tr><th>Endpoint</th><td><code>/admin/virtual-keys</code></td></tr>
+<tr><th>Auth</th><td><code>Authorization: Bearer &lt;admin-password&gt;</code></td></tr>
+</table>
+
+<pre><code>{
+  "name": "friend-key",
+  "monthly_budget": 5.00,
+  "rate_limit": 10,
+  "allowed_models": "groq/llama-3.3-70b-versatile,gemini/gemini-2.5-flash"
+}</code></pre>
+
+<p>Returns the virtual key: <code>vk-xxxxxxxx</code>. Use it exactly like a unified key.</p>
+
+<h3>List Virtual Keys</h3>
+<p><code>GET /admin/virtual-keys</code></p>
+
+<h3>Delete Virtual Key</h3>
+<p><code>DELETE /admin/virtual-keys/:id</code></p>
+
+<h2>Provider Override</h2>
+<p>Force a specific provider and model via headers — no code changes needed.</p>
+
+<pre><code>curl http://localhost:8080/v1/chat/completions \
+  -H "Authorization: Bearer YOUR_KEY" \
+  -H "X-Gateway-Provider: gemini" \
+  -H "X-Gateway-Model: gemini-2.5-flash" \
+  -d '{"model":"anything","messages":[...]}'</code></pre>
+
+<div class="callout callout-info">
+<strong>Note:</strong> The <code>model</code> field in the request body is ignored when the header is present. The header always wins.
+</div>
+
+<h2>System Prompts</h2>
+<p>Customize the AI's personality per provider via dashboard settings.</p>
+<table class="tbl">
+<tr><th>Setting</th><th>Description</th></tr>
+<tr><td><code>system_prompt_groq</code></td><td>System prompt for Groq provider</td></tr>
+<tr><td><code>system_prompt_gemini</code></td><td>System prompt for Gemini provider</td></tr>
+<tr><td><code>system_prompt_openai</code></td><td><code>system_prompt_nvidia</code>, <code>system_prompt_mistral</code>, etc.</td></tr>
+</table>
+
+<h2>Webhook</h2>
+<p>Get notified on events (first request, daily summary, failures).</p>
+<table class="tbl">
+<tr><th>Method</th><td><code>POST</code></td></tr>
+<tr><th>Endpoint</th><td><code>/admin/webhook</code></td></tr>
+<tr><th>Auth</th><td><code>X-Admin-Key: &lt;admin-password&gt;</code></td></tr>
+</table>
+<pre><code>{
+  "url": "https://your-slack-webhook.com/xxx",
+  "events": ["first_request", "daily_summary", "provider_failure"]
+}</code></pre>
+
+<h2>Traffic Monitor</h2>
+<p>Get usage stats for a virtual key.</p>
+<p><code>GET /admin/virtual-keys/:id/traffic</code></p>
+
+<pre><code>{
+  "id": 1,
+  "name": "friend-key",
+  "requests": 42,
+  "tokens_used": 15000,
+  "estimated_cost": 0.03,
+  "monthly_budget": 5.00,
+  "budget_used_pct": 0.6
+}</code></pre>
+
+<h2>Error Responses</h2>
+<table class="tbl">
+<tr><th>Status</th><th>Meaning</th><th>What Happened</th></tr>
+<tr><td><code>401</code></td><td>Unauthorized</td><td>Invalid or missing API key</td></tr>
+<tr><td><code>402</code></td><td>Payment Required</td><td>Quota exhausted — auto-failover triggers if enabled</td></tr>
+<tr><td><code>403</code></td><td>Forbidden</td><td>Model not allowed for this virtual key</td></tr>
+<tr><td><code>429</code></td><td>Rate Limited</td><td>Too many requests — auto-failover triggers if enabled</td></tr>
+<tr><td><code>502</code></td><td>Bad Gateway</td><td>Provider returned an error</td></tr>
+<tr><td><code>503</code></td><td>Unavailable</td><td>No provider available for this model</td></tr>
+</table>
+
+<h2>Admin Endpoints</h2>
+<p>Full admin API at <code>/admin/*</code> — manage keys, settings, providers, and more. Use <code>X-Admin-Key</code> header.</p>
+
+<table class="tbl">
+<tr><th>Endpoint</th><th>Method</th><th>Description</th></tr>
+<tr><td><code>/admin/api-keys</code></td><td>GET/POST</td><td>List and add API keys</td></tr>
+<tr><td><code>/admin/api-keys/:id</code></td><td>PUT/DELETE</td><td>Update or delete a key</td></tr>
+<tr><td><code>/admin/settings</code></td><td>GET/PUT</td><td>Global gateway settings</td></tr>
+<tr><td><code>/admin/providers</code></td><td>GET</td><td>Available providers and models</td></tr>
+<tr><td><code>/admin/virtual-keys</code></td><td>GET/POST</td><td>Manage virtual keys</td></tr>
+<tr><td><code>/admin/virtual-keys/:id/traffic</code></td><td>GET</td><td>Usage stats for a key</td></tr>
+<tr><td><code>/admin/webhook</code></td><td>GET/POST</td><td>Configure webhook notifications</td></tr>
+<tr><td><code>/admin/rate-limit</code></td><td>GET/PUT</td><td>Rate limit config</td></tr>
+<tr><td><code>/admin/budget-alerts</code></td><td>GET/PUT</td><td>Budget alert thresholds</td></tr>
+<tr><td><code>/admin/logs</code></td><td>GET</td><td>Recent request logs</td></tr>
+<tr><td><code>/admin/firewall</code></td><td>GET/PUT</td><td>Prompt firewall settings</td></tr>
+<tr><td><code>/admin/provider-budgets</code></td><td>GET/POST/DELETE</td><td>Per-provider token/cost budgets</td></tr>
+<tr><td><code>/admin/queue</code></td><td>GET/DELETE</td><td>Request queue status</td></tr>
+<tr><td><code>/admin/ab-test</code></td><td>POST</td><td>Create A/B test between providers</td></tr>
+<tr><td><code>/admin/ab-test/vote</code></td><td>POST</td><td>Vote on A/B test result</td></tr>
+<tr><td><code>/admin/health-dashboard</code></td><td>GET</td><td>Provider health metrics</td></tr>
+<tr><td><code>/admin/semantic-cache</code></td><td>GET/DELETE</td><td>Semantic cache stats and management</td></tr>
+<tr><td><code>/admin/ip-allowlist</code></td><td>GET/POST/DELETE</td><td>IP allowlist management</td></tr>
+</table>
+
+</div>
+
+<footer>
+  <p>MIT &middot; made by <a href="https://github.com/MastaChief117">MastaChief117</a> &middot; one endpoint, ten providers, zero budget</p>
+</footer>
+
+<script>
+function toggle(){const h=document.documentElement,n=h.getAttribute('data-theme')==='dark'?'light':'dark';h.setAttribute('data-theme',n);localStorage.setItem('theme',n)}
+(function(){const s=localStorage.getItem('theme');if(s)document.documentElement.setAttribute('data-theme',s);else if(window.matchMedia('(prefers-color-scheme:dark)').matches)document.documentElement.setAttribute('data-theme','dark')})();
+</script>
+</body>
+</html>

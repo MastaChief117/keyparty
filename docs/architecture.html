@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Architecture — KeyParty</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/docs.css">
+</head>
+<body>
+<nav>
+<div class="nav-in">
+  <a href="index.html" class="nav-logo"><b>K</b>eyParty</a>
+  <div class="nav-right">
+    <a href="getting-started.html">Get Started</a>
+    <a href="api.html">API</a>
+    <a href="providers.html">Providers</a>
+    <a href="routing.html">Routing</a>
+    <a href="security.html">Security</a>
+    <a href="architecture.html">Architecture</a>
+    <button class="theme-btn" onclick="toggle()" title="Toggle theme">&#9789;</button>
+    <a href="https://github.com/MastaChief117/keyparty">GitHub</a>
+  </div>
+</div>
+</nav>
+
+<div class="page">
+<h1>Architecture</h1>
+<p class="subtitle">How the internals work. Components, data flow, and why it's a single binary.</p>
+
+<h2>High-Level Overview</h2>
+<pre><code>┌──────────────────────────────────────────────────────────────┐
+│                        KeyParty                              │
+│                                                              │
+│  ┌─────────┐  ┌──────────┐  ┌─────────┐  ┌──────────────┐  │
+│  │ Gateway  │──│ Provider │──│   AES   │──│    SQLite    │  │
+│  │ Router   │  │  Client  │  │  Store  │  │     DB       │  │
+│  └─────────┘  └──────────┘  └─────────┘  └──────────────┘  │
+│       │                                                   │  │
+│  ┌─────────┐  ┌──────────┐  ┌─────────┐  ┌──────────────┐  │
+│  │ Auth    │  │ Failover │  │Virtual  │  │  Dashboard   │  │
+│  │ Layer   │  │ Engine   │  │  Keys   │  │    (SPA)     │  │
+│  └─────────┘  └──────────┘  └─────────┘  └──────────────┘  │
+│                                                              │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │          Dashboard (embedded HTML/JS SPA)            │    │
+│  │  API Keys │ Providers │ Settings │ Virtual Keys │ ...│    │
+│  └─────────────────────────────────────────────────────┘    │
+└──────────────────────────────────────────────────────────────┘
+         │                              │
+    ┌────┴────┐                   ┌─────┴─────┐
+    │ Provider│                   │  Provider  │
+    │    A    │                   │     B      │
+    └─────────┘                   └────────────┘</code></pre>
+
+<h2>Core Components</h2>
+
+<h3>Gateway Router (proxy/proxy.go)</h3>
+<p>The main request handler. All requests flow through here:</p>
+<ol>
+<li>Parse <code>Authorization</code> header, decrypt the API key</li>
+<li>Look up the provider from the key</li>
+<li>Apply provider/model override headers if present</li>
+<li>Check virtual key rate limits and budgets</li>
+<li>Check provider token budgets</li>
+<li>Check IP allowlist</li>
+<li>Forward request to provider, stream response back</li>
+<li>If 402/429 and failover is enabled, retry with backup provider</li>
+<li>If compaction enabled, summarize chat history on failover</li>
+<li>Log everything to SQLite</li>
+</ol>
+
+<h3>Auth Layer (auth/auth.go)</h3>
+<ul>
+<li><strong>Unified Key:</strong> <code>Authorization: Bearer &lt;key&gt;</code> — decrypted via AES-256-GCM</li>
+<li><strong>Admin:</strong> <code>X-Admin-Key</code> header — plain-text comparison</li>
+<li><strong>Virtual Keys:</strong> <code>vk-</code> prefix — checked against DB with budget/rate limits</li>
+<li><strong>IP Allowlist:</strong> Optional per-key IP restriction</li>
+</ul>
+
+<h3>AES Store (store/store.go)</h3>
+<p>All API keys are encrypted with AES-256-GCM:</p>
+<ul>
+<li>32-byte master key stored in <code>.gateway.key</code> (chmod <code>0600</code>)</li>
+<li>Key is derived from a SHA-256 hash of the key file contents</li>
+<li>Each API key gets a random 12-byte nonce per encryption</li>
+<li>Keys are never stored in plaintext — not even in memory after decryption</li>
+</ul>
+
+<h3>Provider Client (provider/provider.go)</h3>
+<p>HTTP clients for each provider with provider-specific logic:</p>
+<ul>
+<li>10 built-in providers + custom provider support</li>
+<li>Each provider has: base URL, model mapping, auth header format</li>
+<li>Gemini uses special <code>alt=sse</code> endpoint for streaming</li>
+<li>Groq uses OpenAI-compatible endpoint</li>
+<li>Each provider has its own timeout and retry settings</li>
+</ul>
+
+<h3>Failover Engine (proxy/proxy.go)</h3>
+<p>Triggers automatically on 402 (quota) or 429 (rate limit):</p>
+<ol>
+<li>Records current provider as failed</li>
+<li>Looks up configured backup provider</li>
+<li>If compaction enabled, summarizes chat history via backup model</li>
+<li>Retries request with backup provider</li>
+<li>Cache compacted result to avoid re-compacting same conversation</li>
+</ol>
+
+<h3>Virtual Keys</h3>
+<p>Share access without sharing real API keys:</p>
+<ul>
+<li><code>vk-</code> prefix identifies virtual keys</li>
+<li>Monthly token budget and cost tracking</li>
+<li>Per-key rate limiting (requests per minute)</li>
+<li>Model allowlist per key</li>
+<li>Usage tracking: requests, tokens, estimated cost</li>
+</ul>
+
+<h2>Data Flow</h2>
+<pre><code>Client Request
+    │
+    ▼
+┌─────────────┐
+│  Parse Auth  │ ── unified key → decrypt → get provider
+└──────┬──────┘
+       │
+       ▼
+┌─────────────┐
+│  Check       │ ── virtual key? check budget, rate limit, model allowlist
+│  Virtual Key │
+└──────┬──────┘
+       │
+       ▼
+┌─────────────┐
+│  Check       │ ── IP allowlist? provider budget?
+│  Filters     │
+└──────┬──────┘
+       │
+       ▼
+┌─────────────┐
+│  Provider    │ ── apply X-Gateway-Provider/Model headers
+│  Override    │
+└──────┬──────┘
+       │
+       ▼
+┌─────────────┐
+│  Forward to  │ ── HTTP request to provider
+│  Provider    │
+└──────┬──────┘
+       │
+       ▼
+┌─────────────┐
+│  Success?    │── yes ── stream response back, log
+└──────┬──────┘
+       │ no (402/429)
+       ▼
+┌─────────────┐
+│  Failover    │ ── compact history? retry with backup
+│  Enabled?    │
+└──────┬──────┘
+       │
+       ▼
+┌─────────────┐
+│  Return to   │
+│  Client      │
+└─────────────┘</code></pre>
+
+<h2>Tech Stack</h2>
+<table class="tbl">
+<tr><th>Component</th><th>Technology</th></tr>
+<tr><td>Language</td><td>Go 1.24+</td></tr>
+<tr><td>Database</td><td>SQLite (via <code>modernc.org/sqlite</code> — pure Go, no CGO)</td></tr>
+<tr><td>Encryption</td><td>AES-256-GCM (standard library)</td></tr>
+<tr><td>HTTP</td><td>Standard library <code>net/http</code></td></tr>
+<tr><td>Streaming</td><td>SSE (Server-Sent Events) via <code>bufio.Scanner</code></td></tr>
+<tr><td>Dashboard</td><td>Embedded HTML/JS SPA (no framework)</td></tr>
+<tr><td>Deployment</td><td>Single binary (~16MB), no dependencies</td></tr>
+</table>
+
+<h2>Why Single Binary?</h2>
+<ul>
+<li><strong>No Docker required.</strong> Just <code>go build</code> and run.</li>
+<li><strong>No Node.js.</strong> Dashboard is plain HTML/JS embedded in the binary.</li>
+<li><strong>No external database.</strong> SQLite is embedded.</li>
+<li><strong>Cross-compile.</strong> Build for Linux, macOS, Windows from any machine.</li>
+<li><strong>One file to deploy.</strong> Copy the binary and <code>.gateway.key</code> to any server.</li>
+</ul>
+
+<div class="callout callout-info">
+<strong>That's the whole architecture.</strong> It's simpler than you'd expect. The entire codebase is ~25 files. No microservices. No message queues. Just Go handling HTTP requests and talking to SQLite.
+</div>
+
+</div>
+
+<footer>
+  <p>MIT &middot; made by <a href="https://github.com/MastaChief117">MastaChief117</a> &middot; one endpoint, ten providers, zero budget</p>
+</footer>
+
+<script>
+function toggle(){const h=document.documentElement,n=h.getAttribute('data-theme')==='dark'?'light':'dark';h.setAttribute('data-theme',n);localStorage.setItem('theme',n)}
+(function(){const s=localStorage.getItem('theme');if(s)document.documentElement.setAttribute('data-theme',s);else if(window.matchMedia('(prefers-color-scheme:dark)').matches)document.documentElement.setAttribute('data-theme','dark')})();
+</script>
+</body>
+</html>

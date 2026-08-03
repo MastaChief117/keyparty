@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Providers — KeyParty</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/docs.css">
+</head>
+<body>
+<nav>
+<div class="nav-in">
+  <a href="index.html" class="nav-logo"><b>K</b>eyParty</a>
+  <div class="nav-right">
+    <a href="getting-started.html">Get Started</a>
+    <a href="api.html">API</a>
+    <a href="providers.html">Providers</a>
+    <a href="routing.html">Routing</a>
+    <a href="security.html">Security</a>
+    <a href="architecture.html">Architecture</a>
+    <button class="theme-btn" onclick="toggle()" title="Toggle theme">&#9789;</button>
+    <a href="https://github.com/MastaChief117/keyparty">GitHub</a>
+  </div>
+</div>
+</nav>
+
+<div class="page">
+<h1>Supported Providers</h1>
+<p class="subtitle">10 providers out of the box. Plus custom provider support for anything else.</p>
+
+<h2>Quick Reference</h2>
+<table class="tbl">
+<tr><th>Provider</th><th>Slug</th><th>Free Tier</th><th>Auth Method</th><th>Base URL</th></tr>
+<tr><td>OpenAI</td><td><code>openai</code></td><td>No</td><td>API Key</td><td>api.openai.com</td></tr>
+<tr><td>Anthropic</td><td><code>anthropic</code></td><td>No</td><td>API Key</td><td>api.anthropic.com</td></tr>
+<tr><td>Gemini</td><td><code>gemini</code></td><td>Yes</td><td>API Key</td><td>generativelanguage.googleapis.com</td></tr>
+<tr><td>Groq</td><td><code>groq</code></td><td>Yes (1000 RPD)</td><td>API Key</td><td>api.groq.com</td></tr>
+<tr><td>NVIDIA</td><td><code>nvidia</code></td><td>Yes</td><td>API Key</td><td>integrate.api.nvidia.com</td></tr>
+<tr><td>xAI</td><td><code>xai</code></td><td>No</td><td>API Key</td><td>api.x.ai</td></tr>
+<tr><td>Mistral</td><td><code>mistral</code></td><td>Yes</td><td>API Key</td><td>api.mistral.ai</td></tr>
+<tr><td>DeepSeek</td><td><code>deepseek</code></td><td>Yes</td><td>API Key</td><td>api.deepseek.com</td></tr>
+<tr><td>OpenAI-HK</td><td><code>openai-hk</code></td><td>Yes</td><td>API Key</td><td>api.openai-hk.com</td></tr>
+<tr><td>Groq (OpenAI)</td><td><code>groq-openai</code></td><td>Yes</td><td>API Key</td><td>api.groq.com</td></tr>
+<tr><td>Custom</td><td><code>custom</code></td><td>N/A</td><td>API Key</td><td>Your URL</td></tr>
+</table>
+
+<h2>Provider Details</h2>
+
+<h3>Groq</h3>
+<p><span class="badge badge-green">Free Tier</span> <span class="badge badge-blue">1000 RPD</span></p>
+<ul>
+<li>Fastest inference available (Groq LPU hardware)</li>
+<li>12K tokens per minute on free tier</li>
+<li>Best for: speed-sensitive apps, prototyping, cost-free experimentation</li>
+<li>Quota resets at midnight UTC daily</li>
+<li>Auto-failover to Gemini on 429/402</li>
+</ul>
+
+<h3>Gemini (Google)</h3>
+<p><span class="badge badge-green">Free Tier</span></p>
+<ul>
+<li>Generous free tier with good rate limits</li>
+<li>Best for: failover target, long context, multimodal</li>
+<li>Uses <code>alt=sse</code> endpoint for streaming</li>
+<li>Excellent as compact/backup provider</li>
+</ul>
+
+<h3>OpenAI</h3>
+<p><span class="badge badge-red">Paid Only</span></p>
+<ul>
+<li>GPT-4o, GPT-4o-mini, GPT-4.1, o1, o3</li>
+<li>Best for: highest quality responses, complex reasoning</li>
+<li>Most expensive option</li>
+</ul>
+
+<h3>Anthropic</h3>
+<p><span class="badge badge-red">Paid Only</span></p>
+<ul>
+<li>Claude Opus 4, Sonnet 4, Haiku</li>
+<li>Best for: long-form content, analysis, coding</li>
+<li>200K context window on Claude models</li>
+</ul>
+
+<h3>NVIDIA</h3>
+<p><span class="badge badge-green">Free Tier</span></p>
+<ul>
+<li>Nemotron models on NVIDIA API</li>
+<li>Good for: experimentation, NIM platform</li>
+</ul>
+
+<h3>xAI (Grok)</h3>
+<p><span class="badge badge-red">Paid Only</span></p>
+<ul>
+<li>Grok models from xAI</li>
+<li>Best for: real-time information, conversational AI</li>
+</ul>
+
+<h3>Mistral</h3>
+<p><span class="badge badge-green">Free Tier</span></p>
+<ul>
+<li>Mistral Large, Small, Codestral</li>
+<li>Best for: European data residency, multilingual</li>
+</ul>
+
+<h3>DeepSeek</h3>
+<p><span class="badge badge-green">Free Tier</span></p>
+<ul>
+<li>DeepSeek V3, R1</li>
+<li>Best for: reasoning, math, code generation</li>
+</ul>
+
+<h3>OpenAI-HK</h3>
+<p><span class="badge badge-green">Free Tier</span></p>
+<ul>
+<li>OpenAI-compatible proxy with free tier</li>
+<li>Good for: prototyping when OpenAI quota is exhausted</li>
+</ul>
+
+<h2>Custom Provider</h2>
+<p>Add any OpenAI-compatible API:</p>
+<pre><code>{
+  "name": "my-company",
+  "base_url": "https://api.my-company.com/v1",
+  "api_key": "sk-xxxx",
+  "model": "my-model-name"
+}</code></pre>
+<p>Just needs to support the OpenAI <code>/v1/chat/completions</code> format.</p>
+
+<h2>Adding a Provider Key</h2>
+<p>Via dashboard or API:</p>
+<pre><code>curl -X POST http://localhost:8080/admin/api-keys \
+  -H "Authorization: Bearer your-admin-password" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "my-groq-key",
+    "provider": "groq",
+    "key": "gsk_xxxxxxxxxxxx",
+    "model": "llama-3.3-70b-versatile"
+  }'</code></pre>
+
+<div class="callout callout-info">
+<strong>Model mapping:</strong> When you specify a model, KeyParty maps it to the correct provider endpoint automatically. If you omit the model, the provider's default model is used.
+</div>
+
+<h2>Provider Token Budgets</h2>
+<p>Set monthly token and cost caps per provider:</p>
+<pre><code>curl -X POST http://localhost:8080/admin/provider-budgets \
+  -H "Authorization: Bearer your-admin-password" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider": "groq",
+    "monthly_token_budget": 1000000,
+    "monthly_cost_budget": 0.00
+  }'</code></pre>
+<p>Once the budget is hit, requests to that provider are rejected with 402. Failover kicks in if enabled.</p>
+
+</div>
+
+<footer>
+  <p>MIT &middot; made by <a href="https://github.com/MastaChief117">MastaChief117</a> &middot; one endpoint, ten providers, zero budget</p>
+</footer>
+
+<script>
+function toggle(){const h=document.documentElement,n=h.getAttribute('data-theme')==='dark'?'light':'dark';h.setAttribute('data-theme',n);localStorage.setItem('theme',n)}
+(function(){const s=localStorage.getItem('theme');if(s)document.documentElement.setAttribute('data-theme',s);else if(window.matchMedia('(prefers-color-scheme:dark)').matches)document.documentElement.setAttribute('data-theme','dark')})();
+</script>
+</body>
+</html>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Getting Started — KeyParty</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/docs.css">
+</head>
+<body>
+<nav>
+<div class="nav-in">
+  <a href="index.html" class="nav-logo"><b>K</b>eyParty</a>
+  <div class="nav-right">
+    <a href="getting-started.html">Get Started</a>
+    <a href="api.html">API</a>
+    <a href="providers.html">Providers</a>
+    <a href="routing.html">Routing</a>
+    <a href="security.html">Security</a>
+    <a href="architecture.html">Architecture</a>
+    <button class="theme-btn" onclick="toggle()" title="Toggle theme">&#9789;</button>
+    <a href="https://github.com/MastaChief117/keyparty">GitHub</a>
+  </div>
+</div>
+</nav>
+
+<div class="page">
+<h1>Getting Started</h1>
+<p class="subtitle">From zero to "holy crap my $4 of API keys actually works" in 5 minutes.</p>
+
+<h2>What is KeyParty?</h2>
+<p>KeyParty is a single-binary AI gateway. You give it your API keys from 10+ providers (OpenAI, Anthropic, Gemini, Groq, NVIDIA, etc.), and it gives you <strong>one endpoint</strong> to rule them all. Your apps talk to KeyParty, KeyParty talks to the providers. If one provider dies, it fails over to another. Your users never see the 429.</p>
+
+<h2>Prerequisites</h2>
+<ul>
+<li>Go 1.24+ installed (<code>go version</code> to check)</li>
+<li>At least one API key from a provider (Groq, Gemini, and NVIDIA have free tiers)</li>
+<li>A terminal (you know how to use one, right?)</li>
+</ul>
+
+<h2>Step 1: Install</h2>
+<div class="steps">
+<div class="step">
+<h4>Clone the repo</h4>
+<pre><code>git clone https://github.com/MastaChief117/keyparty.git
+cd keyparty</code></pre>
+</div>
+<div class="step">
+<h4>Build it</h4>
+<pre><code>go build -o keyparty .</code></pre>
+<p>Takes about 10 seconds. Produces a ~16MB binary. No Docker. No npm. No node_modules. Just vibes.</p>
+</div>
+<div class="step">
+<h4>Run it</h4>
+<pre><code>./keyparty -port 8080 -admin-pass your-password</code></pre>
+<p>You'll see:</p>
+<pre><code>KeyParty running on http://localhost:8080
+Proxy endpoint: http://localhost:8080/v1/chat/completions
+Dashboard: http://localhost:8080
+Admin auth: enabled</code></pre>
+</div>
+</div>
+
+<h2>Step 2: Open the Dashboard</h2>
+<p>Go to <a href="http://localhost:8080"><code>http://localhost:8080</code></a> in your browser. You'll see the dashboard. The first thing you'll notice is your <strong>Unified API Key</strong> — that's the key you'll use in your apps.</p>
+
+<div class="callout callout-info">
+<strong>Pro tip:</strong> Copy that unified key and save it somewhere. You'll need it in Step 4.
+</div>
+
+<h2>Step 3: Add Your API Keys</h2>
+<div class="steps">
+<div class="step">
+<h4>Get an API key from a provider</h4>
+<p>Start with one of the free-tier providers:</p>
+<ul>
+<li><strong>Groq</strong> — <a href="https://console.groq.com">console.groq.com</a> — 1000 req/day free, blazing fast</li>
+<li><strong>Gemini</strong> — <a href="https://aistudio.google.com">aistudio.google.com</a> — generous free tier</li>
+<li><strong>NVIDIA</strong> — <a href="https://build.nvidia.com">build.nvidia.com</a> — free tier available</li>
+</ul>
+</div>
+<div class="step">
+<h4>Add it to KeyParty</h4>
+<p>In the dashboard, go to <strong>API Keys</strong> tab → click <strong>+ Add Key</strong>.</p>
+<ul>
+<li><strong>Key Name:</strong> anything you want (e.g. "my-groq-key")</li>
+<li><strong>Provider:</strong> select your provider</li>
+<li><strong>Key:</strong> paste your API key</li>
+<li><strong>Model:</strong> leave blank for default, or pick a specific model</li>
+</ul>
+</div>
+<div class="step">
+<h4>Test it</h4>
+<p>Click the <strong>Test</strong> button next to your key. You should see a green "Key works!" message.</p>
+</div>
+</div>
+
+<h2>Step 4: Send Your First Request</h2>
+<p>Open a terminal and send a request through the gateway:</p>
+<pre><code>curl http://localhost:8080/v1/chat/completions \
+  -H "Authorization: Bearer YOUR_UNIFIED_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "groq/llama-3.3-70b-versatile",
+    "messages": [{"role": "user", "content": "say hello in 3 words"}]
+  }'</code></pre>
+
+<p>You should get a response back from Groq, routed through KeyParty. Congrats, you're an AI gateway now.</p>
+
+<div class="callout callout-success">
+<strong>That's it.</strong> You now have a multi-provider AI gateway running on your machine. But there's more cool stuff you can do.
+</div>
+
+<h2>Step 5: Use It in Your App</h2>
+<p>Point your OpenAI-compatible client at the gateway:</p>
+
+<h3>Python (OpenAI SDK)</h3>
+<pre><code>from openai import OpenAI
+
+client = OpenAI(
+    base_url="http://localhost:8080/v1",
+    api_key="YOUR_UNIFIED_KEY"
+)
+
+response = client.chat.completions.create(
+    model="groq/llama-3.3-70b-versatile",
+    messages=[{"role": "user", "content": "hello"}]
+)
+print(response.choices[0].message.content)</code></pre>
+
+<h3>JavaScript (fetch)</h3>
+<pre><code>const response = await fetch("http://localhost:8080/v1/chat/completions", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer YOUR_UNIFIED_KEY",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    model: "groq/llama-3.3-70b-versatile",
+    messages: [{ role: "user", content: "hello" }]
+  })
+});
+const data = await response.json();
+console.log(data.choices[0].message.content);</code></pre>
+
+<h3>Go</h3>
+<pre><code>req, _ := http.NewRequest("POST", "http://localhost:8080/v1/chat/completions", body)
+req.Header.Set("Authorization", "Bearer YOUR_UNIFIED_KEY")
+req.Header.Set("Content-Type", "application/json")
+
+resp, _ := http.DefaultClient.Do(req)
+// read response...</code></pre>
+
+<h2>Step 6: Add More Providers</h2>
+<p>The magic of KeyParty is having fallbacks. Add more keys:</p>
+<ol>
+<li>Get keys from 2-3 providers (Groq + Gemini + NVIDIA is a great free combo)</li>
+<li>Add them all to the dashboard</li>
+<li>Send requests — KeyParty routes them automatically</li>
+</ol>
+
+<h2>Step 7: Set Up Failover</h2>
+<p>If one provider dies, KeyParty can automatically reroute to another. In the dashboard, go to <strong>Failover</strong> tab:</p>
+<ol>
+<li>Enable failover</li>
+<li>Set backup provider (e.g. gemini)</li>
+<li>Set backup model (e.g. gemini-2.5-flash)</li>
+<li>Enable auto-compact (summarizes chat history on failover)</li>
+</ol>
+
+<p>Now when Groq rate-limits you at 3am, your users won't notice. You'll sleep like a baby.</p>
+
+<h2>Step 8: Explore the Fun Stuff</h2>
+<div class="card-grid">
+<div class="card">
+<h4>AI Rumble</h4>
+<p>Two providers roast each other in real-time via SSE streaming. Chaos incarnate.</p>
+</div>
+<div class="card">
+<h4>Rap Battle</h4>
+<p>GPT-4 vs Claude, dropping bars. Who wins? Nobody. Everyone wins.</p>
+</div>
+<div class="card">
+<h4>Model Roulette</h4>
+<p>Picks a random provider for your message. Live dangerously.</p>
+</div>
+<div class="card">
+<h4>Provider Race</h4>
+<p>Same prompt to 5 providers at once. First response wins. Fastest/cheapest finder.</p>
+</div>
+<div class="card">
+<h4>AI Therapist</h4>
+<p>Send your vent message to a random AI. Get sarcastic empathetic advice.</p>
+</div>
+<div class="card">
+<h4>Vibe Check</h4>
+<p>Rate a message's vibe 1-10. Exactly as scientific as it sounds.</p>
+</div>
+</div>
+
+<h2>Step 9: Virtual Keys</h2>
+<p>Want to share access with friends without giving them your real API keys? Create virtual keys:</p>
+<pre><code>curl -X POST http://localhost:8080/admin/virtual-keys \
+  -H "Authorization: Bearer your-admin-password" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "friend-key",
+    "monthly_budget": 5.00,
+    "rate_limit": 10,
+    "allowed_models": "groq/llama-3.3-70b-versatile,gemini/gemini-2.5-flash"
+  }'</code></pre>
+
+<p>They get a <code>vk-</code> key. Use it exactly like the unified key. Budget enforced. Rate limited. Your wallet stays safe.</p>
+
+<h2>Step 10: Provider Override Headers</h2>
+<p>Want to force a specific provider without changing your code? Use headers:</p>
+<pre><code>curl http://localhost:8080/v1/chat/completions \
+  -H "Authorization: Bearer YOUR_KEY" \
+  -H "X-Gateway-Provider: gemini" \
+  -H "X-Gateway-Model: gemini-2.5-flash" \
+  -d '{"model":"anything","messages":[...]}'</code></pre>
+
+<p>The model field in the body doesn't matter — the header wins. Great for A/B testing or debugging.</p>
+
+<h2>What's Next?</h2>
+<div class="card-grid">
+<a href="api.html" class="card" style="text-decoration:none">
+<h4>API Reference</h4>
+<p>Every endpoint, every parameter, every response format.</p>
+</a>
+<a href="providers.html" class="card" style="text-decoration:none">
+<h4>Provider Guides</h4>
+<p>Detailed setup for all 10 providers.</p>
+</a>
+<a href="routing.html" class="card" style="text-decoration:none">
+<h4>Routing & Failover</h4>
+<p>How routing, compaction, and failover work.</p>
+</a>
+<a href="security.html" class="card" style="text-decoration:none">
+<h4>Security</h4>
+<p>Encryption, SSRF, brute-force protection, threat model.</p>
+</a>
+<a href="architecture.html" class="card" style="text-decoration:none">
+<h4>Architecture</h4>
+<p>How the internals work. Components, data flow, tech stack.</p>
+</a>
+</div>
+
+</div>
+
+<footer>
+  <p>MIT &middot; made by <a href="https://github.com/MastaChief117">MastaChief117</a> &middot; one endpoint, ten providers, zero budget</p>
+</footer>
+
+<script>
+function toggle(){const h=document.documentElement,n=h.getAttribute('data-theme')==='dark'?'light':'dark';h.setAttribute('data-theme',n);localStorage.setItem('theme',n)}
+(function(){const s=localStorage.getItem('theme');if(s)document.documentElement.setAttribute('data-theme',s);else if(window.matchMedia('(prefers-color-scheme:dark)').matches)document.documentElement.setAttribute('data-theme','dark')})();
+const o=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('visible')})},{threshold:.1});
+document.querySelectorAll('.fade-in').forEach(el=>o.observe(el));
+</script>
+</body>
+</html>
