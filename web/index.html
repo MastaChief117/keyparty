@@ -896,6 +896,72 @@ tr:hover{background:rgba(59,130,246,0.05)}
 </div>
 </div>
 
+<!-- Setup Wizard Modal -->
+<div class="modal-overlay" id="wizard-modal" style="display:none">
+<div class="modal" style="max-width:500px">
+<div id="wizard-step-1">
+<h2 style="margin-bottom:16px">🎉 Welcome to KeyParty</h2>
+<p style="color:#94a3b8;margin-bottom:20px">One endpoint, ten providers, zero budget. Let's get you set up in 60 seconds.</p>
+<div class="form-group">
+<label>Admin Password (for dashboard)</label>
+<input type="password" id="wizard-password" placeholder="Leave empty to disable auth">
+</div>
+<button class="btn btn-primary" onclick="wizardNext(2)" style="width:100%">Next →</button>
+</div>
+<div id="wizard-step-2" style="display:none">
+<h2 style="margin-bottom:16px">🔑 Add Your First API Key</h2>
+<p style="color:#94a3b8;margin-bottom:20px">Add at least one provider to start routing requests.</p>
+<div class="form-group">
+<label>Key Name</label>
+<input type="text" id="wizard-key-name" placeholder="my-groq-key">
+</div>
+<div class="form-group">
+<label>Provider</label>
+<select id="wizard-provider" onchange="onWizardProviderChange()">
+<option value="groq">Groq (free tier available)</option>
+<option value="openai">OpenAI</option>
+<option value="anthropic">Anthropic</option>
+<option value="gemini">Google Gemini</option>
+<option value="deepseek">DeepSeek</option>
+<option value="nvidia">NVIDIA NIM</option>
+<option value="mistral">Mistral</option>
+<option value="together">Together AI</option>
+<option value="openrouter">OpenRouter</option>
+<option value="fireworks">Fireworks AI</option>
+</select>
+</div>
+<div class="form-group">
+<label>API Key</label>
+<input type="password" id="wizard-api-key" placeholder="sk-...">
+</div>
+<div class="form-group" id="wizard-model-group">
+<label>Model (optional)</label>
+<select id="wizard-model"></select>
+</div>
+<div style="display:flex;gap:8px">
+<button class="btn btn-secondary" onclick="wizardNext(1)" style="flex:1">← Back</button>
+<button class="btn btn-primary" onclick="wizardAddKey()" style="flex:1">Add Key</button>
+</div>
+<div id="wizard-key-status" style="margin-top:10px;font-size:12px"></div>
+</div>
+<div id="wizard-step-3" style="display:none">
+<h2 style="margin-bottom:16px">✅ You're All Set!</h2>
+<p style="color:#94a3b8;margin-bottom:20px">KeyParty is ready. Here's how to use it:</p>
+<div style="background:#0f172a;padding:16px;border-radius:8px;margin-bottom:16px">
+<p style="font-size:12px;color:#94a3b8;margin-bottom:8px">Your Unified API Key:</p>
+<p style="font-family:monospace;font-size:14px;color:#10b981;word-break:break-all" id="wizard-unified-key">Loading...</p>
+</div>
+<div style="background:#0f172a;padding:16px;border-radius:8px;margin-bottom:16px">
+<p style="font-size:12px;color:#94a3b8;margin-bottom:8px">Use this in your apps:</p>
+<code style="font-size:12px;color:#60a5fa">curl <span id="wizard-base-url">http://localhost:8080</span>/v1/chat/completions \
+  -H "Authorization: Bearer <span id="wizard-key-hint">YOUR_KEY</span>" \
+  -d '{"model":"groq/llama-3.3-70b-versatile","messages":[{"role":"user","content":"Hello"}]}'</code>
+</div>
+<button class="btn btn-success" onclick="closeWizard()" style="width:100%">🚀 Launch Dashboard</button>
+</div>
+</div>
+</div>
+
 <!-- Add Key Modal -->
 <div class="modal-overlay" id="add-modal">
 <div class="modal">
@@ -2990,6 +3056,105 @@ async function deleteCustomModel(id) {
   loadCustomModels();
 }
 
+// ── SETUP WIZARD ──────────────────────────────────────────────────────────
+
+const WIZARD_MODELS = {
+  groq: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768'],
+  openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini', 'o3', 'o4-mini'],
+  anthropic: ['claude-sonnet-4-5', 'claude-haiku-4-5', 'claude-opus-4-5'],
+  gemini: ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-3.5-flash'],
+  deepseek: ['deepseek-chat', 'deepseek-r1'],
+  nvidia: ['nvidia/llama-3.1-nemotron-70b-instruct', 'nvidia/nemotron-3-nano-30b-a3b'],
+  mistral: ['mistral-large-latest', 'codestral-latest'],
+  together: ['meta-llama/Llama-3.3-70B-Instruct-Turbo', 'Qwen/Qwen2.5-72B-Instruct-Turbo'],
+  openrouter: ['auto'],
+  fireworks: ['accounts/fireworks/models/llama-v3p3-70b-instruct']
+};
+
+function onWizardProviderChange() {
+  const provider = document.getElementById('wizard-provider').value;
+  const select = document.getElementById('wizard-model');
+  select.innerHTML = (WIZARD_MODELS[provider] || []).map(m => `<option value="${m}">${m}</option>`).join('');
+}
+
+function wizardNext(step) {
+  document.querySelectorAll('[id^="wizard-step-"]').forEach(el => el.style.display = 'none');
+  document.getElementById('wizard-step-' + step).style.display = 'block';
+  if (step === 3) {
+    document.getElementById('wizard-unified-key').textContent = document.getElementById('unified-key').textContent;
+    document.getElementById('wizard-base-url').textContent = window.location.origin + '/v1/chat/completions';
+    document.getElementById('wizard-key-hint').textContent = document.getElementById('unified-key').textContent.substring(0, 20) + '...';
+  }
+}
+
+async function wizardAddKey() {
+  const name = document.getElementById('wizard-key-name').value;
+  const provider = document.getElementById('wizard-provider').value;
+  const key = document.getElementById('wizard-api-key').value;
+  const model = document.getElementById('wizard-model').value;
+  const status = document.getElementById('wizard-key-status');
+  
+  if (!key) {
+    status.innerHTML = '<span style="color:#ef4444">API key required</span>';
+    return;
+  }
+  
+  status.innerHTML = '<span style="color:#94a3b8">Adding key...</span>';
+  
+  const res = await fetch(`${BASE_URL}/admin/keys`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
+    body: JSON.stringify({name: name || provider + '-key', provider, key, model})
+  });
+  const data = await res.json();
+  
+  if (data.id) {
+    status.innerHTML = '<span style="color:#10b981">✓ Key added! Testing...</span>';
+    // Test the key
+    const testRes = await fetch(`${BASE_URL}/admin/test-key`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
+      body: JSON.stringify({provider, key, model})
+    });
+    const testData = await testRes.json();
+    if (testData.success) {
+      status.innerHTML = '<span style="color:#10b981">✓ Key added and verified!</span>';
+      loadKeys();
+      loadStats();
+      setTimeout(() => wizardNext(3), 1000);
+    } else {
+      status.innerHTML = '<span style="color:#f59e0b">✓ Key added (test failed: ' + (testData.error || 'unknown') + ')</span>';
+      setTimeout(() => wizardNext(3), 2000);
+    }
+  } else {
+    status.innerHTML = '<span style="color:#ef4444">Failed to add key: ' + (data.error || 'unknown') + '</span>';
+  }
+}
+
+function closeWizard() {
+  document.getElementById('wizard-modal').classList.remove('active');
+  localStorage.setItem('keyparty-wizard-done', '1');
+}
+
+function showWizard() {
+  document.getElementById('wizard-modal').classList.add('active');
+  onWizardProviderChange();
+}
+
+// Check if wizard should show
+function checkWizard() {
+  if (localStorage.getItem('keyparty-wizard-done') === '1') return;
+  // Check if any keys exist
+  fetch(`${BASE_URL}/admin/stats`, {headers: {'Authorization': 'Bearer ' + ADMIN_PASS}})
+    .then(r => r.json())
+    .then(data => {
+      if (data.provider_stats && data.provider_stats.length === 0) {
+        setTimeout(showWizard, 1000);
+      }
+    })
+    .catch(() => {});
+}
+
 askPassword().then(function(pass) {
   ADMIN_PASS = pass;
   setBaseUrl();
@@ -2999,6 +3164,7 @@ askPassword().then(function(pass) {
   loadKeys();
   loadStats();
   setInterval(loadStats, 5000);
+  checkWizard();
 });
 </script>
 </body>
