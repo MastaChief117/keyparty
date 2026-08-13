@@ -42,7 +42,7 @@ function showWelcome() {
     `${icon.info} ${colorize(c.dim, 'You need at least one API key (Groq has a free tier).')}`,
   ];
 
-  console.log(box(lines, { title: 'Setup Wizard', width: 56 }));
+  console.log(box(lines, { title: 'Setup Wizard', width: 60 }));
 }
 
 // ── Step 1: Admin Password ──────────────────────────────────────────────
@@ -163,7 +163,7 @@ function showSummary(port, password, tunnel) {
   lines.push(`  ${colorize(c.dim, 'Press Ctrl+C to stop.')}`);
   lines.push('');
 
-  console.log(box(lines, { title: 'Status', width: 58, border: c.green, titleColor: c.bold + c.green }));
+  console.log(box(lines, { title: 'Status', width: 60, border: c.green, titleColor: c.bold + c.green }));
 }
 
 // ── Main Setup Flow ─────────────────────────────────────────────────────

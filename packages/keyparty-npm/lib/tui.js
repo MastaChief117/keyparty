@@ -36,19 +36,19 @@ function box(lines, opts = {}) {
 
   const out = [top];
   if (title) {
-    const pad = width - 4 - stripAnsi(title).length;
+    const pad = width - 2 - visibleWidth(title);
     const lp = Math.floor(pad / 2);
     const rp = pad - lp;
     out.push(`${border}║${' '.repeat(lp)}${titleColor}${title}${c.reset}${' '.repeat(rp)}${border}║${c.reset}`);
     out.push(`${border}╠${'═'.repeat(width - 2)}╣${c.reset}`);
   }
   for (const line of lines) {
-    const stripped = stripAnsi(line);
-    const padding = width - 4 - stripped.length;
+    const vwidth = visibleWidth(line);
+    const padding = width - 3 - vwidth;
     if (padding > 0) {
-      out.push(`${border}║ ${line}${' '.repeat(padding - 1)}${border}║${c.reset}`);
+      out.push(`${border}║ ${line}${' '.repeat(padding)}${border}║${c.reset}`);
     } else {
-      out.push(`${border}║ ${line.substring(0, width - 4)} ${border}║${c.reset}`);
+      out.push(`${border}║ ${line.substring(0, width - 5)} ${border}║${c.reset}`);
     }
   }
   out.push(bot);
@@ -57,6 +57,38 @@ function box(lines, opts = {}) {
 
 function stripAnsi(str) {
   return str.replace(/\x1b\[[0-9;]*m/g, '');
+}
+
+function visibleWidth(str) {
+  const stripped = stripAnsi(str);
+  let width = 0;
+  for (const char of stripped) {
+    const code = char.codePointAt(0);
+    // Double-width: CJK, emoji, symbols, arrows, etc.
+    if (
+      code > 0x1f000 ||          // Emoji
+      (code >= 0x20000 && code <= 0x2ffff) || // CJK Extension B+
+      (code >= 0x30000 && code <= 0x3ffff) ||
+      (code >= 0xf900 && code <= 0xfaff) ||   // CJK Compatibility Ideographs
+      (code >= 0xfe30 && code <= 0xfe4f) ||   // CJK Compatibility Forms
+      (code >= 0xff00 && code <= 0xffef) ||   // Fullwidth Forms
+      (code >= 0x20000 && code <= 0x2a6df) || // CJK Unified Extension B
+      (code >= 0x2a700 && code <= 0x2b73f) || // CJK Unified Extension C
+      (code >= 0x2b740 && code <= 0x2b81f) || // CJK Unified Extension D
+      (code >= 0x2b820 && code <= 0x2ceaf) || // CJK Unified Extension E
+      (code >= 0x2ceb0 && code <= 0x2ebef) || // CJK Unified Extension F
+      (code >= 0x30000 && code <= 0x3134f) || // CJK Unified Extension G
+      (code >= 0x1f300 && code <= 0x1f9ff) || // Misc Symbols and Pictographs
+      (code >= 0x1fa00 && code <= 0x1fa6f) || // Chess Symbols
+      (code >= 0x1fa70 && code <= 0x1faff) || // Symbols and Pictographs Extended-A
+      (code >= 0x20000 && code <= 0x2fa1f)    // CJK Compatibility Supplement
+    ) {
+      width += 2;
+    } else {
+      width += 1;
+    }
+  }
+  return width;
 }
 
 // ── Banner ──────────────────────────────────────────────────────────────
@@ -222,6 +254,6 @@ function clear() {
 }
 
 module.exports = {
-  c, colorize, stripAnsi, box, banner, icon, spinner, progressBar,
+  c, colorize, stripAnsi, visibleWidth, box, banner, icon, spinner, progressBar,
   ask, confirm, password, select, divider, table, clear, createInterface,
 };
