@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  keyparty:
+    build: .
+    container_name: keyparty
+    ports:
+      - "8080:8080"
+    volumes:
+      - keyparty-data:/app/data
+    environment:
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-changeme}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  keyparty-data:
