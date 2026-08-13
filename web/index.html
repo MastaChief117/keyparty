@@ -191,6 +191,7 @@ tr:hover{background:rgba(59,130,246,0.05)}
 <button class="tab" data-tab="tournament">Tournament</button>
 <button class="tab" data-tab="utils">Utilities</button>
 <button class="tab" data-tab="pro">Pro Tools</button>
+<button class="tab" data-tab="advanced">Advanced</button>
 <button class="tab" data-tab="tools">Tools</button>
 <button class="tab" data-tab="logs">Request Logs</button>
 </div>
@@ -682,6 +683,38 @@ tr:hover{background:rgba(59,130,246,0.05)}
 <button class="btn btn-sm btn-race" onclick="doRapBattle()">🎤 Start Battle</button>
 <div class="rumble-chat" id="rap-chat" style="display:none;margin-top:10px"></div>
 </div>
+<div class="section">
+<div class="section-header"><h2>🔮 AI Fortune Teller</h2></div>
+<p style="font-size:12px;color:#94a3b8;margin-bottom:10px">Ask the oracle about your code's fate</p>
+<div class="form-group"><label>Your Question</label><input type="text" id="fortune-msg" placeholder="Will my code compile?"></div>
+<button class="btn btn-sm btn-primary" onclick="doFortune()" style="background:#8b5cf6">🔮 Tell My Fortune</button>
+<div id="fortune-result" style="margin-top:10px"></div>
+</div>
+<div class="section">
+<div class="section-header"><h2>⚔️ Provider Roast</h2></div>
+<p style="font-size:12px;color:#94a3b8;margin-bottom:10px">Two providers trash-talk each other</p>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<div class="form-group"><label>Provider A</label><input type="text" id="roast-p1" placeholder="random"></div>
+<div class="form-group"><label>Provider B</label><input type="text" id="roast-p2" placeholder="random"></div>
+</div>
+<button class="btn btn-sm btn-danger" onclick="doProviderRoast()">⚔️ Start Roast</button>
+<div id="roast-result" style="margin-top:10px"></div>
+</div>
+<div class="section">
+<div class="section-header"><h2>🐛 Debug Oracle</h2></div>
+<p style="font-size:12px;color:#94a3b8;margin-bottom:10px">Paste an error, get dramatic debugging advice</p>
+<div class="form-group"><label>Error Message</label><textarea id="debug-error" rows="3" placeholder="TypeError: Cannot read property 'foo' of undefined"></textarea></div>
+<button class="btn btn-sm btn-primary" onclick="doDebugOracle()" style="background:#f59e0b">🐛 Ask Oracle</button>
+<div id="debug-result" style="margin-top:10px"></div>
+</div>
+<div class="section">
+<div class="section-header"><h2>📝 Commit Message</h2></div>
+<p style="font-size:12px;color:#94a3b8;margin-bottom:10px">AI writes dramatic commit messages</p>
+<div class="form-group"><label>Git Diff</label><textarea id="commit-diff" rows="3" placeholder="Paste your git diff here..."></textarea></div>
+<div class="form-group"><label>Style</label><select id="commit-style"><option value="dramatic">Dramatic</option><option value="professional">Professional</option><option value="meme">Meme</option><option value="poetic">Poetic</option></select></div>
+<button class="btn btn-sm btn-primary" onclick="doCommitMsg()">📝 Generate</button>
+<div id="commit-result" style="margin-top:10px"></div>
+</div>
 </div>
 </div>
 
@@ -801,6 +834,58 @@ tr:hover{background:rgba(59,130,246,0.05)}
 </div>
 <h3 style="font-size:13px;color:#94a3b8;margin:12px 0 8px">Top Models</h3>
 <div id="analytics-models"></div>
+</div>
+</div>
+</div>
+
+<div id="tab-advanced" class="tab-content" style="display:none">
+<div class="fun-grid">
+<div class="section">
+<div class="section-header"><h2>🧠 Smart Router</h2></div>
+<p style="font-size:12px;color:#94a3b8;margin-bottom:10px">AI recommends best provider based on your priorities</p>
+<div class="form-group"><label>Message</label><textarea id="smart-msg" rows="2" placeholder="Describe your task..."></textarea></div>
+<div class="form-group"><label>Priority</label><select id="smart-priority"><option value="cost">Cost</option><option value="speed">Speed</option><option value="quality">Quality</option></select></div>
+<button class="btn btn-sm btn-primary" onclick="doSmartRoute()">🧠 Recommend</button>
+<div id="smart-result" style="margin-top:10px"></div>
+</div>
+<div class="section">
+<div class="section-header"><h2>💰 Cost Limiter</h2></div>
+<p style="font-size:12px;color:#94a3b8;margin-bottom:10px">Set spending caps per period</p>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<div class="form-group"><label>Name</label><input type="text" id="cl-name" placeholder="daily-limit"></div>
+<div class="form-group"><label>Period</label><select id="cl-period"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select></div>
+<div class="form-group"><label>Max Cost ($)</label><input type="number" id="cl-cost" step="0.01" value="5.00"></div>
+<div class="form-group"><label>Provider (empty=all)</label><input type="text" id="cl-provider" placeholder="openai"></div>
+</div>
+<button class="btn btn-sm btn-primary" onclick="addCostLimit()">Add Limit</button>
+<div id="cost-limits-list" style="margin-top:10px"></div>
+</div>
+<div class="section">
+<div class="section-header"><h2>📊 Provider Uptime</h2></div>
+<p style="font-size:12px;color:#94a3b8;margin-bottom:10px">Track provider reliability over time</p>
+<div class="form-group"><label>Days</label><select id="uptime-days"><option value="7">7 Days</option><option value="30">30 Days</option><option value="90">90 Days</option></select></div>
+<button class="btn btn-sm btn-secondary" onclick="loadUptime()">Load Uptime</button>
+<div id="uptime-results" style="margin-top:10px"></div>
+</div>
+<div class="section">
+<div class="section-header"><h2>🔄 Replay Queue</h2></div>
+<p style="font-size:12px;color:#94a3b8;margin-bottom:10px">Retry failed requests</p>
+<button class="btn btn-sm btn-secondary" onclick="loadReplayQueue()">Load Failed</button>
+<div id="replay-list" style="margin-top:10px"></div>
+</div>
+<div class="section">
+<div class="section-header"><h2>➕ Custom Models</h2></div>
+<p style="font-size:12px;color:#94a3b8;margin-bottom:10px">Add models not in the default list</p>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<div class="form-group"><label>Name</label><input type="text" id="cm-name" placeholder="my-model"></div>
+<div class="form-group"><label>Provider</label><input type="text" id="cm-provider" placeholder="openai"></div>
+<div class="form-group"><label>Display Name</label><input type="text" id="cm-display" placeholder="My Custom Model"></div>
+<div class="form-group"><label>Context Size</label><input type="number" id="cm-context" value="128000"></div>
+<div class="form-group"><label>Input Price ($/1M)</label><input type="number" id="cm-input" step="0.01" value="0"></div>
+<div class="form-group"><label>Output Price ($/1M)</label><input type="number" id="cm-output" step="0.01" value="0"></div>
+</div>
+<button class="btn btn-sm btn-primary" onclick="addCustomModel()">Add Model</button>
+<div id="custom-models-list" style="margin-top:10px"></div>
 </div>
 </div>
 </div>
@@ -2457,6 +2542,7 @@ document.querySelectorAll('.tab').forEach(function(tab) {
     if (tabName === 'rumble') loadRumbleProviders();
     if (tabName === 'utils') { loadWebhooks(); loadTemplates(); loadRateTiers(); loadBudgetAlerts(); }
     if (tabName === 'pro') { loadVKUsage(); loadRotateStatus(); loadAnalytics(); }
+    if (tabName === 'advanced') { loadCostLimits(); loadCustomModels(); }
     if (tabName === 'tools') loadModels();
     if (tabName === 'tournament') loadTournamentModels();
     if (tabName === 'logs') loadLogs();
@@ -2728,6 +2814,181 @@ document.getElementById('btn-tournament').addEventListener('click', async functi
     el.innerHTML = html;
   } catch(e) { el.innerHTML = '<div style="color:#ef4444">Error: ' + escHtml(e.message) + '</div>'; }
 });
+
+// ── NEW FEATURES ──────────────────────────────────────────────────────────
+
+async function doFortune() {
+  const msg = document.getElementById('fortune-msg').value;
+  const res = await fetch(`${BASE_URL}/admin/fortune`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
+    body: JSON.stringify({message: msg})
+  });
+  const data = await res.json();
+  document.getElementById('fortune-result').innerHTML = `<div class="section" style="margin:0"><p style="font-size:14px;color:#e2e8f0">${data.fortune}</p><p style="font-size:11px;color:#64748b;margin-top:8px">${data.warning || ''}</p></div>`;
+}
+
+async function doProviderRoast() {
+  const p1 = document.getElementById('roast-p1').value;
+  const p2 = document.getElementById('roast-p2').value;
+  document.getElementById('roast-result').innerHTML = '<p style="color:#94a3b8">Loading roast battle...</p>';
+  const res = await fetch(`${BASE_URL}/admin/provider-roast`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
+    body: JSON.stringify({provider1: p1, provider2: p2})
+  });
+  const data = await res.json();
+  document.getElementById('roast-result').innerHTML = `
+    <div class="section" style="margin:0">
+      <h3 style="color:#ef4444">${data.provider_a} 🔥</h3>
+      <p style="font-size:13px;color:#e2e8f0;margin-bottom:12px">${data.roast_a}</p>
+      <h3 style="color:#3b82f6">${data.provider_b} 🔥</h3>
+      <p style="font-size:13px;color:#e2e8f0;margin-bottom:12px">${data.roast_b}</p>
+      <h3 style="color:#f59e0b">Finale</h3>
+      <p style="font-size:13px;color:#e2e8f0">${data.finale_a}</p>
+      <p style="font-size:11px;color:#64748b;margin-top:8px">Winner: ${data.winner}</p>
+    </div>`;
+}
+
+async function doDebugOracle() {
+  const error = document.getElementById('debug-error').value;
+  document.getElementById('debug-result').innerHTML = '<p style="color:#94a3b8">Consulting the oracle...</p>';
+  const res = await fetch(`${BASE_URL}/admin/debug-oracle`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
+    body: JSON.stringify({error: error})
+  });
+  const data = await res.json();
+  document.getElementById('debug-result').innerHTML = `<div class="section" style="margin:0"><pre style="font-size:13px;color:#e2e8f0;white-space:pre-wrap">${data.oracle}</pre><p style="font-size:11px;color:#64748b;margin-top:8px">Provider: ${data.provider} | Latency: ${data.latency_ms}ms</p></div>`;
+}
+
+async function doCommitMsg() {
+  const diff = document.getElementById('commit-diff').value;
+  const style = document.getElementById('commit-style').value;
+  document.getElementById('commit-result').innerHTML = '<p style="color:#94a3b8">Generating commit message...</p>';
+  const res = await fetch(`${BASE_URL}/admin/commit-msg`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
+    body: JSON.stringify({diff: diff, style: style})
+  });
+  const data = await res.json();
+  document.getElementById('commit-result').innerHTML = `<div class="section" style="margin:0"><pre style="font-size:13px;color:#10b981;background:#0f172a;padding:12px;border-radius:6px">${data.commit_message}</pre><p style="font-size:11px;color:#64748b;margin-top:8px">Style: ${data.style} | Provider: ${data.provider}</p></div>`;
+}
+
+async function doSmartRoute() {
+  const msg = document.getElementById('smart-msg').value;
+  const priority = document.getElementById('smart-priority').value;
+  const res = await fetch(`${BASE_URL}/admin/smart-route`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
+    body: JSON.stringify({message: msg, priority: priority})
+  });
+  const data = await res.json();
+  document.getElementById('smart-result').innerHTML = `
+    <div class="section" style="margin:0">
+      <p style="font-size:13px;color:#10b981"><strong>Recommended:</strong> ${data.recommended_provider}/${data.recommended_model}</p>
+      <p style="font-size:12px;color:#94a3b8">${data.reasoning}</p>
+      <p style="font-size:11px;color:#64748b;margin-top:4px">Length: ${data.message_length} chars | Words: ${data.word_count}</p>
+    </div>`;
+}
+
+async function addCostLimit() {
+  const name = document.getElementById('cl-name').value;
+  const period = document.getElementById('cl-period').value;
+  const cost = parseFloat(document.getElementById('cl-cost').value);
+  const provider = document.getElementById('cl-provider').value;
+  await fetch(`${BASE_URL}/admin/cost-limiter`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
+    body: JSON.stringify({name, period, max_cost: cost, provider})
+  });
+  loadCostLimits();
+}
+
+async function loadCostLimits() {
+  const res = await fetch(`${BASE_URL}/admin/cost-limiter`, {headers: {'Authorization': 'Bearer ' + ADMIN_PASS}});
+  const data = await res.json();
+  const limits = data.limits || [];
+  document.getElementById('cost-limits-list').innerHTML = limits.length ? limits.map(l => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px;border-bottom:1px solid #1e293b">
+      <span style="font-size:12px;color:#e2e8f0">${l.name} (${l.period}) - $${l.current_cost.toFixed(2)}/$${l.max_cost.toFixed(2)} ${l.provider ? '- ' + l.provider : ''}</span>
+      <button class="btn btn-sm btn-danger" onclick="deleteCostLimit(${l.id})">×</button>
+    </div>`).join('') : '<p style="font-size:12px;color:#64748b">No cost limits set</p>';
+}
+
+async function deleteCostLimit(id) {
+  await fetch(`${BASE_URL}/admin/cost-limiter`, {
+    method: 'DELETE',
+    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
+    body: JSON.stringify({id})
+  });
+  loadCostLimits();
+}
+
+async function loadUptime() {
+  const days = document.getElementById('uptime-days').value;
+  const res = await fetch(`${BASE_URL}/admin/uptime?days=${days}`, {headers: {'Authorization': 'Bearer ' + ADMIN_PASS}});
+  const data = await res.json();
+  const providers = data.providers || [];
+  document.getElementById('uptime-results').innerHTML = providers.length ? providers.map(p => `
+    <div style="padding:8px;border-bottom:1px solid #1e293b">
+      <div style="display:flex;justify-content:space-between">
+        <span style="font-size:13px;color:#e2e8f0;font-weight:600">${p.provider}</span>
+        <span style="font-size:13px;color:${p.uptime_percent >= 99 ? '#10b981' : p.uptime_percent >= 95 ? '#f59e0b' : '#ef4444'}">${p.uptime_percent}%</span>
+      </div>
+      <div style="font-size:11px;color:#64748b">Requests: ${p.total_requests} | Failed: ${p.failed_requests} | Avg Latency: ${Math.round(p.avg_latency_ms)}ms</div>
+    </div>`).join('') : '<p style="font-size:12px;color:#64748b">No uptime data yet</p>';
+}
+
+async function loadReplayQueue() {
+  const res = await fetch(`${BASE_URL}/admin/replay-queue`, {headers: {'Authorization': 'Bearer ' + ADMIN_PASS}});
+  const data = await res.json();
+  const failed = data.failed_requests || [];
+  document.getElementById('replay-list').innerHTML = failed.length ? failed.slice(0, 20).map(l => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px;border-bottom:1px solid #1e293b;font-size:12px">
+      <span style="color:#e2e8f0">${l.provider}/${l.model} - ${l.status_code}</span>
+      <button class="btn btn-sm btn-primary" onclick="replayRequest('${l.provider}','${l.model}')">Replay</button>
+    </div>`).join('') : '<p style="font-size:12px;color:#64748b">No failed requests</p>';
+}
+
+async function replayRequest(provider, model) {
+  alert(`Replay ${provider}/${model} - implement with full request body from logs`);
+}
+
+async function addCustomModel() {
+  const name = document.getElementById('cm-name').value;
+  const provider = document.getElementById('cm-provider').value;
+  const display = document.getElementById('cm-display').value;
+  const context = parseInt(document.getElementById('cm-context').value);
+  const input = parseFloat(document.getElementById('cm-input').value);
+  const output = parseFloat(document.getElementById('cm-output').value);
+  await fetch(`${BASE_URL}/admin/custom-models`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
+    body: JSON.stringify({name, provider, display_name: display, context_size: context, input_price: input, output_price: output})
+  });
+  loadCustomModels();
+}
+
+async function loadCustomModels() {
+  const res = await fetch(`${BASE_URL}/admin/custom-models`, {headers: {'Authorization': 'Bearer ' + ADMIN_PASS}});
+  const data = await res.json();
+  const models = data.models || [];
+  document.getElementById('custom-models-list').innerHTML = models.length ? models.map(m => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px;border-bottom:1px solid #1e293b">
+      <span style="font-size:12px;color:#e2e8f0">${m.display_name || m.name} (${m.provider}) - ${m.context_size} ctx</span>
+      <button class="btn btn-sm btn-danger" onclick="deleteCustomModel(${m.id})">×</button>
+    </div>`).join('') : '<p style="font-size:12px;color:#64748b">No custom models</p>';
+}
+
+async function deleteCustomModel(id) {
+  await fetch(`${BASE_URL}/admin/custom-models`, {
+    method: 'DELETE',
+    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
+    body: JSON.stringify({id})
+  });
+  loadCustomModels();
+}
 
 askPassword().then(function(pass) {
   ADMIN_PASS = pass;

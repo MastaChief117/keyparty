@@ -882,7 +882,7 @@ func (p *Proxy) HandleTestKey(w http.ResponseWriter, r *http.Request) {
 
 	reply := ""
 	if len(chatResp.Choices) > 0 {
-		reply = stripThinking(chatResp.Choices[0].Message.Content)
+		reply = chatResp.Choices[0].Message.Content
 	}
 
 	json.NewEncoder(w).Encode(map[string]interface{}{

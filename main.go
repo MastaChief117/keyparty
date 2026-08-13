@@ -104,6 +104,24 @@ func main() {
 	mux.HandleFunc("/admin/recap/generate", p.HandleRecap)
 	mux.HandleFunc("/admin/analytics", p.HandleCostAnalytics)
 
+	// Fun features
+	mux.HandleFunc("/admin/fortune", p.HandleFortune)
+	mux.HandleFunc("/admin/provider-roast", p.HandleProviderRoast)
+	mux.HandleFunc("/admin/debug-oracle", p.HandleDebugOracle)
+	mux.HandleFunc("/admin/commit-msg", p.HandleCommitMsg)
+
+	// Pro features
+	mux.HandleFunc("/admin/smart-route", p.HandleSmartRoute)
+	mux.HandleFunc("/admin/cost-limiter", p.HandleCostLimiter)
+	mux.HandleFunc("/admin/uptime", p.HandleUptime)
+	mux.HandleFunc("/admin/replay-queue", p.HandleReplayQueue)
+	mux.HandleFunc("/admin/custom-models", p.HandleCustomModels)
+
+	// Quick wins
+	mux.HandleFunc("/admin/health-check", p.HandleHealthCheck)
+	mux.HandleFunc("/admin/export-logs", p.HandleExportLogs)
+	mux.HandleFunc("/admin/prompt-builder", p.HandlePromptBuilder)
+
 	// New feature endpoints
 	mux.HandleFunc("/admin/firewall", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

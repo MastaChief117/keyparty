@@ -242,6 +242,7 @@ func (s *Store) migrate() error {
 	s.db.Exec("ALTER TABLE api_keys ADD COLUMN total_cost REAL DEFAULT 0")
 
 	s.migrateNewTables()
+	s.migrateExtraTables()
 
 	return nil
 }
