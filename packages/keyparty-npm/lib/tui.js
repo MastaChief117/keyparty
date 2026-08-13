@@ -168,17 +168,21 @@ function progressBar(pct, opts = {}) {
 }
 
 // ── Interactive Input ───────────────────────────────────────────────────
-function createInterface() {
-  return readline.createInterface({ input: stdin, output: stdout });
+let _rl = null;
+function getInterface() {
+  if (!_rl) {
+    _rl = readline.createInterface({ input: stdin, output: stdout });
+    _rl.on('close', () => { _rl = null; });
+  }
+  return _rl;
 }
 
 function ask(question, opts = {}) {
   return new Promise((resolve) => {
-    const rl = createInterface();
+    const rl = getInterface();
     const prefix = opts.prefix || `  ${icon.arrow} `;
     const suffix = opts.suffix || '';
     rl.question(`${prefix}${colorize(c.bold + c.white, question)}${suffix} `, (answer) => {
-      rl.close();
       resolve(answer.trim());
     });
   });
@@ -193,10 +197,9 @@ async function confirm(question, defaultVal = true) {
 
 async function password(question) {
   return new Promise((resolve) => {
-    const rl = createInterface();
+    const rl = getInterface();
     const prefix = `  ${icon.key} `;
     rl.question(`${prefix}${colorize(c.bold + c.white, question)} `, (answer) => {
-      rl.close();
       resolve(answer.trim());
     });
   });
@@ -204,14 +207,13 @@ async function password(question) {
 
 function select(question, options) {
   return new Promise((resolve) => {
-    const rl = createInterface();
+    const rl = getInterface();
     console.log(`\n  ${colorize(c.bold + c.white, question)}`);
     options.forEach((opt, i) => {
       console.log(`    ${colorize(c.cyan, String(i + 1))}) ${opt.label}`);
     });
     console.log();
     rl.question(`  ${icon.arrow} ${colorize(c.dim, 'Pick [1-' + options.length + ']')}: `, (answer) => {
-      rl.close();
       const idx = parseInt(answer) - 1;
       if (idx >= 0 && idx < options.length) {
         resolve(options[idx]);
@@ -255,5 +257,5 @@ function clear() {
 
 module.exports = {
   c, colorize, stripAnsi, visibleWidth, box, banner, icon, spinner, progressBar,
-  ask, confirm, password, select, divider, table, clear, createInterface,
+  ask, confirm, password, select, divider, table, clear,
 };
