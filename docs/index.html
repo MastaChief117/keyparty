@@ -169,6 +169,7 @@ footer a{color:var(--accent)}
     <a href="architecture.html">Architecture</a>
     <button class="theme-btn" onclick="toggle()" title="Toggle theme">&#9789;</button>
     <a href="https://github.com/MastaChief117/keyparty" class="gh-btn">GitHub</a>
+    <a href="http://localhost:8080" class="btn btn-p" style="font-size:12px;padding:5px 12px">Dashboard</a>
   </div>
 </div>
 </nav>
@@ -264,12 +265,18 @@ footer a{color:var(--accent)}
     <button class="tab" onclick="stab(this,'t5')">openai SDK</button>
   </div>
 
-  <div id="t1" class="tp on"><div class="codebox"><div class="codebar"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>terminal</div><div class="codepad"><span class="cm"># clone and build</span>
+  <div id="t1" class="tp on"><div class="codebox"><div class="codebar"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>terminal</div><div class="codepad"><span class="cm"># option 1: shell script (easiest)</span>
 <span class="kw">git clone</span> https://github.com/MastaChief117/keyparty.git
 <span class="kw">cd</span> keyparty
-<span class="kw">go build</span> -o keyparty .
+<span class="kw">chmod</span> +x keyparty.sh
+<span class="fn">./keyparty.sh</span>
 
-<span class="cm"># run it</span>
+<span class="cm"># option 2: docker</span>
+<span class="kw">docker build</span> -t keyparty .
+<span class="kw">docker run</span> -d -p 8080:8080 -e ADMIN_PASSWORD=secret keyparty
+
+<span class="cm"># option 3: manual</span>
+<span class="kw">go build</span> -o keyparty .
 <span class="fn">./keyparty</span> -port <span class="nu">8080</span> -admin-pass <span class="st">your-password</span>
 
 <span class="cm"># open dashboard: http://localhost:8080</span>

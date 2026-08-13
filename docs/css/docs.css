@@ -110,3 +110,52 @@ footer a{color:var(--accent)}
 
 @media(max-width:1100px){.doc-nav{display:none}.doc-content{margin-left:0}.toc{display:none}}
 @media(max-width:600px){.card-grid{grid-template-columns:1fr}.page{padding:70px 16px 30px}}
+
+/* ── MOBILE RESPONSIVE ─────────────────────────────────────────────────── */
+@media(max-width:700px){
+  .nav-right{display:none}
+  .nav-right.open{display:flex;flex-direction:column;position:absolute;top:56px;left:0;right:0;background:var(--bg2);border-bottom:1px solid var(--border);padding:16px 20px;gap:12px;z-index:200}
+  .mob{display:block}
+
+  .page h1{font-size:24px}
+  .page .subtitle{font-size:15px}
+  h2{font-size:20px;margin:28px 0 12px}
+  h3{font-size:16px;margin:20px 0 10px}
+
+  /* Tables scroll */
+  .tbl{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .tbl th,.tbl td{white-space:nowrap;font-size:12px;padding:8px 10px}
+
+  /* Code blocks */
+  pre{font-size:12px}
+  pre code{padding:12px;font-size:12px;white-space:pre}
+
+  /* Steps */
+  .step{padding:16px 16px 16px 56px}
+  .step::before{left:12px;top:14px;width:28px;height:28px;font-size:12px}
+
+  /* Cards */
+  .card-grid{grid-template-columns:1fr}
+  .card{padding:16px}
+
+  /* Callouts */
+  .callout{padding:12px 14px;font-size:13px}
+
+  /* TOC */
+  .toc{display:none}
+
+  /* Footer */
+  footer{padding:24px 16px;margin-top:40px}
+
+  /* Hero ASCII */
+  .hero-ascii{font-size:11px;padding:14px;max-width:100%;overflow-x:auto}
+
+  /* Comparison table */
+  table.tbl{min-width:400px}
+}
+
+@media(max-width:400px){
+  .page h1{font-size:20px}
+  h2{font-size:18px}
+  .page{padding:65px 12px 20px}
+}

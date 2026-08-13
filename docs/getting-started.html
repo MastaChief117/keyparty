@@ -12,6 +12,7 @@
 <nav>
 <div class="nav-in">
   <a href="index.html" class="nav-logo"><b>K</b>eyParty</a>
+  <button class="mob" onclick="document.querySelector('.nav-right').classList.toggle('open')">&#9776;</button>
   <div class="nav-right">
     <a href="getting-started.html">Get Started</a>
     <a href="api.html">API</a>
@@ -34,12 +35,50 @@
 
 <h2>Prerequisites</h2>
 <ul>
-<li>Go 1.24+ installed (<code>go version</code> to check)</li>
+<li>Go 1.24+ installed (<code>go version</code> to check) — or Docker</li>
 <li>At least one API key from a provider (Groq, Gemini, and NVIDIA have free tiers)</li>
 <li>A terminal (you know how to use one, right?)</li>
 </ul>
 
-<h2>Step 1: Install</h2>
+<h2>Option A: Shell Script (easiest)</h2>
+<div class="steps">
+<div class="step">
+<h4>Clone and run</h4>
+<pre><code>git clone https://github.com/MastaChief117/keyparty.git
+cd keyparty
+chmod +x keyparty.sh
+./keyparty.sh</code></pre>
+<p>The script handles Go installation, building, admin password setup, and optionally a Cloudflare tunnel. Just follow the prompts.</p>
+</div>
+</div>
+
+<h2>Option B: Docker</h2>
+<div class="steps">
+<div class="step">
+<h4>Build the image</h4>
+<pre><code>git clone https://github.com/MastaChief117/keyparty.git
+cd keyparty
+docker build -t keyparty .</code></pre>
+</div>
+<div class="step">
+<h4>Run it</h4>
+<pre><code>docker run -d \
+  --name keyparty \
+  -p 8080:8080 \
+  -e ADMIN_PASSWORD=your-secret-password \
+  -v keyparty-data:/app/data \
+  keyparty</code></pre>
+<p>Or use docker-compose:</p>
+<pre><code>echo "ADMIN_PASSWORD=your-secret" > .env
+docker-compose up -d</code></pre>
+</div>
+</div>
+
+<div class="callout callout-info">
+<strong>Docker perks:</strong> No Go install needed. Persistent data via volumes. Health checks built in. ~20MB image.
+</div>
+
+<h2>Option C: Manual Build</h2>
 <div class="steps">
 <div class="step">
 <h4>Clone the repo</h4>
@@ -258,6 +297,7 @@ function toggle(){const h=document.documentElement,n=h.getAttribute('data-theme'
 (function(){const s=localStorage.getItem('theme');if(s)document.documentElement.setAttribute('data-theme',s);else if(window.matchMedia('(prefers-color-scheme:dark)').matches)document.documentElement.setAttribute('data-theme','dark')})();
 const o=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('visible')})},{threshold:.1});
 document.querySelectorAll('.fade-in').forEach(el=>o.observe(el));
+document.querySelectorAll('.nav-right a').forEach(a=>a.addEventListener('click',()=>document.querySelector('.nav-right').classList.remove('open')));
 </script>
 </body>
 </html>
