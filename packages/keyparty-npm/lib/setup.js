@@ -38,8 +38,8 @@ function showWelcome() {
     '',
     `${icon.arrow} ${colorize(c.white, 'One endpoint. Ten providers. Zero budget.')}`,
     '',
-    `${icon.info} ${colorize(c.dim, 'This wizard will set up your gateway in 60 seconds.')}`,
-    `${icon.info} ${colorize(c.dim, 'You need at least one API key (Groq has a free tier).')}`,
+    `${icon.info} ${colorize(c.dim, 'This wizard sets up your gateway in 60 seconds.')}`,
+    `${icon.info} ${colorize(c.dim, 'You need one API key (Groq has a free tier).')}`,
   ];
 
   console.log(box(lines, { title: 'Setup Wizard', width: 60 }));
