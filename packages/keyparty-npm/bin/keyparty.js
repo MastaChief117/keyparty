@@ -33,8 +33,6 @@ if (args.includes('--version') || args.includes('-v')) {
 
 // ── Main ────────────────────────────────────────────────────────────────
 async function main() {
-  console.log(banner());
-
   // Check if binary is installed
   if (!isInstalled()) {
     console.log(`  ${icon.info} ${colorize(c.dim, 'First run detected. Installing KeyParty binary...')}`);
