@@ -1,0 +1,37 @@
+{
+  "name": "keyparty",
+  "version": "1.0.0",
+  "description": "AI gateway for broke devs. One endpoint, ten providers, zero budget.",
+  "bin": {
+    "keyparty": "./bin/keyparty.js"
+  },
+  "scripts": {
+    "postinstall": "node lib/install.js"
+  },
+  "files": [
+    "bin/",
+    "lib/"
+  ],
+  "keywords": [
+    "ai",
+    "gateway",
+    "openai",
+    "llm",
+    "proxy",
+    "anthropic",
+    "gemini",
+    "groq",
+    "router",
+    "failover",
+    "api"
+  ],
+  "author": "MastaChief117",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MastaChief117/keyparty"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
