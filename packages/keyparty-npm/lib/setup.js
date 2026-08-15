@@ -136,22 +136,22 @@ async function setupTunnel(port) {
 
 // ── Final Summary ───────────────────────────────────────────────────────
 function showSummary(port, password, tunnel) {
-  console.log('\n' + '═'.repeat(58));
+  console.log('\n' + '═'.repeat(78));
 
   const lines = [
     '',
     `  ${colorize(c.bold + c.green, '🎉 KeyParty is running!')}`,
     '',
-    `  ${icon.globe} ${colorize(c.bold + c.white, 'Dashboard:')}   ${colorize(c.cyan, `http://localhost:${port}`)}`,
-    `  ${icon.key}  ${colorize(c.bold + c.white, 'Proxy:')}       ${colorize(c.cyan, `http://localhost:${port}/v1/chat/completions`)}`,
-    `  ${icon.dot} ${colorize(c.bold + c.white, 'Health:')}      ${colorize(c.cyan, `http://localhost:${port}/health`)}`,
+    `  ${icon.globe} ${colorize(c.bold + c.white, 'Dashboard:')}  http://localhost:${port}`,
+    `  ${icon.key}  ${colorize(c.bold + c.white, 'Proxy:')}      http://localhost:${port}/v1/chat/completions`,
+    `  ${icon.dot} ${colorize(c.bold + c.white, 'Health:')}     http://localhost:${port}/health`,
   ];
 
   if (tunnel) {
     lines.push('');
     lines.push(`  ${colorize(c.bold + c.yellow, '🌐 TUNNEL ACTIVE')}`);
-    lines.push(`  ${icon.globe} ${colorize(c.bold + c.white, 'Public URL:')}  ${colorize(c.green, tunnel.url)}`);
-    lines.push(`  ${icon.key}  ${colorize(c.bold + c.white, 'Proxy:')}       ${colorize(c.cyan, tunnel.url + '/v1/chat/completions')}`);
+    lines.push(`  ${icon.globe} ${colorize(c.bold + c.white, 'Public:')}     ${colorize(c.green, tunnel.url)}`);
+    lines.push(`  ${icon.key}  ${colorize(c.bold + c.white, 'Proxy:')}      ${colorize(c.cyan, tunnel.url + '/v1/chat/completions')}`);
   }
 
   if (password) {
@@ -163,7 +163,7 @@ function showSummary(port, password, tunnel) {
   lines.push(`  ${colorize(c.dim, 'Press Ctrl+C to stop.')}`);
   lines.push('');
 
-  console.log(box(lines, { title: 'Status', width: 60, border: c.green, titleColor: c.bold + c.green }));
+  console.log(box(lines, { title: 'Status', width: 78, border: c.green, titleColor: c.bold + c.green }));
 }
 
 // ── Main Setup Flow ─────────────────────────────────────────────────────

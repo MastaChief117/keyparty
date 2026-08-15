@@ -48,7 +48,24 @@ function box(lines, opts = {}) {
     if (padding > 0) {
       out.push(`${border}║ ${line}${' '.repeat(padding)}${border}║${c.reset}`);
     } else {
-      out.push(`${border}║ ${line.substring(0, width - 5)} ${border}║${c.reset}`);
+      // Truncate to fit, add ellipsis
+      let truncated = line;
+      let w = 0;
+      let cutIdx = truncated.length;
+      for (let i = 0; i < truncated.length; i++) {
+        const ch = truncated[i];
+        if (ch === '\x1b') {
+          // Skip ANSI escape sequence
+          while (i < truncated.length && truncated[i] !== 'm') i++;
+          continue;
+        }
+        const cp = ch.codePointAt(0);
+        const add = (cp > 0x1f000 || (cp >= 0x20000 && cp <= 0x2ffff) || (cp >= 0xff00 && cp <= 0xffef)) ? 2 : 1;
+        if (w + add > width - 5) { cutIdx = i; break; }
+        w += add;
+      }
+      truncated = truncated.substring(0, cutIdx) + c.dim + '…' + c.reset;
+      out.push(`${border}║ ${truncated}${' '.repeat(Math.max(0, width - 4 - visibleWidth(truncated)))}${border}║${c.reset}`);
     }
   }
   out.push(bot);
