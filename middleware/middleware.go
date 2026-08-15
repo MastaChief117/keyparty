@@ -75,7 +75,15 @@ func RateLimit(next http.HandlerFunc) http.HandlerFunc {
 		}
 		limiter.mu.Lock()
 		if len(limiter.visitors) > 10000 {
-			limiter.visitors = make(map[string]*visitor)
+			// Evict oldest 10%
+			toEvict := len(limiter.visitors) / 10
+			for k := range limiter.visitors {
+				if toEvict <= 0 {
+					break
+				}
+				delete(limiter.visitors, k)
+				toEvict--
+			}
 		}
 		remaining := limiter.burst
 		allowed := limiter.allowLocked(ip)

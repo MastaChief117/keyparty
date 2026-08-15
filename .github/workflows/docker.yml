@@ -11,7 +11,7 @@ permissions:
   packages: write
 
 env:
-  IMAGE_NAME: mastachief/keyparty
+  IMAGE_NAME: mastachief117/keyparty
 
 jobs:
   docker:

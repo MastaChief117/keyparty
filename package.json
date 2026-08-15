@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "keyparty": "file:packages/keyparty-npm"
+  }
+}

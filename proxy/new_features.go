@@ -18,13 +18,7 @@ import (
 
 // ── PROMPT FIREWALL ───────────────────────────────────────────────────────
 
-var outboundPIIPatterns = map[string]*regexp.Regexp{
-	"email":  regexp.MustCompile(`[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}`),
-	"phone":  regexp.MustCompile(`\b\d{3}[-.]?\d{3}[-.]?\d{4}\b`),
-	"ssn":    regexp.MustCompile(`\b\d{3}-\d{2}-\d{4}\b`),
-	"credit": regexp.MustCompile(`\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b`),
-	"api_key": regexp.MustCompile(`(?i)(api[_-]?key|secret[_-]?key|access[_-]?key|bearer)\s*[:=]\s*["']?[A-Za-z0-9\-_\.]{20,}`),
-}
+// outboundPIIPatterns is now consolidated into piiPatterns in proxy.go
 
 var outboundSecretPatterns = []*regexp.Regexp{
 	regexp.MustCompile(`(?i)(password|passwd|pwd)\s*[:=]\s*["']?[^\s"']{8,}`),
@@ -45,7 +39,7 @@ func (p *Proxy) CheckOutboundFirewall(message string, config map[string]string) 
 	var matched []string
 	redacted := message
 
-	for name, pattern := range outboundPIIPatterns {
+	for name, pattern := range piiPatterns {
 		if pattern.MatchString(message) {
 			matched = append(matched, name)
 			redacted = pattern.ReplaceAllString(redacted, "[REDACTED_"+strings.ToUpper(name)+"]")

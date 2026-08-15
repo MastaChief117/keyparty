@@ -329,7 +329,6 @@ func (p *Proxy) HandleTemplateSearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	q := strings.ToLower(r.URL.Query().Get("q"))
-	category := r.URL.Query().Get("category")
 
 	templates, err := p.store.GetTemplates()
 	if err != nil {
@@ -349,9 +348,6 @@ func (p *Proxy) HandleTemplateSearch(w http.ResponseWriter, r *http.Request) {
 	for _, t := range templates {
 		if q != "" && !strings.Contains(strings.ToLower(t.Name), q) && !strings.Contains(strings.ToLower(t.SystemPrompt), q) {
 			continue
-		}
-		if category != "" {
-			continue // no category field yet
 		}
 		results = append(results, templateResult{
 			Name:      t.Name,
@@ -391,10 +387,11 @@ func (p *Proxy) HandleShareLink(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	shareID := fmt.Sprintf("%s_%d", req.Type, time.Now().UnixNano())
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"share_id": fmt.Sprintf("%s_%d", req.Type, time.Now().UnixNano()),
+		"share_id": shareID,
 		"expiry":   req.Expiry,
-		"url":      fmt.Sprintf("/share/%s_%d", req.Type, time.Now().UnixNano()),
+		"url":      fmt.Sprintf("/share/%s", shareID),
 	})
 }
 
@@ -616,11 +613,32 @@ func (p *Proxy) HandleTournament(w http.ResponseWriter, r *http.Request) {
 			var wg sync.WaitGroup
 			var mu sync.Mutex
 
+			// Find the actual API keys for these models
+			var keyA, keyB store.APIKey
+			for _, k := range keys {
+				if k.Provider == a.provider && k.Model == a.model && k.Enabled && keyA.Key == "" {
+					keyA = k
+				}
+				if k.Provider == b.provider && k.Model == b.model && k.Enabled && keyB.Key == "" {
+					keyB = k
+				}
+			}
+
+			if keyA.Key == "" {
+				resultA = MatchResult{Round: round, Model: a.provider + "/" + a.model, Error: "no enabled key found for model"}
+			}
+			if keyB.Key == "" {
+				resultB = MatchResult{Round: round, Model: b.provider + "/" + b.model, Error: "no enabled key found for model"}
+			}
+
 			wg.Add(2)
-			go func(spec modelSpec) {
+			go func(spec modelSpec, apiKey store.APIKey) {
 				defer wg.Done()
+				if apiKey.Key == "" {
+					return
+				}
 				start := time.Now()
-				reply, tokens, _, err := p.callProviderForPro(spec.provider, store.APIKey{Provider: spec.provider, Key: "tournament", Model: spec.model, Enabled: true}, spec.model, []map[string]string{{"role": "user", "content": req.Message}})
+				reply, tokens, _, err := p.callProviderForPro(spec.provider, apiKey, spec.model, []map[string]string{{"role": "user", "content": req.Message}})
 				latency := int(time.Since(start).Milliseconds())
 				mu.Lock()
 				defer mu.Unlock()
@@ -629,11 +647,14 @@ func (p *Proxy) HandleTournament(w http.ResponseWriter, r *http.Request) {
 				} else {
 					resultA = MatchResult{Round: round, Model: spec.provider + "/" + spec.model, Reply: reply, Tokens: tokens, Latency: latency}
 				}
-			}(a)
-			go func(spec modelSpec) {
+			}(a, keyA)
+			go func(spec modelSpec, apiKey store.APIKey) {
 				defer wg.Done()
+				if apiKey.Key == "" {
+					return
+				}
 				start := time.Now()
-				reply, tokens, _, err := p.callProviderForPro(spec.provider, store.APIKey{Provider: spec.provider, Key: "tournament", Model: spec.model, Enabled: true}, spec.model, []map[string]string{{"role": "user", "content": req.Message}})
+				reply, tokens, _, err := p.callProviderForPro(spec.provider, apiKey, spec.model, []map[string]string{{"role": "user", "content": req.Message}})
 				latency := int(time.Since(start).Milliseconds())
 				mu.Lock()
 				defer mu.Unlock()
@@ -642,7 +663,7 @@ func (p *Proxy) HandleTournament(w http.ResponseWriter, r *http.Request) {
 				} else {
 					resultB = MatchResult{Round: round, Model: spec.provider + "/" + spec.model, Reply: reply, Tokens: tokens, Latency: latency}
 				}
-			}(b)
+			}(b, keyB)
 			wg.Wait()
 
 			if resultA.Error != "" && resultB.Error == "" {
@@ -688,16 +709,8 @@ func (p *Proxy) HandleSetKeyExpiry(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	var req struct {
-		KeyID    int64  `json:"key_id"`
-		Expiry   string `json:"expiry"` // ISO 8601 or "30d", "7d", "24h"
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, `{"error":"Invalid JSON"}`, 400)
-		return
-	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "ok", "expiry": req.Expiry})
+	http.Error(w, `{"error":"Key expiry not yet implemented"}`, http.StatusNotImplemented)
 }
 
 // ── IP Allowlist ───────────────────────────────────────────────────────
@@ -720,7 +733,7 @@ func (p *Proxy) HandleIPAllowlist(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, `{"error":"Invalid JSON"}`, 400)
 			return
 		}
-		json.NewEncoder(w).Encode(map[string]string{"status": "updated"})
+		http.Error(w, `{"error":"IP allowlist not yet implemented"}`, http.StatusNotImplemented)
 	default:
 		http.Error(w, "Method not allowed", 405)
 	}
@@ -764,7 +777,7 @@ func (p *Proxy) HandleTemplateVersions(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, `{"error":"Invalid JSON"}`, 400)
 			return
 		}
-		json.NewEncoder(w).Encode(map[string]string{"status": "versioned"})
+		http.Error(w, `{"error":"Template versioning not yet implemented"}`, http.StatusNotImplemented)
 	default:
 		http.Error(w, "Method not allowed", 405)
 	}

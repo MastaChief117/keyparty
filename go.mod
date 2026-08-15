@@ -1,3 +1,4 @@
+// Module path is "ai-gateway" for historical reasons (renamed project).
 module ai-gateway
 
 go 1.24.5

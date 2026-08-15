@@ -1,9 +1,8 @@
-const { spawn, execSync } = require('child_process');
+const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const readline = require('readline');
-const { c, colorize, box, banner, icon, ask, confirm, password, select, divider, table, clear, spinner } = require('./tui');
-const { getBinaryPath, INSTALL_DIR } = require('./platform');
+const { c, colorize, box, banner, icon, ask, confirm, password, divider, clear, spinner } = require('./tui');
+const { getBinaryPath } = require('./platform');
 const { installCloudflared, hasCloudflared } = require('./install');
 const { startTunnel, stopTunnel } = require('./tunnel');
 
@@ -100,14 +99,14 @@ async function setupPort() {
 }
 
 // ── Step 4: Start Gateway ───────────────────────────────────────────────
-function startGateway(port, password) {
+function startGateway(port, adminPass) {
   const bin = getBinaryPath();
   const args = ['-port', port];
-  if (password) args.push('-admin-pass', password);
+  if (adminPass) args.push('-admin-pass', adminPass);
 
   const proc = spawn(bin, args, {
     stdio: ['ignore', 'pipe', 'pipe'],
-    env: { ...process.env, ADMIN_PASSWORD: password || '' },
+    env: { ...process.env, ADMIN_PASSWORD: adminPass || '' },
   });
 
   return proc;
@@ -170,20 +169,19 @@ function showSummary(port, password, tunnel) {
 async function setup() {
   showWelcome();
 
-  const password = await setupPassword();
-  const hasCF = await setupCloudflared();
+  const adminPassword = await setupPassword();
   const port = await setupPort();
 
   // Save config
   const config = loadConfig();
-  if (password) config.ADMIN_PASSWORD = password;
+  if (adminPassword) config.ADMIN_PASSWORD = adminPassword;
   config.PORT = port;
   saveConfig(config);
 
   console.log(divider('Starting Gateway'));
 
   const sp = spinner('Starting KeyParty on port ' + port);
-  const gwProc = startGateway(port, password);
+  const gwProc = startGateway(port, adminPassword);
 
   // Wait for gateway to start
   await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -197,10 +195,13 @@ async function setup() {
 
   const tunnel = await setupTunnel(port);
 
-  showSummary(port, password, tunnel);
+  showSummary(port, adminPassword, tunnel);
 
   // Handle shutdown
+  let shuttingDown = false;
   const shutdown = () => {
+    if (shuttingDown) return;
+    shuttingDown = true;
     console.log(`\n  ${icon.arrow} ${colorize(c.dim, 'Shutting down...')}`);
     if (tunnel) stopTunnel(tunnel.process);
     gwProc.kill('SIGTERM');

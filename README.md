@@ -141,7 +141,6 @@ Multi-stage build. Final image is ~20MB on Alpine.
 ### Docker Compose
 
 ```yaml
-version: '3.8'
 services:
   keyparty:
     build: .
@@ -153,10 +152,11 @@ services:
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-changeme}
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost:8080/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 10s
 
 volumes:
   keyparty-data:

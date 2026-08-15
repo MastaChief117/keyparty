@@ -111,7 +111,9 @@ func (p *Proxy) HandleUsageDashboard(w http.ResponseWriter, r *http.Request) {
 	if keyID != "" {
 		logs, err := p.store.SearchRequestLogs("", "", keyID, "", 500)
 		if err != nil {
-			http.Error(w, `{"error":"`+err.Error()+`"}`, 500)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(500)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 			return
 		}
 
@@ -167,7 +169,9 @@ func (p *Proxy) HandleUsageDashboard(w http.ResponseWriter, r *http.Request) {
 
 	details, err := p.store.GetVirtualKeyUsageDetail()
 	if err != nil {
-		http.Error(w, `{"error":"`+err.Error()+`"}`, 500)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(500)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
@@ -213,7 +217,9 @@ func (p *Proxy) HandleAutoRotate(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/admin/auto-rotate/status" {
 		keys, err := p.store.GetKeys()
 		if err != nil {
-			http.Error(w, `{"error":"`+err.Error()+`"}`, 500)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(500)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 			return
 		}
 
@@ -267,7 +273,9 @@ func (p *Proxy) HandleAutoRotate(w http.ResponseWriter, r *http.Request) {
 
 	healthy, err := p.store.GetHealthyKeysByProvider(reqBody.Provider)
 	if err != nil {
-		http.Error(w, `{"error":"`+err.Error()+`"}`, 500)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(500)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
 	if len(healthy) == 0 {
@@ -342,7 +350,9 @@ func (p *Proxy) HandlePlayground(w http.ResponseWriter, r *http.Request) {
 
 	proxyReq, err := http.NewRequest("POST", endpoint, bytes.NewReader(bodyBytes))
 	if err != nil {
-		http.Error(w, `{"error":"`+err.Error()+`"}`, 500)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(500)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
 	proxyReq.Header.Set("Content-Type", "application/json")
@@ -355,7 +365,9 @@ func (p *Proxy) HandlePlayground(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	resp, err := p.client.Do(proxyReq)
 	if err != nil {
-		http.Error(w, `{"error":"`+err.Error()+`"}`, 502)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(502)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
 	defer resp.Body.Close()
@@ -468,7 +480,9 @@ func (p *Proxy) HandleRecap(w http.ResponseWriter, r *http.Request) {
 
 		recap, err := p.store.GetWeeklyRecap()
 		if err != nil {
-			http.Error(w, `{"error":"`+err.Error()+`"}`, 500)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(500)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 			return
 		}
 
@@ -476,7 +490,9 @@ func (p *Proxy) HandleRecap(w http.ResponseWriter, r *http.Request) {
 
 		providerName, key, err := p.pickRandomProviderForPro()
 		if err != nil {
-			http.Error(w, `{"error":"`+err.Error()+`"}`, 500)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(500)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 			return
 		}
 
@@ -488,7 +504,9 @@ func (p *Proxy) HandleRecap(w http.ResponseWriter, r *http.Request) {
 
 		reply, _, _, err := p.callProviderForPro(providerName, key, model, messages)
 		if err != nil {
-			http.Error(w, `{"error":"`+err.Error()+`"}`, 502)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(502)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 			return
 		}
 
@@ -506,7 +524,9 @@ func (p *Proxy) HandleRecap(w http.ResponseWriter, r *http.Request) {
 
 	recap, err := p.store.GetWeeklyRecap()
 	if err != nil {
-		http.Error(w, `{"error":"`+err.Error()+`"}`, 500)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(500)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
@@ -531,7 +551,9 @@ func (p *Proxy) HandleCostAnalytics(w http.ResponseWriter, r *http.Request) {
 
 	analytics, err := p.store.GetCostAnalytics(days)
 	if err != nil {
-		http.Error(w, `{"error":"`+err.Error()+`"}`, 500)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(500)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
 

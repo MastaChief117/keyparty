@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"net/http"
 	"regexp"
 	"strings"
@@ -20,11 +21,12 @@ import (
 )
 
 var piiPatterns = map[string]*regexp.Regexp{
-	"email":     regexp.MustCompile(`[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}`),
-	"phone":     regexp.MustCompile(`\b\d{3}[-.]?\d{3}[-.]?\d{4}\b`),
-	"ssn":       regexp.MustCompile(`\b\d{3}-\d{2}-\d{4}\b`),
-	"credit":    regexp.MustCompile(`\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b`),
-	"ip":        regexp.MustCompile(`\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b`),
+	"email":   regexp.MustCompile(`[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}`),
+	"phone":   regexp.MustCompile(`\b\d{3}[-.]?\d{3}[-.]?\d{4}\b`),
+	"ssn":     regexp.MustCompile(`\b\d{3}-\d{2}-\d{4}\b`),
+	"credit":  regexp.MustCompile(`\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b`),
+	"ip":      regexp.MustCompile(`\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b`),
+	"api_key": regexp.MustCompile(`(?i)(api[_-]?key|secret[_-]?key|access[_-]?key|bearer)\s*[:=]\s*["']?[A-Za-z0-9\-_\.]{20,}`),
 }
 
 var injectionPatterns = []*regexp.Regexp{
@@ -50,7 +52,7 @@ type Proxy struct {
 	client      *http.Client
 	providerIdx map[string]*int64
 	mu          sync.Mutex
-	cacheTTL    int
+	cacheTTL    int64
 	vkRateMu    sync.Mutex
 	vkTokens    map[string]*vkBucket
 }
@@ -73,7 +75,7 @@ func New(s *store.Store) *Proxy {
 			Transport: transport,
 		},
 		providerIdx: make(map[string]*int64),
-		cacheTTL:    60,
+		cacheTTL:    int64(60),
 		vkTokens:    make(map[string]*vkBucket),
 	}
 }
@@ -100,7 +102,7 @@ func (p *Proxy) allowVK(vkKey string, rateLimit int) bool {
 }
 
 func (p *Proxy) SetCacheTTL(ttl int) {
-	p.cacheTTL = ttl
+	atomic.StoreInt64(&p.cacheTTL, int64(ttl))
 }
 
 func (p *Proxy) getRoundRobinIndex(providerName string) int64 {
@@ -153,7 +155,10 @@ func (p *Proxy) checkGuardrails(message string) (bool, string, string) {
 }
 
 func (p *Proxy) computeHash(model string, messages []interface{}, vkID string) string {
-	msgJSON, _ := json.Marshal(messages)
+	msgJSON, err := json.Marshal(messages)
+	if err != nil {
+		msgJSON = []byte("[]")
+	}
 	h := sha256.Sum256(append([]byte(model+":"+vkID+":"), msgJSON...))
 	return fmt.Sprintf("%x", h)
 }
@@ -369,7 +374,14 @@ func (p *Proxy) HandleChatCompletions(w http.ResponseWriter, r *http.Request) {
 		if blocked {
 			p.store.LogBlockedRequest(reason, userMessage[:min(len(userMessage), 100)], fmt.Sprintf("Blocked by rule: %s", reason))
 			if action == "block" {
-				http.Error(w, fmt.Sprintf(`{"error":{"message":"Request blocked by guardrail: %s","type":"guardrail"}}`, reason), http.StatusForbidden)
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusForbidden)
+				json.NewEncoder(w).Encode(map[string]interface{}{
+					"error": map[string]string{
+						"message": fmt.Sprintf("Request blocked by guardrail: %s", reason),
+						"type":    "guardrail",
+					},
+				})
 				return
 			}
 		}
@@ -504,7 +516,13 @@ func (p *Proxy) HandleChatCompletions(w http.ResponseWriter, r *http.Request) {
 		if p.tryFailover(w, r, body, reqBody, modelName, isStream, targetKey.ID, 0) {
 			return
 		}
-		http.Error(w, fmt.Sprintf(`{"error":{"message":"%s"}}`, sanitizeError(err.Error())), http.StatusBadGateway)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadGateway)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": map[string]string{
+				"message": sanitizeError(err.Error()),
+			},
+		})
 		return
 	}
 
@@ -574,7 +592,7 @@ func (p *Proxy) HandleChatCompletions(w http.ResponseWriter, r *http.Request) {
 			vkID = vk.Key
 		}
 		hash := p.computeHash(modelName, messages, vkID)
-		p.store.SetCache(hash, string(respBody), modelName, p.cacheTTL)
+		p.store.SetCache(hash, string(respBody), modelName, int(atomic.LoadInt64(&p.cacheTTL)))
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -678,7 +696,7 @@ func (p *Proxy) tryFailover(w http.ResponseWriter, r *http.Request, origBody []b
 
 		p.store.RecordRequest(key.ID)
 
-		if resp.StatusCode >= 400 && resp.StatusCode != http.StatusOK {
+		if resp.StatusCode >= 400 {
 			io.ReadAll(resp.Body)
 			resp.Body.Close()
 			p.store.RecordError(key.ID, failoverProvider, fmt.Sprintf("HTTP %d", resp.StatusCode), resp.StatusCode)
@@ -1351,6 +1369,9 @@ func hashString(s string) int32 {
 
 func abs(n int32) int32 {
 	if n < 0 {
+		if n == math.MinInt32 {
+			return math.MaxInt32
+		}
 		return -n
 	}
 	return n

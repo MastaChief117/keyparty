@@ -115,7 +115,7 @@ Language:     Go (single binary, no dependencies)
 Database:     SQLite (zero config, portable)
 Encryption:   AES-256-GCM at rest (your API keys are safe)
 Dashboard:    Single HTML file, no build step, no npm install
-Deployment:   ./KeyParty -port 8080 -admin-pass yourpass
+Deployment:   ./keyparty -port 8080 -admin-pass yourpass
 
 Feature count:
   - 10 AI provider integrations
@@ -171,7 +171,7 @@ This one is built for the dev who:
   - Is probably coding at 3AM on a Tuesday
 
 It's not trying to replace Kong. It's building something new:
-  An KeyParty that's as fun to use as it is useful.
+  A KeyParty that's as fun to use as it is useful.
 
 ================================================================================
                           THE NUMBERS
@@ -188,7 +188,7 @@ It's not trying to replace Kong. It's building something new:
                           LINKS
 ================================================================================
 
-  GitHub:    https://github.com/MastaChief117/KeyParty
+  GitHub:    https://github.com/MastaChief117/keyparty
   Dashboard: http://localhost:8080
   Proxy:     http://localhost:8080/v1/chat/completions
 

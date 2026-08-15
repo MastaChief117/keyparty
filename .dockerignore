@@ -6,3 +6,11 @@ keyparty.sh
 gateway.db
 *.db
 .env
+dist/
+node_modules/
+packages/
+docs/
+.gateway.key
+ABOUT.txt
+*.json
+*.exe

@@ -7,6 +7,7 @@ const { c, colorize, icon, banner } = require('../lib/tui');
 
 // ── CLI Flags ───────────────────────────────────────────────────────────
 const args = process.argv.slice(2);
+let gwProc = null;
 
 if (args.includes('--help') || args.includes('-h')) {
   console.log(banner());
@@ -47,19 +48,29 @@ async function main() {
 
     const portIdx = args.indexOf('--port');
     const passIdx = args.indexOf('--password');
-    const port = portIdx !== -1 ? args[portIdx + 1] : '8080';
-    const pass = passIdx !== -1 ? args[passIdx + 1] : '';
+    const port = (portIdx !== -1 && portIdx + 1 < args.length) ? args[portIdx + 1] : '8080';
+    const pass = (passIdx !== -1 && passIdx + 1 < args.length) ? args[passIdx + 1] : '';
 
     const bin = getBinaryPath();
     const binArgs = ['-port', port];
     if (pass) binArgs.push('-admin-pass', pass);
 
-    const proc = spawn(bin, binArgs, {
+    gwProc = spawn(bin, binArgs, {
       stdio: 'inherit',
       env: { ...process.env, ADMIN_PASSWORD: pass },
     });
 
-    proc.on('exit', (code) => process.exit(code));
+    if (args.includes('--tunnel')) {
+      const { startTunnel } = require('../lib/tunnel');
+      try {
+        const tunnel = await startTunnel(port);
+        if (tunnel) console.log(`  Tunnel: ${tunnel.url}`);
+      } catch (err) {
+        console.error(`  Tunnel failed: ${err.message}`);
+      }
+    }
+
+    gwProc.on('exit', (code) => process.exit(code));
     return;
   }
 
@@ -69,5 +80,6 @@ async function main() {
 
 main().catch((err) => {
   console.error(`\n  ${icon.fail} ${colorize(c.red, err.message)}`);
+  if (gwProc && !gwProc.killed) gwProc.kill();
   process.exit(1);
 });

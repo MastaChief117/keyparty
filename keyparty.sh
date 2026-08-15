@@ -44,7 +44,7 @@ if ! command -v go &>/dev/null; then
     case "$ARCH" in
         x86_64)  GO_ARCH="amd64" ;;
         aarch64) GO_ARCH="arm64" ;;
-        armv7l)  GO_ARCH="armv6l" ;;
+        armv7l)  GO_ARCH="arm" ;;
         *)       echo "Error: Unsupported architecture: $ARCH"; echo "Install from: https://go.dev/dl/"; exit 1 ;;
     esac
     GO_VER="1.24.5"
@@ -62,7 +62,7 @@ if ! command -v go &>/dev/null; then
         exit 1
     fi
 fi
-GO_VER=$(go version | grep -oP 'go\K[0-9.]+')
+GO_VER=$(go version | sed 's/.*go\([0-9.]*\).*/\1/')
 echo "Go version: $GO_VER"
 
 # ── Build ──
@@ -175,7 +175,7 @@ if [ "$ENABLE_TUNNEL" = "y" ] || [ "$ENABLE_TUNNEL" = "yes" ]; then
     for i in $(seq 1 30); do
         sleep 1
         if [ -f "$TUNNEL_LOG" ]; then
-            TUNNEL_URL=$(grep -oP 'https://[a-z0-9-]+\.trycloudflare\.com' "$TUNNEL_LOG" 2>/dev/null | head -1 || true)
+            TUNNEL_URL=$(sed -n 's|.*\(https://[a-z0-9-]*\.trycloudflare\.com\).*|\1|p' "$TUNNEL_LOG" 2>/dev/null | head -1 || true)
         fi
         if [ -n "$TUNNEL_URL" ]; then
             break

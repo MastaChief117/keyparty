@@ -178,7 +178,9 @@ func (p *Proxy) HandleProviderRoast(w http.ResponseWriter, r *http.Request) {
 
 	replyA, err := callProvider(nameA, keyA, messagesA)
 	if err != nil {
-		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err.Error()), 500)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(500)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
@@ -189,7 +191,9 @@ func (p *Proxy) HandleProviderRoast(w http.ResponseWriter, r *http.Request) {
 
 	replyB, err := callProvider(nameB, keyB, messagesB)
 	if err != nil {
-		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err.Error()), 500)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(500)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
@@ -287,7 +291,9 @@ func (p *Proxy) HandleDebugOracle(w http.ResponseWriter, r *http.Request) {
 	resp, err := p.client.Do(proxyReq)
 	latency := time.Since(start).Milliseconds()
 	if err != nil {
-		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err.Error()), 500)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(500)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
 	defer resp.Body.Close()
@@ -391,7 +397,9 @@ func (p *Proxy) HandleCommitMsg(w http.ResponseWriter, r *http.Request) {
 	resp, err := p.client.Do(proxyReq)
 	latency := time.Since(start).Milliseconds()
 	if err != nil {
-		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err.Error()), 500)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(500)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
 	defer resp.Body.Close()

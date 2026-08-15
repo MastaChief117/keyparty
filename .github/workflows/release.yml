@@ -21,11 +21,11 @@ jobs:
       - name: Build binaries
         run: |
           mkdir -p dist
-          GOOS=linux   GOARCH=amd64 go build -o dist/keyparty-linux-amd64 .
-          GOOS=linux   GOARCH=arm64 go build -o dist/keyparty-linux-arm64 .
-          GOOS=darwin  GOARCH=amd64 go build -o dist/keyparty-darwin-amd64 .
-          GOOS=darwin  GOARCH=arm64 go build -o dist/keyparty-darwin-arm64 .
-          GOOS=windows GOARCH=amd64 go build -o dist/keyparty-windows-amd64.exe .
+          GOOS=linux   GOARCH=amd64 go build -ldflags="-s -w" -o dist/keyparty-linux-amd64 .
+          GOOS=linux   GOARCH=arm64 go build -ldflags="-s -w" -o dist/keyparty-linux-arm64 .
+          GOOS=darwin  GOARCH=amd64 go build -ldflags="-s -w" -o dist/keyparty-darwin-amd64 .
+          GOOS=darwin  GOARCH=arm64 go build -ldflags="-s -w" -o dist/keyparty-darwin-arm64 .
+          GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/keyparty-windows-amd64.exe .
 
       - name: Create release
         uses: softprops/action-gh-release@v2

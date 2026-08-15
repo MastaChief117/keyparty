@@ -99,10 +99,13 @@ func (p *Proxy) HandleHealthCheck(w http.ResponseWriter, r *http.Request) {
 				status = "error"
 				errMsg = err.Error()
 			} else {
-				resp.Body.Close()
 				if resp.StatusCode >= 400 {
 					status = "degraded"
-					errMsg = fmt.Sprintf("HTTP %d", resp.StatusCode)
+					respBody, _ := io.ReadAll(resp.Body)
+					resp.Body.Close()
+					errMsg = fmt.Sprintf("HTTP %d: %s", resp.StatusCode, string(respBody[:min(len(respBody), 200)]))
+				} else {
+					resp.Body.Close()
 				}
 			}
 

@@ -1,9 +1,7 @@
 const https = require('https');
 const http = require('http');
 const fs = require('fs');
-const path = require('path');
-const { URL } = require('url');
-const { c, colorize, spinner, progressBar, icon, banner, box } = require('./tui');
+const { c, colorize, spinner, progressBar, icon } = require('./tui');
 const {
   getBinaryName, getBinaryPath, getCloudflaredName, getCloudflaredPath,
   getReleaseUrl, isInstalled, ensureInstallDir, makeExecutable, INSTALL_DIR,
@@ -13,14 +11,17 @@ const KEPARTY_REPO = 'MastaChief117/keyparty';
 const CLOUDFLARED_REPO = 'cloudflare/cloudflared';
 
 // ── HTTP Download with Redirects ────────────────────────────────────────
-function download(url, dest) {
+function download(url, dest, redirectCount = 0) {
+  if (redirectCount > 5) {
+    return Promise.reject(new Error('Too many redirects'));
+  }
   return new Promise((resolve, reject) => {
     const proto = url.startsWith('https') ? https : http;
 
     const req = proto.get(url, { headers: { 'User-Agent': 'keyparty-npm' } }, (res) => {
       // Follow redirects
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-        return download(res.headers.location, dest).then(resolve).catch(reject);
+        return download(res.headers.location, dest, redirectCount + 1).then(resolve).catch(reject);
       }
 
       if (res.statusCode !== 200) {
@@ -41,6 +42,12 @@ function download(url, dest) {
       });
 
       res.pipe(file);
+
+      res.on('error', (err) => {
+        file.close();
+        fs.unlink(dest, () => {});
+        reject(err);
+      });
 
       file.on('finish', () => {
         file.close();
@@ -137,7 +144,7 @@ async function install() {
   if (!binaryOk) {
     console.log(`\n  ${icon.fail} ${colorize(c.red + c.bold, 'Could not install KeyParty binary.')}`);
     console.log(`  ${colorize(c.dim, 'Install Go and run: go build -o keyparty .')}`);
-    process.exit(1);
+    throw new Error('Could not install KeyParty binary');
   }
 }
 

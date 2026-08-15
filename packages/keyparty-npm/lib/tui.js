@@ -145,7 +145,7 @@ const icon = {
 // ── Spinner ─────────────────────────────────────────────────────────────
 const spinners = {
   dots: { frames: ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'], interval: 80 },
-  moon: { frames: ['🌑', '🌒', '🌓', '🌔', '🌕', '🌖', '🌗', 'loon'], interval: 100 },
+  moon: { frames: ['🌑', '🌒', '🌓', '🌔', '🌕', '🌖', '🌗', '🌘'], interval: 100 },
   fire: { frames: ['🔥', '🔥', '🔥'], interval: 150 },
 };
 
@@ -165,7 +165,7 @@ function spinner(text, opts = {}) {
     stop(suffix = '') {
       running = false;
       clearInterval(id);
-      stdout.write(`\r${' '.repeat(text.length + 10)}\r`);
+      stdout.write(`\r${' '.repeat(visibleWidth(text) + 10)}\r`);
       if (suffix) stdout.write(`  ${suffix}\n`);
     },
     succeed(text) { this.stop(`${icon.ok} ${colorize(c.green, text)}`); },
@@ -214,10 +214,30 @@ async function confirm(question, defaultVal = true) {
 
 async function password(question) {
   return new Promise((resolve) => {
-    const rl = getInterface();
     const prefix = `  ${icon.key} `;
-    rl.question(`${prefix}${colorize(c.bold + c.white, question)} `, (answer) => {
-      resolve(answer.trim());
+    process.stdout.write(`${prefix}${colorize(c.bold + c.white, question)} `);
+    process.stdin.setRawMode(true);
+    process.stdin.resume();
+    process.stdin.setEncoding('utf8');
+    let input = '';
+    process.stdin.on('data', function onKey(ch) {
+      if (ch === '\n' || ch === '\r') {
+        process.stdin.setRawMode(false);
+        process.stdin.pause();
+        process.stdin.removeListener('data', onKey);
+        process.stdout.write('\n');
+        resolve(input);
+      } else if (ch === '\u007F' || ch === '\b') {
+        if (input.length > 0) {
+          input = input.slice(0, -1);
+          process.stdout.write('\b \b');
+        }
+      } else if (ch === '\u0003') {
+        process.exit();
+      } else {
+        input += ch;
+        process.stdout.write('*');
+      }
     });
   });
 }
@@ -225,25 +245,29 @@ async function password(question) {
 function select(question, options) {
   return new Promise((resolve) => {
     const rl = getInterface();
-    console.log(`\n  ${colorize(c.bold + c.white, question)}`);
-    options.forEach((opt, i) => {
-      console.log(`    ${colorize(c.cyan, String(i + 1))}) ${opt.label}`);
-    });
-    console.log();
-    rl.question(`  ${icon.arrow} ${colorize(c.dim, 'Pick [1-' + options.length + ']')}: `, (answer) => {
-      const idx = parseInt(answer) - 1;
-      if (idx >= 0 && idx < options.length) {
-        resolve(options[idx]);
-      } else {
-        resolve(options[0]);
-      }
-    });
+    function prompt() {
+      console.log(`\n  ${colorize(c.bold + c.white, question)}`);
+      options.forEach((opt, i) => {
+        console.log(`    ${colorize(c.cyan, String(i + 1))}) ${opt.label}`);
+      });
+      console.log();
+      rl.question(`  ${icon.arrow} ${colorize(c.dim, 'Pick [1-' + options.length + ']')}: `, (answer) => {
+        const idx = parseInt(answer) - 1;
+        if (idx >= 0 && idx < options.length) {
+          resolve(options[idx]);
+        } else {
+          console.log(`  ${icon.warn} ${colorize(c.yellow, 'Invalid choice. Please try again.')}`);
+          prompt();
+        }
+      });
+    }
+    prompt();
   });
 }
 
 // ── Section Divider ─────────────────────────────────────────────────────
 function divider(label) {
-  const pad = 54 - label.length;
+  const pad = Math.max(0, 54 - label.length);
   const left = Math.floor(pad / 2);
   const right = pad - left;
   return `\n${c.dim}${'─'.repeat(left)}${c.reset} ${colorize(c.bold + c.white, label)} ${c.dim}${'─'.repeat(right)}${c.reset}\n`;

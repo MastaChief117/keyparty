@@ -99,14 +99,18 @@ func (p *Proxy) HandleRoulette(w http.ResponseWriter, r *http.Request) {
 	resp, err := p.client.Do(proxyReq)
 	latency := time.Since(start).Milliseconds()
 	if err != nil {
-		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err.Error()), 500)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(500)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
 	defer resp.Body.Close()
 
 	respBody, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode >= 400 {
-		http.Error(w, fmt.Sprintf(`{"error":"HTTP %d"}`, resp.StatusCode), 502)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(502)
+		json.NewEncoder(w).Encode(map[string]string{"error": fmt.Sprintf("HTTP %d", resp.StatusCode)})
 		return
 	}
 
@@ -203,7 +207,9 @@ func (p *Proxy) HandleRoastLogs(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := p.client.Do(proxyReq)
 	if err != nil {
-		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err.Error()), 500)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(500)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
 	defer resp.Body.Close()
@@ -314,7 +320,9 @@ func (p *Proxy) HandleTherapist(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := p.client.Do(proxyReq)
 	if err != nil {
-		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err.Error()), 500)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(500)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
 	defer resp.Body.Close()
@@ -411,7 +419,9 @@ func (p *Proxy) HandleVibeCheck(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := p.client.Do(proxyReq)
 	if err != nil {
-		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err.Error()), 500)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(500)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
 	defer resp.Body.Close()

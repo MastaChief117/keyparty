@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 
 	"ai-gateway/auth"
 	"ai-gateway/middleware"
@@ -572,9 +571,6 @@ func main() {
 
 	addr := fmt.Sprintf(":%d", *port)
 	scheme := "http"
-	if strings.Contains(addr, "443") {
-		scheme = "https"
-	}
 	fmt.Printf("KeyParty running on %s://localhost%s\n", scheme, addr)
 	fmt.Printf("Proxy endpoint: %s://localhost%s/v1/chat/completions\n", scheme, addr)
 	fmt.Printf("Dashboard: %s://localhost%s\n", scheme, addr)

@@ -41,7 +41,12 @@ func IsBlockedURL(rawURL string) bool {
 		return true
 	}
 
-	// Resolve hostname and check resolved IPs
+	// TODO: Known TOCTOU limitation: DNS resolution here may differ from
+	// the resolution that happens when the HTTP transport actually dials.
+	// A DNS rebinding attack could resolve to a safe IP at check time,
+	// then resolve to a private IP at dial time. The proper fix is to
+	// check IPs at dial time via a custom HTTP transport with a custom
+	// DialContext that validates resolved IPs before connecting.
 	ips, err := net.LookupIP(host)
 	if err != nil {
 		return true // Block on DNS resolution failure

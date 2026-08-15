@@ -86,11 +86,6 @@ tr:hover{background:rgba(59,130,246,0.05)}
 
 .empty-state{text-align:center;padding:30px;color:#64748b}
 
-.toast{position:fixed;bottom:20px;right:20px;padding:12px 20px;border-radius:8px;color:white;font-size:14px;z-index:2000;animation:slideIn 0.3s ease}
-.toast-success{background:#22c55e}
-.toast-error{background:#ef4444}
-@keyframes slideIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
-
 .error-list{max-height:250px;overflow-y:auto}
 .error-item{padding:8px;border-bottom:1px solid #334155;font-size:12px}
 .error-time{color:#64748b;font-size:11px}
@@ -223,12 +218,226 @@ tr:hover{background:rgba(59,130,246,0.05)}
   [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
   #queue-stats{grid-template-columns:1fr!important}
 }
+
+/* Key cards */
+.key-card{background:var(--bg-secondary, #1e293b);border:1px solid var(--border, #334155);border-radius:12px;padding:16px;margin-bottom:12px}
+.key-info{display:flex;justify-content:space-between;align-items:center}
+.key-name{font-weight:600;color:var(--text-primary, #e2e8f0)}
+.key-provider{font-size:0.85em;color:var(--text-secondary, #94a3b8)}
+
+/* Toggle switches */
+.toggle{position:relative;display:inline-block;width:44px;height:24px}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--bg-tertiary, #0f172a);border-radius:24px;transition:0.3s}
+.toggle-slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background:white;border-radius:50%;transition:0.3s}
+.toggle input:checked+.toggle-slider{background:var(--accent, #3b82f6)}
+.toggle input:checked+.toggle-slider:before{transform:translateX(20px)}
+
+/* Responsive grids */
+.responsive-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.responsive-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.responsive-grid-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.responsive-grid-ab{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+/* Tab content animation */
+.tab-content{animation:fadeIn 0.3s ease-out}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Hover effects */
+.stat-card,.key-card,.template-card{transition:transform 0.2s ease,box-shadow 0.2s ease}
+.stat-card:hover,.key-card:hover,.template-card:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(0,0,0,0.15)}
+.btn{transition:all 0.2s ease}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+
+/* Loading skeleton */
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.skeleton{background:linear-gradient(90deg,var(--bg-secondary, #1e293b) 25%,var(--bg-tertiary, #334155) 50%,var(--bg-secondary, #1e293b) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:8px}
+
+/* Pulse animation for health indicator */
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+.health-dot{animation:pulse 2s infinite}
+
+/* Smooth scroll */
+html{scroll-behavior:smooth}
+
+@media(max-width:768px){
+  .responsive-grid,.responsive-grid-3,.responsive-grid-ab{grid-template-columns:1fr}
+}
+
+/* Toast notifications */
+.toast{position:fixed;top:20px;right:20px;padding:12px 24px;border-radius:12px;color:white;font-weight:500;z-index:10000;animation:slideIn 0.3s ease-out;box-shadow:0 4px 20px rgba(0,0,0,0.2)}
+.toast-success{background:#22c55e}
+.toast-error{background:#ef4444}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes slideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}
+
+/* Gradient text */
+.gradient-text{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SUPER COOL ANIMATIONS — The Glow Up
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Ambient Background Glow ─────────────────────────────────────────── */
+body::before{content:"";position:fixed;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle at 20% 50%,rgba(59,130,246,0.03) 0%,transparent 50%),radial-gradient(circle at 80% 20%,rgba(139,92,246,0.03) 0%,transparent 50%),radial-gradient(circle at 50% 80%,rgba(6,182,212,0.02) 0%,transparent 50%);animation:ambientShift 20s ease-in-out infinite;z-index:-1;pointer-events:none}
+@keyframes ambientShift{0%,100%{transform:translate(0,0) rotate(0deg)}25%{transform:translate(2%,-2%) rotate(1deg)}50%{transform:translate(-1%,3%) rotate(-1deg)}75%{transform:translate(-3%,-1%) rotate(0.5deg)}}
+
+/* ── Page Load Stagger Animation ─────────────────────────────────────── */
+.container{animation:containerReveal 0.6s cubic-bezier(0.16,1,0.3,1) both}
+@keyframes containerReveal{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+header{animation:slideDown 0.5s cubic-bezier(0.16,1,0.3,1) 0.1s both}
+@keyframes slideDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+
+.unified-key-banner{animation:bannerGlow 0.6s cubic-bezier(0.16,1,0.3,1) 0.2s both}
+@keyframes bannerGlow{from{opacity:0;transform:scale(0.98);box-shadow:0 0 0 rgba(59,130,246,0)}to{opacity:1;transform:scale(1);box-shadow:0 0 30px rgba(59,130,246,0.05)}}
+
+/* ── Stat Cards Stagger ──────────────────────────────────────────────── */
+.stat-card{opacity:0;animation:cardPop 0.4s cubic-bezier(0.34,1.56,0.64,1) both}
+.stat-card:nth-child(1){animation-delay:0.3s}
+.stat-card:nth-child(2){animation-delay:0.38s}
+.stat-card:nth-child(3){animation-delay:0.46s}
+.stat-card:nth-child(4){animation-delay:0.54s}
+.stat-card:nth-child(5){animation-delay:0.62s}
+.stat-card:nth-child(6){animation-delay:0.7s}
+@keyframes cardPop{from{opacity:0;transform:scale(0.8) translateY(15px)}to{opacity:1;transform:scale(1) translateY(0)}}
+
+/* ── Stat Value Count-Up Glow ────────────────────────────────────────── */
+.stat-card .value{transition:color 0.3s,text-shadow 0.3s}
+.stat-card:hover .value{text-shadow:0 0 12px currentColor}
+
+/* ── Tab Bar Slide-In ────────────────────────────────────────────────── */
+.tabs{opacity:0;animation:tabsSlide 0.4s ease 0.5s both}
+@keyframes tabsSlide{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+.tab{position:relative;overflow:hidden}
+.tab::after{content:"";position:absolute;bottom:0;left:50%;width:0;height:2px;background:linear-gradient(90deg,#3b82f6,#8b5cf6);transition:all 0.3s cubic-bezier(0.4,0,0.2,1);transform:translateX(-50%)}
+.tab:hover::after,.tab.active::after{width:80%}
+.tab.active{background:linear-gradient(135deg,rgba(59,130,246,0.15),rgba(139,92,246,0.15));box-shadow:0 0 15px rgba(59,130,246,0.1)}
+
+/* ── Section Entrance ────────────────────────────────────────────────── */
+.section{opacity:0;animation:sectionReveal 0.5s ease 0.6s both}
+@keyframes sectionReveal{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Enhanced Card Hover with Glow ───────────────────────────────────── */
+.stat-card,.key-card,.template-card{position:relative;overflow:hidden}
+.stat-card::before,.key-card::before{content:"";position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.03),transparent);transition:left 0.5s}
+.stat-card:hover::before,.key-card:hover::before{left:100%}
+.stat-card:hover,.key-card:hover{border-color:rgba(59,130,246,0.3);box-shadow:0 8px 32px rgba(59,130,246,0.1),0 0 0 1px rgba(59,130,246,0.1)}
+
+/* ── Button Ripple Effect ────────────────────────────────────────────── */
+.btn{position:relative;overflow:hidden}
+.btn::after{content:"";position:absolute;top:50%;left:50%;width:0;height:0;background:rgba(255,255,255,0.2);border-radius:50%;transform:translate(-50%,-50%);transition:width 0.4s,height 0.4s}
+.btn:active::after{width:200px;height:200px;opacity:0;transition:0s}
+
+/* ── Unified Key Banner Pulse ────────────────────────────────────────── */
+.unified-key-banner{position:relative}
+.unified-key-banner::after{content:"";position:absolute;top:-1px;left:-1px;right:-1px;bottom:-1px;border-radius:13px;background:linear-gradient(135deg,#3b82f6,#8b5cf6,#06b6d4,#3b82f6);background-size:300% 300%;animation:borderGlow 4s ease infinite;opacity:0;transition:opacity 0.3s;z-index:-1}
+.unified-key-banner:hover::after{opacity:0.5}
+@keyframes borderGlow{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+
+/* ── Key Value Copy Animation ────────────────────────────────────────── */
+.key-value{transition:border-color 0.3s,box-shadow 0.3s}
+.key-value:focus-within{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,0.15)}
+.copy-btn{transition:all 0.2s}
+.copy-btn:active{transform:scale(0.95)}
+.copy-btn.copied{background:#22c55e!important}
+
+/* ── Modal Magic ─────────────────────────────────────────────────────── */
+.modal-overlay{backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.modal{animation:modalIn 0.4s cubic-bezier(0.34,1.56,0.64,1)}
+@keyframes modalIn{from{opacity:0;transform:scale(0.9) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-overlay.active{animation:overlayIn 0.3s ease}
+@keyframes overlayIn{from{opacity:0}to{opacity:1}}
+
+/* ── Table Row Hover ─────────────────────────────────────────────────── */
+tr{transition:background 0.2s}
+tr:hover{background:rgba(59,130,246,0.08)!important}
+tr:hover td{color:#e2e8f0}
+
+/* ── Badge Pop ───────────────────────────────────────────────────────── */
+.badge{transition:transform 0.2s,box-shadow 0.2s}
+.badge:hover{transform:scale(1.05);box-shadow:0 2px 8px rgba(0,0,0,0.2)}
+
+/* ── Toast Enhanced ──────────────────────────────────────────────────── */
+.toast{backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);background:rgba(30,41,59,0.95);border:1px solid rgba(255,255,255,0.1)}
+.toast-success{border-left:4px solid #22c55e}
+.toast-error{border-left:4px solid #ef4444}
+
+/* ── Fun Zone Cards Glow ─────────────────────────────────────────────── */
+.fun-grid .section{transition:all 0.3s cubic-bezier(0.4,0,0.2,1)}
+.fun-grid .section:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,0.2);border-color:rgba(139,92,246,0.3)}
+
+/* ── Race Button Glow ────────────────────────────────────────────────── */
+.btn-race{box-shadow:0 0 0 rgba(245,158,11,0)}
+.btn-race:hover{box-shadow:0 0 20px rgba(245,158,11,0.3);transform:translateY(-2px)}
+
+/* ── Rumble VS Pulse ─────────────────────────────────────────────────── */
+.rumble-vs{animation:vsPulse 1.5s ease-in-out infinite}
+@keyframes vsPulse{0%,100%{transform:scale(1);text-shadow:0 0 10px rgba(245,158,11,0.5)}50%{transform:scale(1.1);text-shadow:0 0 20px rgba(245,158,11,0.8)}}
+
+/* ── Rumble Fighter Glow ─────────────────────────────────────────────── */
+.rumble-fighter.active-a{animation:glowBlue 2s ease-in-out infinite}
+.rumble-fighter.active-b{animation:glowRed 2s ease-in-out infinite}
+@keyframes glowBlue{0%,100%{box-shadow:0 0 15px rgba(59,130,246,0.3)}50%{box-shadow:0 0 30px rgba(59,130,246,0.5)}}
+@keyframes glowRed{0%,100%{box-shadow:0 0 15px rgba(239,68,68,0.3)}50%{box-shadow:0 0 30px rgba(239,68,68,0.5)}}
+
+/* ── Rumble Message Slide-In ─────────────────────────────────────────── */
+.rumble-msg{animation:msgSlide 0.3s cubic-bezier(0.16,1,0.3,1) both}
+.rumble-msg.a{animation-name:msgSlideLeft}
+.rumble-msg.b{animation-name:msgSlideRight}
+@keyframes msgSlideLeft{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes msgSlideRight{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+/* ── Input Focus Glow ────────────────────────────────────────────────── */
+.form-group input,.form-group select,.form-group textarea{transition:border-color 0.3s,box-shadow 0.3s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,0.15)}
+
+/* ── Loading Spinner ─────────────────────────────────────────────────── */
+.loading{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Success Checkmark ───────────────────────────────────────────────── */
+@keyframes checkmark{0%{transform:scale(0) rotate(-45deg)}50%{transform:scale(1.2) rotate(-45deg)}100%{transform:scale(1) rotate(-45deg)}}
+
+/* ── Ripple for Click Feedback ───────────────────────────────────────── */
+.ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,0.3);transform:scale(0);animation:rippleAnim 0.6s linear;pointer-events:none}
+@keyframes rippleAnim{to{transform:scale(4);opacity:0}}
+
+/* ── Gradient Border on Focus ────────────────────────────────────────── */
+.key-display:focus-within{background:linear-gradient(#0f172a,#0f172a) padding-box,linear-gradient(135deg,#3b82f6,#8b5cf6) border-box;border:2px solid transparent}
+
+/* ── Stat Number Pop on Update ───────────────────────────────────────── */
+.value.pop{animation:numPop 0.3s cubic-bezier(0.34,1.56,0.64,1)}
+@keyframes numPop{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
+
+/* ── Tab Content Transitions ─────────────────────────────────────────── */
+.tab-panel{animation:panelIn 0.35s cubic-bezier(0.16,1,0.3,1) both}
+@keyframes panelIn{from{opacity:0;transform:translateY(8px) scale(0.99)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+/* ── Footer Fade-In ──────────────────────────────────────────────────── */
+footer{opacity:0;animation:fadeUp 0.4s ease 1s both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Empty State Float ───────────────────────────────────────────────── */
+.empty-state{animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+
+/* ── Copy Success Flash ──────────────────────────────────────────────── */
+@keyframes flash{0%{background:rgba(34,197,94,0.3)}100%{background:transparent}}
+
+/* ── Tournament Bracket Entry ────────────────────────────────────────── */
+.bracket-entry{opacity:0;animation:bracketSlide 0.4s ease both}
+@keyframes bracketSlide{from{opacity:0;transform:translateX(-15px)}to{opacity:1;transform:translateX(0)}}
+
+/* ── Reduced Motion ──────────────────────────────────────────────────── */
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important}}
 </style>
 </head>
 <body>
 <div class="container">
 <header>
-<h1>KeyParty 🎉</h1>
+<h1 class="gradient-text">KeyParty 🎉</h1>
 <div class="header-right">
 <button class="btn btn-race" id="btn-race">Race Providers</button>
 <button class="btn btn-secondary" id="btn-config">Import/Export</button>
@@ -779,7 +988,7 @@ tr:hover{background:rgba(59,130,246,0.05)}
 <div class="form-group"><label>Provider B</label><input type="text" id="roast-p2" placeholder="random"></div>
 </div>
 <button class="btn btn-sm btn-danger" onclick="doProviderRoast()">⚔️ Start Roast</button>
-<div id="roast-result" style="margin-top:10px"></div>
+<div id="provider-roast-result" style="margin-top:10px"></div>
 </div>
 <div class="section">
 <div class="section-header"><h2>🐛 Debug Oracle</h2></div>
@@ -978,7 +1187,7 @@ tr:hover{background:rgba(59,130,246,0.05)}
 </div>
 
 <!-- Setup Wizard Modal -->
-<div class="modal-overlay" id="wizard-modal" style="display:none">
+<div class="modal-overlay" id="wizard-modal">
 <div class="modal" style="max-width:500px">
 <div id="wizard-step-1">
 <h2 style="margin-bottom:16px">🎉 Welcome to KeyParty</h2>
@@ -1231,6 +1440,7 @@ const MODELS = {
 
 let activeTab = 'api-keys';
 let ADMIN_PASS = '';
+const BASE_URL = window.location.origin;
 
 function askPassword() {
   return new Promise((resolve) => {
@@ -1291,8 +1501,44 @@ function toast(msg, type) {
   t.className = 'toast toast-' + type;
   t.textContent = msg;
   document.body.appendChild(t);
-  setTimeout(function() { t.remove(); }, 3000);
+  setTimeout(function() { t.style.animation = 'slideOut 0.3s ease-out forwards'; setTimeout(function() { t.remove(); }, 300); }, 3000);
 }
+
+function animateCounter(el, target) {
+  const duration = 600;
+  const start = parseInt(el.textContent) || 0;
+  const diff = target - start;
+  if (diff === 0) return;
+  el.classList.add('pop');
+  setTimeout(function() { el.classList.remove('pop'); }, 300);
+  const startTime = performance.now();
+  function update(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    el.textContent = Math.round(start + diff * eased);
+    if (progress < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
+
+function addRipple(e) {
+  const btn = e.currentTarget;
+  const circle = document.createElement('span');
+  circle.className = 'ripple';
+  const rect = btn.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height);
+  circle.style.width = circle.style.height = size + 'px';
+  circle.style.left = (e.clientX - rect.left - size / 2) + 'px';
+  circle.style.top = (e.clientY - rect.top - size / 2) + 'px';
+  btn.appendChild(circle);
+  setTimeout(function() { circle.remove(); }, 600);
+}
+
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('.btn');
+  if (btn) addRipple(e);
+});
 
 function setBaseUrl() {
   document.getElementById('base-url').textContent = window.location.origin + '/v1/chat/completions';
@@ -1309,7 +1555,11 @@ async function loadUnifiedKey() {
 function copyUnifiedKey() {
   const key = document.getElementById('unified-key').textContent;
   navigator.clipboard.writeText(key);
+  var btn = document.getElementById('btn-copy-key');
+  btn.classList.add('copied');
+  btn.textContent = 'Copied!';
   toast('Unified key copied!');
+  setTimeout(function() { btn.classList.remove('copied'); btn.textContent = 'Copy'; }, 2000);
 }
 
 async function regenerateKey() {
@@ -1334,16 +1584,16 @@ async function loadStats() {
   try {
     const res = await adminFetch('/admin/stats');
     const stats = await res.json();
-    document.getElementById('stat-total').textContent = stats.total_requests || 0;
-    document.getElementById('stat-errors').textContent = stats.error_requests || 0;
+    animateCounter(document.getElementById('stat-total'), stats.total_requests || 0);
+    animateCounter(document.getElementById('stat-errors'), stats.error_requests || 0);
     var total = stats.total_requests || 0;
     var errors = stats.error_requests || 0;
     document.getElementById('stat-rate').textContent = total > 0 ? ((total - errors) / total * 100).toFixed(1) + '%' : '100%';
     var activeKeys = 0;
     if (stats.provider_stats) stats.provider_stats.forEach(function(p) { activeKeys += p.active_keys; });
-    document.getElementById('stat-keys').textContent = activeKeys;
+    animateCounter(document.getElementById('stat-keys'), activeKeys);
     document.getElementById('stat-cost').textContent = '$' + (stats.total_cost || 0).toFixed(4);
-    document.getElementById('stat-blocked').textContent = stats.blocked_requests || 0;
+    animateCounter(document.getElementById('stat-blocked'), stats.blocked_requests || 0);
     if (stats.recent_errors) renderErrors(stats.recent_errors);
   } catch(e) {}
 }
@@ -2532,7 +2782,7 @@ async function loadHealth() {
       var statusColor = p.error_rate_24h < 5 ? '#22c55e' : p.error_rate_24h < 20 ? '#f59e0b' : '#ef4444';
       html += '<div style="background:#1e293b;border:1px solid #334155;border-radius:10px;padding:16px;border-left:4px solid ' + statusColor + '">';
       html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
-      html += '<h3 style="font-size:14px;text-transform:uppercase">' + p.provider + '</h3>';
+      html += '<h3 style="font-size:14px;text-transform:uppercase"><span class="health-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + statusColor + ';margin-right:8px"></span>' + escHtml(p.provider) + '</h3>';
       html += '<span class="badge ' + (p.uptime_24h >= 99 ? 'badge-green' : p.uptime_24h >= 95 ? 'badge-yellow' : 'badge-red') + '">' + p.uptime_24h.toFixed(1) + '% uptime</span>';
       html += '</div>';
       html += '<div class="responsive-grid-stats">';
@@ -2584,20 +2834,23 @@ async function loadABTests() {
     var html = '';
     (d || []).forEach(function(t) {
       html += '<div style="background:#0f172a;border:1px solid #334155;border-radius:8px;padding:12px;margin-bottom:10px">';
-      html += '<div style="display:flex;justify-content:space-between;margin-bottom:8px"><strong>' + (t.name || 'Untitled') + '</strong><span class="badge ' + (t.status === 'ready' ? 'badge-green' : 'badge-yellow') + '">' + t.status + '</span></div>';
-      html += '<div style="font-size:12px;color:#94a3b8;margin-bottom:8px">Prompt: ' + t.prompt.substring(0, 80) + (t.prompt.length > 80 ? '...' : '') + '</div>';
+      html += '<div style="display:flex;justify-content:space-between;margin-bottom:8px"><strong>' + escHtml(t.name || 'Untitled') + '</strong><span class="badge ' + (t.status === 'ready' ? 'badge-green' : 'badge-yellow') + '">' + escHtml(t.status) + '</span></div>';
+      html += '<div style="font-size:12px;color:#94a3b8;margin-bottom:8px">Prompt: ' + escHtml(t.prompt.substring(0, 80)) + (t.prompt.length > 80 ? '...' : '') + '</div>';
       html += '<div class="responsive-grid-ab">';
-      html += '<div style="background:#1e293b;padding:10px;border-radius:6px"><div style="font-size:11px;color:#3b82f6;margin-bottom:4px;font-weight:600">' + t.provider_a + ' (' + t.latency_a + 'ms) | Votes: ' + t.votes_a + '</div><div style="font-size:12px;color:#e2e8f0;white-space:pre-wrap;max-height:120px;overflow-y:auto">' + (t.reply_a || 'Pending...') + '</div></div>';
-      html += '<div style="background:#1e293b;padding:10px;border-radius:6px"><div style="font-size:11px;color:#ef4444;margin-bottom:4px;font-weight:600">' + t.provider_b + ' (' + t.latency_b + 'ms) | Votes: ' + t.votes_b + '</div><div style="font-size:12px;color:#e2e8f0;white-space:pre-wrap;max-height:120px;overflow-y:auto">' + (t.reply_b || 'Pending...') + '</div></div>';
+      html += '<div style="background:#1e293b;padding:10px;border-radius:6px"><div style="font-size:11px;color:#3b82f6;margin-bottom:4px;font-weight:600">' + escHtml(t.provider_a) + ' (' + t.latency_a + 'ms) | Votes: ' + t.votes_a + '</div><div style="font-size:12px;color:#e2e8f0;white-space:pre-wrap;max-height:120px;overflow-y:auto">' + escHtml(t.reply_a || 'Pending...') + '</div></div>';
+      html += '<div style="background:#1e293b;padding:10px;border-radius:6px"><div style="font-size:11px;color:#ef4444;margin-bottom:4px;font-weight:600">' + escHtml(t.provider_b) + ' (' + t.latency_b + 'ms) | Votes: ' + t.votes_b + '</div><div style="font-size:12px;color:#e2e8f0;white-space:pre-wrap;max-height:120px;overflow-y:auto">' + escHtml(t.reply_b || 'Pending...') + '</div></div>';
       html += '</div>';
       if (t.status === 'ready') {
-        html += '<div style="margin-top:8px;display:flex;gap:8px"><button class="btn btn-sm btn-primary" onclick="voteAB(' + t.id + ',\'a\')" style="background:#3b82f6">Vote A</button><button class="btn btn-sm" onclick="voteAB(' + t.id + ',\'b\')" style="background:#ef4444;color:white">Vote B</button></div>';
+        html += '<div style="margin-top:8px;display:flex;gap:8px"><button class="btn btn-sm btn-primary" data-action="vote-ab" data-id="' + t.id + '" data-winner="a" style="background:#3b82f6">Vote A</button><button class="btn btn-sm" data-action="vote-ab" data-id="' + t.id + '" data-winner="b" style="background:#ef4444;color:white">Vote B</button></div>';
       }
-      if (t.winner) html += '<div style="margin-top:6px;font-size:12px;color:#f59e0b">Winner: ' + t.winner.toUpperCase() + '</div>';
+      if (t.winner) html += '<div style="margin-top:6px;font-size:12px;color:#f59e0b">Winner: ' + escHtml(t.winner.toUpperCase()) + '</div>';
       html += '</div>';
     });
     document.getElementById('ab-results').innerHTML = html || '<div class="empty-state">No A/B tests yet</div>';
     document.getElementById('ab-history').innerHTML = html || '<div class="empty-state">No tests</div>';
+    document.querySelectorAll('[data-action="vote-ab"]').forEach(function(btn) {
+      btn.addEventListener('click', function() { voteAB(parseInt(btn.getAttribute('data-id')), btn.getAttribute('data-winner')); });
+    });
   } catch(e) {}
 }
 async function voteAB(id, winner) {
@@ -2840,7 +3093,7 @@ document.getElementById('btn-gen-curl').addEventListener('click', function() {
 });
 document.getElementById('btn-copy-curl').addEventListener('click', function() {
   navigator.clipboard.writeText(document.getElementById('curl-code').textContent);
-  showToast('Copied!', 'success');
+  toast('Copied!', 'success');
 });
 
 // ── SDK Snippets ──────────────────────────────────────────────────────
@@ -2897,7 +3150,7 @@ document.getElementById('btn-gen-sdk').addEventListener('click', function() {
 });
 document.getElementById('btn-copy-sdk').addEventListener('click', function() {
   navigator.clipboard.writeText(document.getElementById('sdk-code').textContent);
-  showToast('Copied!', 'success');
+  toast('Copied!', 'success');
 });
 
 // ── AI Tournament ──────────────────────────────────────────────────────
@@ -2965,137 +3218,163 @@ document.getElementById('btn-tournament').addEventListener('click', async functi
 // ── NEW FEATURES ──────────────────────────────────────────────────────────
 
 async function doFortune() {
-  const msg = document.getElementById('fortune-msg').value;
-  const res = await fetch(`${BASE_URL}/admin/fortune`, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
-    body: JSON.stringify({message: msg})
-  });
-  const data = await res.json();
-  document.getElementById('fortune-result').innerHTML = `<div class="section" style="margin:0"><p style="font-size:14px;color:#e2e8f0">${data.fortune}</p><p style="font-size:11px;color:#64748b;margin-top:8px">${data.warning || ''}</p></div>`;
+  try {
+    const msg = document.getElementById('fortune-msg').value;
+    const res = await fetch(`${BASE_URL}/admin/fortune`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
+      body: JSON.stringify({message: msg})
+    });
+    const data = await res.json();
+    document.getElementById('fortune-result').innerHTML = `<div class="section" style="margin:0"><p style="font-size:14px;color:#e2e8f0">${escHtml(data.fortune)}</p><p style="font-size:11px;color:#64748b;margin-top:8px">${escHtml(data.warning || '')}</p></div>`;
+  } catch(e) { toast('Failed to get fortune', 'error'); }
 }
 
 async function doProviderRoast() {
-  const p1 = document.getElementById('roast-p1').value;
-  const p2 = document.getElementById('roast-p2').value;
-  document.getElementById('roast-result').innerHTML = '<p style="color:#94a3b8">Loading roast battle...</p>';
-  const res = await fetch(`${BASE_URL}/admin/provider-roast`, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
-    body: JSON.stringify({provider1: p1, provider2: p2})
-  });
-  const data = await res.json();
-  document.getElementById('roast-result').innerHTML = `
-    <div class="section" style="margin:0">
-      <h3 style="color:#ef4444">${data.provider_a} 🔥</h3>
-      <p style="font-size:13px;color:#e2e8f0;margin-bottom:12px">${data.roast_a}</p>
-      <h3 style="color:#3b82f6">${data.provider_b} 🔥</h3>
-      <p style="font-size:13px;color:#e2e8f0;margin-bottom:12px">${data.roast_b}</p>
-      <h3 style="color:#f59e0b">Finale</h3>
-      <p style="font-size:13px;color:#e2e8f0">${data.finale_a}</p>
-      <p style="font-size:11px;color:#64748b;margin-top:8px">Winner: ${data.winner}</p>
-    </div>`;
+  try {
+    const p1 = document.getElementById('roast-p1').value;
+    const p2 = document.getElementById('roast-p2').value;
+    document.getElementById('provider-roast-result').innerHTML = '<p style="color:#94a3b8">Loading roast battle...</p>';
+    const res = await fetch(`${BASE_URL}/admin/provider-roast`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
+      body: JSON.stringify({provider1: p1, provider2: p2})
+    });
+    const data = await res.json();
+    document.getElementById('provider-roast-result').innerHTML = `
+      <div class="section" style="margin:0">
+        <h3 style="color:#ef4444">${escHtml(data.provider_a)} 🔥</h3>
+        <p style="font-size:13px;color:#e2e8f0;margin-bottom:12px">${escHtml(data.roast_a)}</p>
+        <h3 style="color:#3b82f6">${escHtml(data.provider_b)} 🔥</h3>
+        <p style="font-size:13px;color:#e2e8f0;margin-bottom:12px">${escHtml(data.roast_b)}</p>
+        <h3 style="color:#f59e0b">Finale</h3>
+        <p style="font-size:13px;color:#e2e8f0">${escHtml(data.finale_a)}</p>
+        <p style="font-size:11px;color:#64748b;margin-top:8px">Winner: ${escHtml(data.winner)}</p>
+      </div>`;
+  } catch(e) { toast('Failed to get roast', 'error'); }
 }
 
 async function doDebugOracle() {
-  const error = document.getElementById('debug-error').value;
-  document.getElementById('debug-result').innerHTML = '<p style="color:#94a3b8">Consulting the oracle...</p>';
-  const res = await fetch(`${BASE_URL}/admin/debug-oracle`, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
-    body: JSON.stringify({error: error})
-  });
-  const data = await res.json();
-  document.getElementById('debug-result').innerHTML = `<div class="section" style="margin:0"><pre style="font-size:13px;color:#e2e8f0;white-space:pre-wrap">${data.oracle}</pre><p style="font-size:11px;color:#64748b;margin-top:8px">Provider: ${data.provider} | Latency: ${data.latency_ms}ms</p></div>`;
+  try {
+    const error = document.getElementById('debug-error').value;
+    document.getElementById('debug-result').innerHTML = '<p style="color:#94a3b8">Consulting the oracle...</p>';
+    const res = await fetch(`${BASE_URL}/admin/debug-oracle`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
+      body: JSON.stringify({error: error})
+    });
+    const data = await res.json();
+    document.getElementById('debug-result').innerHTML = `<div class="section" style="margin:0"><pre style="font-size:13px;color:#e2e8f0;white-space:pre-wrap">${escHtml(data.oracle)}</pre><p style="font-size:11px;color:#64748b;margin-top:8px">Provider: ${escHtml(data.provider)} | Latency: ${data.latency_ms}ms</p></div>`;
+  } catch(e) { toast('Failed to consult oracle', 'error'); }
 }
 
 async function doCommitMsg() {
-  const diff = document.getElementById('commit-diff').value;
-  const style = document.getElementById('commit-style').value;
-  document.getElementById('commit-result').innerHTML = '<p style="color:#94a3b8">Generating commit message...</p>';
-  const res = await fetch(`${BASE_URL}/admin/commit-msg`, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
-    body: JSON.stringify({diff: diff, style: style})
-  });
-  const data = await res.json();
-  document.getElementById('commit-result').innerHTML = `<div class="section" style="margin:0"><pre style="font-size:13px;color:#10b981;background:#0f172a;padding:12px;border-radius:6px">${data.commit_message}</pre><p style="font-size:11px;color:#64748b;margin-top:8px">Style: ${data.style} | Provider: ${data.provider}</p></div>`;
+  try {
+    const diff = document.getElementById('commit-diff').value;
+    const style = document.getElementById('commit-style').value;
+    document.getElementById('commit-result').innerHTML = '<p style="color:#94a3b8">Generating commit message...</p>';
+    const res = await fetch(`${BASE_URL}/admin/commit-msg`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
+      body: JSON.stringify({diff: diff, style: style})
+    });
+    const data = await res.json();
+    document.getElementById('commit-result').innerHTML = `<div class="section" style="margin:0"><pre style="font-size:13px;color:#10b981;background:#0f172a;padding:12px;border-radius:6px">${escHtml(data.commit_message)}</pre><p style="font-size:11px;color:#64748b;margin-top:8px">Style: ${escHtml(data.style)} | Provider: ${escHtml(data.provider)}</p></div>`;
+  } catch(e) { toast('Failed to generate commit message', 'error'); }
 }
 
 async function doSmartRoute() {
-  const msg = document.getElementById('smart-msg').value;
-  const priority = document.getElementById('smart-priority').value;
-  const res = await fetch(`${BASE_URL}/admin/smart-route`, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
-    body: JSON.stringify({message: msg, priority: priority})
-  });
-  const data = await res.json();
-  document.getElementById('smart-result').innerHTML = `
-    <div class="section" style="margin:0">
-      <p style="font-size:13px;color:#10b981"><strong>Recommended:</strong> ${data.recommended_provider}/${data.recommended_model}</p>
-      <p style="font-size:12px;color:#94a3b8">${data.reasoning}</p>
-      <p style="font-size:11px;color:#64748b;margin-top:4px">Length: ${data.message_length} chars | Words: ${data.word_count}</p>
-    </div>`;
+  try {
+    const msg = document.getElementById('smart-msg').value;
+    const priority = document.getElementById('smart-priority').value;
+    const res = await fetch(`${BASE_URL}/admin/smart-route`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
+      body: JSON.stringify({message: msg, priority: priority})
+    });
+    const data = await res.json();
+    document.getElementById('smart-result').innerHTML = `
+      <div class="section" style="margin:0">
+        <p style="font-size:13px;color:#10b981"><strong>Recommended:</strong> ${escHtml(data.recommended_provider)}/${escHtml(data.recommended_model)}</p>
+        <p style="font-size:12px;color:#94a3b8">${escHtml(data.reasoning)}</p>
+        <p style="font-size:11px;color:#64748b;margin-top:4px">Length: ${data.message_length} chars | Words: ${data.word_count}</p>
+      </div>`;
+  } catch(e) { toast('Failed to get recommendation', 'error'); }
 }
 
 async function addCostLimit() {
-  const name = document.getElementById('cl-name').value;
-  const period = document.getElementById('cl-period').value;
-  const cost = parseFloat(document.getElementById('cl-cost').value);
-  const provider = document.getElementById('cl-provider').value;
-  await fetch(`${BASE_URL}/admin/cost-limiter`, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
-    body: JSON.stringify({name, period, max_cost: cost, provider})
-  });
-  loadCostLimits();
+  try {
+    const name = document.getElementById('cl-name').value;
+    const period = document.getElementById('cl-period').value;
+    const cost = parseFloat(document.getElementById('cl-cost').value);
+    const provider = document.getElementById('cl-provider').value;
+    await fetch(`${BASE_URL}/admin/cost-limiter`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
+      body: JSON.stringify({name, period, max_cost: cost, provider})
+    });
+    loadCostLimits();
+  } catch(e) { toast('Failed to add cost limit', 'error'); }
 }
 
 async function loadCostLimits() {
-  const res = await fetch(`${BASE_URL}/admin/cost-limiter`, {headers: {'Authorization': 'Bearer ' + ADMIN_PASS}});
-  const data = await res.json();
-  const limits = data.limits || [];
-  document.getElementById('cost-limits-list').innerHTML = limits.length ? limits.map(l => `
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px;border-bottom:1px solid #1e293b">
-      <span style="font-size:12px;color:#e2e8f0">${l.name} (${l.period}) - $${l.current_cost.toFixed(2)}/$${l.max_cost.toFixed(2)} ${l.provider ? '- ' + l.provider : ''}</span>
-      <button class="btn btn-sm btn-danger" onclick="deleteCostLimit(${l.id})">×</button>
-    </div>`).join('') : '<p style="font-size:12px;color:#64748b">No cost limits set</p>';
+  try {
+    const res = await fetch(`${BASE_URL}/admin/cost-limiter`, {headers: {'Authorization': 'Bearer ' + ADMIN_PASS}});
+    const data = await res.json();
+    const limits = data.limits || [];
+    document.getElementById('cost-limits-list').innerHTML = limits.length ? limits.map(l => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px;border-bottom:1px solid #1e293b">
+        <span style="font-size:12px;color:#e2e8f0">${escHtml(l.name)} (${escHtml(l.period)}) - $${l.current_cost.toFixed(2)}/$${l.max_cost.toFixed(2)} ${l.provider ? '- ' + escHtml(l.provider) : ''}</span>
+        <button class="btn btn-sm btn-danger" data-action="delete-cost-limit" data-id="${l.id}">×</button>
+      </div>`).join('') : '<p style="font-size:12px;color:#64748b">No cost limits set</p>';
+    document.querySelectorAll('[data-action="delete-cost-limit"]').forEach(function(btn) {
+      btn.addEventListener('click', function() { deleteCostLimit(parseInt(btn.getAttribute('data-id'))); });
+    });
+  } catch(e) { toast('Failed to load cost limits', 'error'); }
 }
 
 async function deleteCostLimit(id) {
-  await fetch(`${BASE_URL}/admin/cost-limiter`, {
-    method: 'DELETE',
-    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
-    body: JSON.stringify({id})
-  });
-  loadCostLimits();
+  try {
+    await fetch(`${BASE_URL}/admin/cost-limiter`, {
+      method: 'DELETE',
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
+      body: JSON.stringify({id})
+    });
+    loadCostLimits();
+  } catch(e) { toast('Failed to delete cost limit', 'error'); }
 }
 
 async function loadUptime() {
-  const days = document.getElementById('uptime-days').value;
-  const res = await fetch(`${BASE_URL}/admin/uptime?days=${days}`, {headers: {'Authorization': 'Bearer ' + ADMIN_PASS}});
-  const data = await res.json();
-  const providers = data.providers || [];
-  document.getElementById('uptime-results').innerHTML = providers.length ? providers.map(p => `
-    <div style="padding:8px;border-bottom:1px solid #1e293b">
-      <div style="display:flex;justify-content:space-between">
-        <span style="font-size:13px;color:#e2e8f0;font-weight:600">${p.provider}</span>
-        <span style="font-size:13px;color:${p.uptime_percent >= 99 ? '#10b981' : p.uptime_percent >= 95 ? '#f59e0b' : '#ef4444'}">${p.uptime_percent}%</span>
-      </div>
-      <div style="font-size:11px;color:#64748b">Requests: ${p.total_requests} | Failed: ${p.failed_requests} | Avg Latency: ${Math.round(p.avg_latency_ms)}ms</div>
-    </div>`).join('') : '<p style="font-size:12px;color:#64748b">No uptime data yet</p>';
+  try {
+    const days = document.getElementById('uptime-days').value;
+    const res = await fetch(`${BASE_URL}/admin/uptime?days=${days}`, {headers: {'Authorization': 'Bearer ' + ADMIN_PASS}});
+    const data = await res.json();
+    const providers = data.providers || [];
+    document.getElementById('uptime-results').innerHTML = providers.length ? providers.map(p => `
+      <div style="padding:8px;border-bottom:1px solid #1e293b">
+        <div style="display:flex;justify-content:space-between">
+          <span style="font-size:13px;color:#e2e8f0;font-weight:600">${escHtml(p.provider)}</span>
+          <span style="font-size:13px;color:${p.uptime_percent >= 99 ? '#10b981' : p.uptime_percent >= 95 ? '#f59e0b' : '#ef4444'}">${p.uptime_percent}%</span>
+        </div>
+        <div style="font-size:11px;color:#64748b">Requests: ${p.total_requests} | Failed: ${p.failed_requests} | Avg Latency: ${Math.round(p.avg_latency_ms)}ms</div>
+      </div>`).join('') : '<p style="font-size:12px;color:#64748b">No uptime data yet</p>';
+  } catch(e) { toast('Failed to load uptime', 'error'); }
 }
 
 async function loadReplayQueue() {
-  const res = await fetch(`${BASE_URL}/admin/replay-queue`, {headers: {'Authorization': 'Bearer ' + ADMIN_PASS}});
-  const data = await res.json();
-  const failed = data.failed_requests || [];
-  document.getElementById('replay-list').innerHTML = failed.length ? failed.slice(0, 20).map(l => `
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px;border-bottom:1px solid #1e293b;font-size:12px">
-      <span style="color:#e2e8f0">${l.provider}/${l.model} - ${l.status_code}</span>
-      <button class="btn btn-sm btn-primary" onclick="replayRequest('${l.provider}','${l.model}')">Replay</button>
-    </div>`).join('') : '<p style="font-size:12px;color:#64748b">No failed requests</p>';
+  try {
+    const res = await fetch(`${BASE_URL}/admin/replay-queue`, {headers: {'Authorization': 'Bearer ' + ADMIN_PASS}});
+    const data = await res.json();
+    const failed = data.failed_requests || [];
+    document.getElementById('replay-list').innerHTML = failed.length ? failed.slice(0, 20).map(l => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px;border-bottom:1px solid #1e293b;font-size:12px">
+        <span style="color:#e2e8f0">${escHtml(l.provider)}/${escHtml(l.model)} - ${l.status_code}</span>
+        <button class="btn btn-sm btn-primary btn-replay" data-provider="${escHtml(l.provider)}" data-model="${escHtml(l.model)}">Replay</button>
+      </div>`).join('') : '<p style="font-size:12px;color:#64748b">No failed requests</p>';
+    document.querySelectorAll('.btn-replay').forEach(function(btn) {
+      btn.addEventListener('click', function() { replayRequest(btn.getAttribute('data-provider'), btn.getAttribute('data-model')); });
+    });
+  } catch(e) { toast('Failed to load replay queue', 'error'); }
 }
 
 async function replayRequest(provider, model) {
@@ -3103,38 +3382,47 @@ async function replayRequest(provider, model) {
 }
 
 async function addCustomModel() {
-  const name = document.getElementById('cm-name').value;
-  const provider = document.getElementById('cm-provider').value;
-  const display = document.getElementById('cm-display').value;
-  const context = parseInt(document.getElementById('cm-context').value);
-  const input = parseFloat(document.getElementById('cm-input').value);
-  const output = parseFloat(document.getElementById('cm-output').value);
-  await fetch(`${BASE_URL}/admin/custom-models`, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
-    body: JSON.stringify({name, provider, display_name: display, context_size: context, input_price: input, output_price: output})
-  });
-  loadCustomModels();
+  try {
+    const name = document.getElementById('cm-name').value;
+    const provider = document.getElementById('cm-provider').value;
+    const display = document.getElementById('cm-display').value;
+    const context = parseInt(document.getElementById('cm-context').value);
+    const input = parseFloat(document.getElementById('cm-input').value);
+    const output = parseFloat(document.getElementById('cm-output').value);
+    await fetch(`${BASE_URL}/admin/custom-models`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
+      body: JSON.stringify({name, provider, display_name: display, context_size: context, input_price: input, output_price: output})
+    });
+    loadCustomModels();
+  } catch(e) { toast('Failed to add custom model', 'error'); }
 }
 
 async function loadCustomModels() {
-  const res = await fetch(`${BASE_URL}/admin/custom-models`, {headers: {'Authorization': 'Bearer ' + ADMIN_PASS}});
-  const data = await res.json();
-  const models = data.models || [];
-  document.getElementById('custom-models-list').innerHTML = models.length ? models.map(m => `
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px;border-bottom:1px solid #1e293b">
-      <span style="font-size:12px;color:#e2e8f0">${m.display_name || m.name} (${m.provider}) - ${m.context_size} ctx</span>
-      <button class="btn btn-sm btn-danger" onclick="deleteCustomModel(${m.id})">×</button>
-    </div>`).join('') : '<p style="font-size:12px;color:#64748b">No custom models</p>';
+  try {
+    const res = await fetch(`${BASE_URL}/admin/custom-models`, {headers: {'Authorization': 'Bearer ' + ADMIN_PASS}});
+    const data = await res.json();
+    const models = data.models || [];
+    document.getElementById('custom-models-list').innerHTML = models.length ? models.map(m => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px;border-bottom:1px solid #1e293b">
+        <span style="font-size:12px;color:#e2e8f0">${escHtml(m.display_name || m.name)} (${escHtml(m.provider)}) - ${m.context_size} ctx</span>
+        <button class="btn btn-sm btn-danger" data-action="delete-custom-model" data-id="${m.id}">×</button>
+      </div>`).join('') : '<p style="font-size:12px;color:#64748b">No custom models</p>';
+    document.querySelectorAll('[data-action="delete-custom-model"]').forEach(function(btn) {
+      btn.addEventListener('click', function() { deleteCustomModel(parseInt(btn.getAttribute('data-id'))); });
+    });
+  } catch(e) { toast('Failed to load custom models', 'error'); }
 }
 
 async function deleteCustomModel(id) {
-  await fetch(`${BASE_URL}/admin/custom-models`, {
-    method: 'DELETE',
-    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
-    body: JSON.stringify({id})
-  });
-  loadCustomModels();
+  try {
+    await fetch(`${BASE_URL}/admin/custom-models`, {
+      method: 'DELETE',
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
+      body: JSON.stringify({id})
+    });
+    loadCustomModels();
+  } catch(e) { toast('Failed to delete custom model', 'error'); }
 }
 
 // ── SETUP WIZARD ──────────────────────────────────────────────────────────
@@ -3182,33 +3470,36 @@ async function wizardAddKey() {
   
   status.innerHTML = '<span style="color:#94a3b8">Adding key...</span>';
   
-  const res = await fetch(`${BASE_URL}/admin/keys`, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
-    body: JSON.stringify({name: name || provider + '-key', provider, key, model})
-  });
-  const data = await res.json();
-  
-  if (data.id) {
-    status.innerHTML = '<span style="color:#10b981">✓ Key added! Testing...</span>';
-    // Test the key
-    const testRes = await fetch(`${BASE_URL}/admin/test-key`, {
+  try {
+    const res = await fetch(`${BASE_URL}/admin/keys`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
-      body: JSON.stringify({provider, key, model})
+      body: JSON.stringify({name: name || provider + '-key', provider, key, model})
     });
-    const testData = await testRes.json();
-    if (testData.success) {
-      status.innerHTML = '<span style="color:#10b981">✓ Key added and verified!</span>';
-      loadKeys();
-      loadStats();
-      setTimeout(() => wizardNext(3), 1000);
+    const data = await res.json();
+    
+    if (data.id) {
+      status.innerHTML = '<span style="color:#10b981">✓ Key added! Testing...</span>';
+      const testRes = await fetch(`${BASE_URL}/admin/test-key`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
+        body: JSON.stringify({provider, key, model})
+      });
+      const testData = await testRes.json();
+      if (testData.success) {
+        status.innerHTML = '<span style="color:#10b981">✓ Key added and verified!</span>';
+        loadKeys();
+        loadStats();
+        setTimeout(() => wizardNext(3), 1000);
+      } else {
+        status.innerHTML = '<span style="color:#f59e0b">✓ Key added (test failed: ' + escHtml(testData.error || 'unknown') + ')</span>';
+        setTimeout(() => wizardNext(3), 2000);
+      }
     } else {
-      status.innerHTML = '<span style="color:#f59e0b">✓ Key added (test failed: ' + (testData.error || 'unknown') + ')</span>';
-      setTimeout(() => wizardNext(3), 2000);
+      status.innerHTML = '<span style="color:#ef4444">Failed to add key: ' + escHtml(data.error || 'unknown') + '</span>';
     }
-  } else {
-    status.innerHTML = '<span style="color:#ef4444">Failed to add key: ' + (data.error || 'unknown') + '</span>';
+  } catch(e) {
+    status.innerHTML = '<span style="color:#ef4444">Error: ' + escHtml(e.message) + '</span>';
   }
 }
 
@@ -3225,7 +3516,6 @@ function showWizard() {
 // Check if wizard should show
 function checkWizard() {
   if (localStorage.getItem('keyparty-wizard-done') === '1') return;
-  // Check if any keys exist
   fetch(`${BASE_URL}/admin/stats`, {headers: {'Authorization': 'Bearer ' + ADMIN_PASS}})
     .then(r => r.json())
     .then(data => {

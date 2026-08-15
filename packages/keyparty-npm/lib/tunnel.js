@@ -1,6 +1,6 @@
 const { spawn } = require('child_process');
 const fs = require('fs');
-const { c, colorize, spinner, icon } = require('./tui');
+const { spinner } = require('./tui');
 const { getCloudflaredPath } = require('./platform');
 
 // ── Start Cloudflared Tunnel ────────────────────────────────────────────
@@ -26,9 +26,10 @@ function startTunnel(port = 8080) {
       }
     }, 30000);
 
+    let buffer = '';
     proc.stdout.on('data', (data) => {
-      const output = data.toString();
-      const match = output.match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com/);
+      buffer += data.toString();
+      const match = buffer.match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com/);
       if (match && !resolved) {
         resolved = true;
         clearTimeout(timeout);
@@ -38,9 +39,10 @@ function startTunnel(port = 8080) {
       }
     });
 
+    let stderrBuffer = '';
     proc.stderr.on('data', (data) => {
-      const output = data.toString();
-      const match = output.match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com/);
+      stderrBuffer += data.toString();
+      const match = stderrBuffer.match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com/);
       if (match && !resolved) {
         resolved = true;
         clearTimeout(timeout);
@@ -70,7 +72,7 @@ function startTunnel(port = 8080) {
 
 // ── Stop Tunnel ─────────────────────────────────────────────────────────
 function stopTunnel(proc) {
-  if (proc && !proc.killed) {
+  if (proc && !proc.killed && proc.exitCode === null) {
     proc.kill('SIGTERM');
   }
 }
