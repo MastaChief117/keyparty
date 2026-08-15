@@ -140,23 +140,23 @@ function showSummary(port, password, tunnel) {
 
   const lines = [
     '',
-    `  ${colorize(c.bold + c.green, '🎉 KeyParty is running!')}`,
+    `  ${colorize(c.bold + c.green, 'KeyParty is running!')}`,
     '',
-    `  ${icon.globe} ${colorize(c.bold + c.white, 'Dashboard:')}  http://localhost:${port}`,
-    `  ${icon.key}  ${colorize(c.bold + c.white, 'Proxy:')}      http://localhost:${port}/v1/chat/completions`,
-    `  ${icon.dot} ${colorize(c.bold + c.white, 'Health:')}     http://localhost:${port}/health`,
+    `  Dashboard:  http://localhost:${port}`,
+    `  Proxy:      http://localhost:${port}/v1/chat/completions`,
+    `  Health:     http://localhost:${port}/health`,
   ];
 
   if (tunnel) {
     lines.push('');
-    lines.push(`  ${colorize(c.bold + c.yellow, '🌐 TUNNEL ACTIVE')}`);
-    lines.push(`  ${icon.globe} ${colorize(c.bold + c.white, 'Public:')}     ${colorize(c.green, tunnel.url)}`);
-    lines.push(`  ${icon.key}  ${colorize(c.bold + c.white, 'Proxy:')}      ${colorize(c.cyan, tunnel.url + '/v1/chat/completions')}`);
+    lines.push(`  ${colorize(c.bold + c.yellow, 'TUNNEL ACTIVE')}`);
+    lines.push(`  Public:     ${colorize(c.green, tunnel.url)}`);
+    lines.push(`  Proxy:      ${colorize(c.cyan, tunnel.url + '/v1/chat/completions')}`);
   }
 
   if (password) {
     lines.push('');
-    lines.push(`  ${icon.lock} ${colorize(c.dim, 'Admin auth: enabled')}`);
+    lines.push(`  Admin auth: enabled`);
   }
 
   lines.push('');
