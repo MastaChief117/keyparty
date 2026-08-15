@@ -95,12 +95,12 @@ function visibleWidth(str) {
 function banner() {
   const lines = [
     '',
-    colorize(c.bold + c.magenta, '  ██╗  ██╗██╗████████╗██████╗  ██████╗ ███████╗'),
-    colorize(c.bold + c.magenta, '  ██║ ██╔╝██║╚══██╔══╝██╔══██╗██╔═══██╗██╔════╝'),
-    colorize(c.bold + c.cyan,   '  █████╔╝ ██║   ██║   ██████╔╝██║   ██║███████╗'),
-    colorize(c.bold + c.cyan,   '  ██╔═██╗ ██║   ██║   ██╔══██╗██║   ██║╚════██║'),
-    colorize(c.bold + c.blue,   '  ██║  ██╗██║   ██║   ██████╔╝╚██████╔╝███████║'),
-    colorize(c.bold + c.blue,   '  ╚═╝  ╚═╝╚═╝   ╚═╝   ╚═════╝  ╚═════╝ ╚══════╝'),
+    colorize(c.bold + c.magenta, '  ██╗  ██╗███████╗██╗   ██╗██████╗  █████╗ ██████╗ ████████╗██╗   ██╗'),
+    colorize(c.bold + c.magenta, '  ██║ ██╔╝██╔════╝╚██╗ ██╔╝██╔══██╗██╔══██╗██╔══██╗╚══██╔══╝╚██╗ ██╔╝'),
+    colorize(c.bold + c.cyan,   '  █████╔╝ █████╗   ╚████╔╝ ██████╔╝███████║██████╔╝   ██║    ╚████╔╝ '),
+    colorize(c.bold + c.cyan,   '  ██╔═██╗ ██╔══╝    ╚██╔╝  ██╔═══╝ ██╔══██║██╔══██╗   ██║     ╚██╔╝  '),
+    colorize(c.bold + c.blue,   '  ██║  ██╗███████╗   ██║   ██║     ██║  ██║██║  ██║   ██║      ██║   '),
+    colorize(c.bold + c.blue,   '  ╚═╝  ╚═╝╚══════╝   ╚═╝   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝      ╚═╝   '),
     '',
     colorize(c.dim + c.white,  '       One endpoint. Ten providers. Zero budget.'),
     '',
