@@ -17,12 +17,70 @@ import (
 
 var thinkingTagRe = regexp.MustCompile(`(?s)<thinking>.*?</thinking>|<think>.*?</think>`)
 var thinkMarkerRe = regexp.MustCompile(`(?s)\*\*Thinking:\*\*.*?(?:\*\*Answer:\*\*|\*\*Response:\*\*)`)
+var reasoningRe = regexp.MustCompile(`(?s)^((?:We need to|The task is|Let's|Must be|Ensure|We are given|Write a|You need to|The user wants|Following the instruction|Output exactly|Respond with|Here's|Draft:|Provide a|Count approximate|Let's count|We should|I need to|The instruction says|We must|Check spacing|Probably|Simple|We are |We'll|Make sure|Interpret|The user says|We have to|One possible|First, |Second, |Third, ).*\n\n?)`)
 
 func stripThinking(s string) string {
 	s = thinkingTagRe.ReplaceAllString(s, "")
 	s = thinkMarkerRe.ReplaceAllString(s, "")
+	s = reasoningRe.ReplaceAllString(s, "")
 	s = strings.TrimSpace(s)
 	return s
+}
+
+func (p *Proxy) callProviderWithFallback(enabled []store.APIKey, messages []map[string]string, maxTokens int) (string, string, error) {
+	rand.Shuffle(len(enabled), func(i, j int) { enabled[i], enabled[j] = enabled[j], enabled[i] })
+	for _, k := range enabled {
+		provDef, ok := provider.GetByName(k.Provider)
+		if !ok {
+			continue
+		}
+		baseURL := provDef.BaseURL
+		if !strings.HasSuffix(baseURL, "/") {
+			baseURL += "/"
+		}
+		model := k.Model
+		if model == "" {
+			model = getDefaultModel(k.Provider)
+		}
+		body := map[string]interface{}{
+			"model":       model,
+			"messages":    messages,
+			"max_tokens":  maxTokens,
+			"temperature": 0.9,
+		}
+		bodyBytes, _ := json.Marshal(body)
+		proxyReq, _ := http.NewRequest("POST", baseURL+"chat/completions", bytes.NewReader(bodyBytes))
+		proxyReq.Header.Set("Content-Type", "application/json")
+		proxyReq.Header.Set("Authorization", "Bearer "+k.Key)
+		if k.Provider == "anthropic" {
+			proxyReq.Header.Set("x-api-key", k.Key)
+			proxyReq.Header.Set("anthropic-version", "2023-06-01")
+		}
+		resp, err := p.client.Do(proxyReq)
+		if err != nil {
+			continue
+		}
+		respBody, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if resp.StatusCode >= 400 {
+			continue
+		}
+		var chatResp struct {
+			Choices []struct {
+				Message struct {
+					Content string `json:"content"`
+				} `json:"message"`
+			} `json:"choices"`
+		}
+		json.Unmarshal(respBody, &chatResp)
+		if len(chatResp.Choices) > 0 && chatResp.Choices[0].Message.Content != "" {
+			reply := stripThinking(chatResp.Choices[0].Message.Content)
+			if reply != "" {
+				return reply, k.Provider, nil
+			}
+		}
+	}
+	return "", "", fmt.Errorf("all providers failed")
 }
 
 // ── MODEL ROULETTE ─────────────────────────────────────────────────────────
@@ -68,69 +126,20 @@ func (p *Proxy) HandleRoulette(w http.ResponseWriter, r *http.Request) {
 		model = getDefaultModel(chosen.Provider)
 	}
 
-	provDef, ok := provider.GetByName(chosen.Provider)
-	if !ok {
-		http.Error(w, `{"error":"Unknown provider"}`, 500)
-		return
-	}
-	baseURL := provDef.BaseURL
-	if !strings.HasSuffix(baseURL, "/") {
-		baseURL += "/"
-	}
-	endpoint := baseURL + "chat/completions"
-
-	body := map[string]interface{}{
-		"model":      model,
-		"messages":   []map[string]string{{"role": "user", "content": reqBody.Message}},
-		"max_tokens": 300,
-		"temperature": 0.9,
-	}
-	bodyBytes, _ := json.Marshal(body)
-
+	messages := []map[string]string{{"role": "user", "content": reqBody.Message}}
 	start := time.Now()
-	proxyReq, _ := http.NewRequest("POST", endpoint, bytes.NewReader(bodyBytes))
-	proxyReq.Header.Set("Content-Type", "application/json")
-	proxyReq.Header.Set("Authorization", "Bearer "+chosen.Key)
-	if chosen.Provider == "anthropic" {
-		proxyReq.Header.Set("x-api-key", chosen.Key)
-		proxyReq.Header.Set("anthropic-version", "2023-06-01")
-	}
-
-	resp, err := p.client.Do(proxyReq)
+	reply, provider, err := p.callProviderWithFallback(enabled, messages, 300)
 	latency := time.Since(start).Milliseconds()
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(500)
+		w.WriteHeader(502)
 		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
-	}
-	defer resp.Body.Close()
-
-	respBody, _ := io.ReadAll(resp.Body)
-	if resp.StatusCode >= 400 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(502)
-		json.NewEncoder(w).Encode(map[string]string{"error": fmt.Sprintf("HTTP %d", resp.StatusCode)})
-		return
-	}
-
-	var chatResp struct {
-		Choices []struct {
-			Message struct {
-				Content string `json:"content"`
-			} `json:"message"`
-		} `json:"choices"`
-	}
-	json.Unmarshal(respBody, &chatResp)
-
-	reply := ""
-	if len(chatResp.Choices) > 0 {
-		reply = stripThinking(chatResp.Choices[0].Message.Content)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"provider":   chosen.Provider,
+		"provider":   provider,
 		"model":      model,
 		"reply":      reply,
 		"latency_ms": latency,
@@ -176,63 +185,27 @@ func (p *Proxy) HandleRoastLogs(w http.ResponseWriter, r *http.Request) {
 	}
 	chosen := enabled[rand.Intn(len(enabled))]
 
-	provDef, ok := provider.GetByName(chosen.Provider)
-	if !ok {
-		http.Error(w, `{"error":"Unknown provider"}`, 500)
-		return
-	}
-	baseURL := provDef.BaseURL
-	if !strings.HasSuffix(baseURL, "/") {
-		baseURL += "/"
+	messages := []map[string]string{
+		{"role": "system", "content": "You are a savage AI. Roast this user's API usage logs. Be funny and brutal. Max 200 words. Do NOT show reasoning or steps — output ONLY the final roast."},
+		{"role": "user", "content": summary.String()},
 	}
 
-	body := map[string]interface{}{
-		"model":      getDefaultModel(chosen.Provider),
-		"messages": []map[string]string{
-			{"role": "system", "content": "You are a savage AI. Roast this user's API usage logs. Be funny and brutal. Max 200 words. Do NOT show reasoning or steps — output ONLY the final roast."},
-			{"role": "user", "content": summary.String()},
-		},
-		"max_tokens": 300,
-		"temperature": 0.9,
-	}
-	bodyBytes, _ := json.Marshal(body)
-
-	proxyReq, _ := http.NewRequest("POST", baseURL+"chat/completions", bytes.NewReader(bodyBytes))
-	proxyReq.Header.Set("Content-Type", "application/json")
-	proxyReq.Header.Set("Authorization", "Bearer "+chosen.Key)
-	if chosen.Provider == "anthropic" {
-		proxyReq.Header.Set("x-api-key", chosen.Key)
-		proxyReq.Header.Set("anthropic-version", "2023-06-01")
-	}
-
-	resp, err := p.client.Do(proxyReq)
+	start := time.Now()
+	reply, provider, err := p.callProviderWithFallback(enabled, messages, 200)
+	latency := time.Since(start).Milliseconds()
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(500)
+		w.WriteHeader(502)
 		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
-	defer resp.Body.Close()
-
-	respBody, _ := io.ReadAll(resp.Body)
-	var chatResp struct {
-		Choices []struct {
-			Message struct {
-				Content string `json:"content"`
-			} `json:"message"`
-		} `json:"choices"`
-	}
-	json.Unmarshal(respBody, &chatResp)
-
-	reply := ""
-	if len(chatResp.Choices) > 0 {
-		reply = stripThinking(chatResp.Choices[0].Message.Content)
-	}
+	_ = chosen
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"roast":   reply,
-		"provider": chosen.Provider,
+		"roast":     reply,
+		"provider":  provider,
+		"latency_ms": latency,
 	})
 }
 
@@ -260,21 +233,20 @@ func (p *Proxy) HandleTherapist(w http.ResponseWriter, r *http.Request) {
 	var chosen store.APIKey
 	var provName string
 
+	var enabled []store.APIKey
 	if reqBody.Provider != "" {
 		keys, err := p.store.GetKeysByProvider(reqBody.Provider)
 		if err != nil || len(keys) == 0 {
 			http.Error(w, `{"error":"Provider not found"}`, 400)
 			return
 		}
-		chosen = keys[0]
-		provName = reqBody.Provider
+		enabled = keys
 	} else {
 		keys, err := p.store.GetKeys()
 		if err != nil || len(keys) == 0 {
 			http.Error(w, `{"error":"No keys"}`, 500)
 			return
 		}
-		var enabled []store.APIKey
 		for _, k := range keys {
 			if k.Enabled && k.Provider != "custom" {
 				enabled = append(enabled, k)
@@ -284,69 +256,31 @@ func (p *Proxy) HandleTherapist(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, `{"error":"No enabled keys"}`, 500)
 			return
 		}
-		chosen = enabled[rand.Intn(len(enabled))]
-		provName = chosen.Provider
 	}
 
-	provDef, ok := provider.GetByName(provName)
-	if !ok {
-		http.Error(w, `{"error":"Unknown provider"}`, 500)
-		return
-	}
-	baseURL := provDef.BaseURL
-	if !strings.HasSuffix(baseURL, "/") {
-		baseURL += "/"
+	messages := []map[string]string{
+		{"role": "system", "content": "You are a wise, calming AI therapist. Give thoughtful, empathetic but slightly sarcastic advice. Keep it under 150 words. Do NOT show reasoning or steps — output ONLY the final advice."},
+		{"role": "user", "content": reqBody.Message},
 	}
 
-	model := getDefaultModel(provName)
-	body := map[string]interface{}{
-		"model": model,
-		"messages": []map[string]string{
-			{"role": "system", "content": "You are a wise, calming AI therapist. Give thoughtful, empathetic but slightly sarcastic advice. Keep it under 150 words. Do NOT show reasoning or steps — output ONLY the final advice."},
-			{"role": "user", "content": reqBody.Message},
-		},
-		"max_tokens": 300,
-		"temperature": 0.8,
-	}
-	bodyBytes, _ := json.Marshal(body)
-
-	proxyReq, _ := http.NewRequest("POST", baseURL+"chat/completions", bytes.NewReader(bodyBytes))
-	proxyReq.Header.Set("Content-Type", "application/json")
-	proxyReq.Header.Set("Authorization", "Bearer "+chosen.Key)
-	if provName == "anthropic" {
-		proxyReq.Header.Set("x-api-key", chosen.Key)
-		proxyReq.Header.Set("anthropic-version", "2023-06-01")
-	}
-
-	resp, err := p.client.Do(proxyReq)
+	start := time.Now()
+	reply, provider, err := p.callProviderWithFallback(enabled, messages, 300)
+	latency := time.Since(start).Milliseconds()
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(500)
+		w.WriteHeader(502)
 		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
-	defer resp.Body.Close()
-
-	respBody, _ := io.ReadAll(resp.Body)
-	var chatResp struct {
-		Choices []struct {
-			Message struct {
-				Content string `json:"content"`
-			} `json:"message"`
-		} `json:"choices"`
-	}
-	json.Unmarshal(respBody, &chatResp)
-
-	reply := ""
-	if len(chatResp.Choices) > 0 {
-		reply = stripThinking(chatResp.Choices[0].Message.Content)
-	}
+	_ = chosen
+	_ = provName
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"reply":    reply,
-		"provider": provName,
-		"model":    model,
+		"reply":     reply,
+		"provider":  provider,
+		"model":     getDefaultModel(provider),
+		"latency_ms": latency,
 	})
 }
 
@@ -385,67 +319,28 @@ func (p *Proxy) HandleVibeCheck(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"No enabled keys"}`, 500)
 		return
 	}
-	chosen := enabled[rand.Intn(len(enabled))]
 
-	provDef, ok := provider.GetByName(chosen.Provider)
-	if !ok {
-		http.Error(w, `{"error":"Unknown provider"}`, 500)
-		return
-	}
-	baseURL := provDef.BaseURL
-	if !strings.HasSuffix(baseURL, "/") {
-		baseURL += "/"
+	messages := []map[string]string{
+		{"role": "system", "content": "You are a vibe checker. Output ONLY the final answer in this exact format, nothing else:\nVibe: [1-10]/10 — [one word]\n[one sentence explanation]\nDo NOT explain your reasoning. Do NOT show your thinking. Do NOT say what you need to do. Just output the final formatted answer."},
+		{"role": "user", "content": reqBody.Message},
 	}
 
-	model := getDefaultModel(chosen.Provider)
-	body := map[string]interface{}{
-		"model": model,
-		"messages": []map[string]string{
-			{"role": "system", "content": "You are a vibe checker. Respond to the user's message with a 'vibe rating' from 1-10, a one-word vibe description (like 'chaotic', 'zen', 'cursed', 'legendary'), and a one-sentence explanation. Format exactly: 'Vibe: [rating]/10 — [word]\n[explanation]'. Do NOT show reasoning, steps, or chain-of-thought. Output ONLY the final formatted response."},
-			{"role": "user", "content": reqBody.Message},
-		},
-		"max_tokens": 150,
-		"temperature": 0.9,
-	}
-	bodyBytes, _ := json.Marshal(body)
-
-	proxyReq, _ := http.NewRequest("POST", baseURL+"chat/completions", bytes.NewReader(bodyBytes))
-	proxyReq.Header.Set("Content-Type", "application/json")
-	proxyReq.Header.Set("Authorization", "Bearer "+chosen.Key)
-	if chosen.Provider == "anthropic" {
-		proxyReq.Header.Set("x-api-key", chosen.Key)
-		proxyReq.Header.Set("anthropic-version", "2023-06-01")
-	}
-
-	resp, err := p.client.Do(proxyReq)
+	start := time.Now()
+	reply, provider, err := p.callProviderWithFallback(enabled, messages, 150)
+	latency := time.Since(start).Milliseconds()
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(500)
+		w.WriteHeader(502)
 		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
-	}
-	defer resp.Body.Close()
-
-	respBody, _ := io.ReadAll(resp.Body)
-	var chatResp struct {
-		Choices []struct {
-			Message struct {
-				Content string `json:"content"`
-			} `json:"message"`
-		} `json:"choices"`
-	}
-	json.Unmarshal(respBody, &chatResp)
-
-	reply := ""
-	if len(chatResp.Choices) > 0 {
-		reply = stripThinking(chatResp.Choices[0].Message.Content)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"provider": chosen.Provider,
-		"model":    model,
-		"reply":    reply,
+		"provider":   provider,
+		"model":      getDefaultModel(provider),
+		"reply":      reply,
+		"latency_ms": latency,
 	})
 }
 
@@ -550,8 +445,12 @@ func (p *Proxy) HandleRapBattle(w http.ResponseWriter, r *http.Request) {
 		if !strings.HasSuffix(baseURL, "/") {
 			baseURL += "/"
 		}
+		model := key.Model
+		if model == "" {
+			model = getDefaultModel(pname)
+		}
 		body := map[string]interface{}{
-			"model":       getDefaultModel(pname),
+			"model":       model,
 			"messages":    messages,
 			"max_tokens":  300,
 			"temperature": 0.95,

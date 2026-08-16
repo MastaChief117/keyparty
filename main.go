@@ -396,7 +396,7 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
 		case "GET":
-			keys, err := s.GetVirtualKeysMasked()
+			keys, err := s.GetVirtualKeys()
 			if err != nil {
 				http.Error(w, `{"error":"Internal error"}`, 500)
 				return

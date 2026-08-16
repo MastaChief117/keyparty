@@ -47,7 +47,7 @@ header h1{font-size:24px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);-web
 .stat-card .value.yellow{color:#f59e0b}
 .stat-card .value.cyan{color:#06b6d4}
 
-.section{background:#1e293b;border-radius:12px;padding:16px;margin-bottom:16px;border:1px solid #334155;overflow:hidden}
+.section{background:#1e293b;border-radius:12px;padding:16px;margin-bottom:16px;border:1px solid #334155}
 .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 .section-header h2{font-size:15px}
 
@@ -294,34 +294,28 @@ header{animation:slideDown 0.5s cubic-bezier(0.16,1,0.3,1) 0.1s both}
 @keyframes bannerGlow{from{opacity:0;transform:scale(0.98);box-shadow:0 0 0 rgba(59,130,246,0)}to{opacity:1;transform:scale(1);box-shadow:0 0 30px rgba(59,130,246,0.05)}}
 
 /* ── Stat Cards Stagger ──────────────────────────────────────────────── */
-.stat-card{opacity:0;animation:cardPop 0.4s cubic-bezier(0.34,1.56,0.64,1) both}
-.stat-card:nth-child(1){animation-delay:0.3s}
-.stat-card:nth-child(2){animation-delay:0.38s}
-.stat-card:nth-child(3){animation-delay:0.46s}
-.stat-card:nth-child(4){animation-delay:0.54s}
-.stat-card:nth-child(5){animation-delay:0.62s}
-.stat-card:nth-child(6){animation-delay:0.7s}
-@keyframes cardPop{from{opacity:0;transform:scale(0.8) translateY(15px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.stat-card{animation:cardPop 0.4s cubic-bezier(0.34,1.56,0.64,1) both}
+@keyframes cardPop{from{opacity:0;transform:scale(0.95) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
 
 /* ── Stat Value Count-Up Glow ────────────────────────────────────────── */
 .stat-card .value{transition:color 0.3s,text-shadow 0.3s}
 .stat-card:hover .value{text-shadow:0 0 12px currentColor}
 
 /* ── Tab Bar Slide-In ────────────────────────────────────────────────── */
-.tabs{opacity:0;animation:tabsSlide 0.4s ease 0.5s both}
+.tabs{animation:tabsSlide 0.4s ease both}
 @keyframes tabsSlide{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
-.tab{position:relative;overflow:hidden}
+.tab{position:relative}
 .tab::after{content:"";position:absolute;bottom:0;left:50%;width:0;height:2px;background:linear-gradient(90deg,#3b82f6,#8b5cf6);transition:all 0.3s cubic-bezier(0.4,0,0.2,1);transform:translateX(-50%)}
 .tab:hover::after,.tab.active::after{width:80%}
 .tab.active{background:linear-gradient(135deg,rgba(59,130,246,0.15),rgba(139,92,246,0.15));box-shadow:0 0 15px rgba(59,130,246,0.1)}
 
 /* ── Section Entrance ────────────────────────────────────────────────── */
-.section{opacity:0;animation:sectionReveal 0.5s ease 0.6s both}
-@keyframes sectionReveal{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.section{animation:sectionReveal 0.5s ease both}
+@keyframes sectionReveal{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
 /* ── Enhanced Card Hover with Glow ───────────────────────────────────── */
-.stat-card,.key-card,.template-card{position:relative;overflow:hidden}
-.stat-card::before,.key-card::before{content:"";position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.03),transparent);transition:left 0.5s}
+.stat-card,.key-card,.template-card{position:relative}
+.stat-card::before,.key-card::before{content:"";position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.03),transparent);transition:left 0.5s;pointer-events:none}
 .stat-card:hover::before,.key-card:hover::before{left:100%}
 .stat-card:hover,.key-card:hover{border-color:rgba(59,130,246,0.3);box-shadow:0 8px 32px rgba(59,130,246,0.1),0 0 0 1px rgba(59,130,246,0.1)}
 
@@ -1802,7 +1796,7 @@ function renderVirtualKeys(keys) {
     var used = '$' + k.used_this_month.toFixed(4);
     html += '<tr>' +
       '<td><strong>' + escHtml(k.name) + '</strong></td>' +
-      '<td class="key-mask">' + escHtml(k.key) + '</td>' +
+      '<td class="key-mask" style="cursor:pointer" onclick="navigator.clipboard.writeText(\'' + escHtml(k.key) + '\');toast(\'Copied!\')" title="Click to copy">' + escHtml(k.key.substring(0,12)) + '... <span style="color:#60a5fa;font-size:10px">copy</span></td>' +
       '<td>' + escHtml(k.owner_id || '-') + '</td>' +
       '<td>' + budget + '</td>' +
       '<td>' + used + '</td>' +
@@ -1841,13 +1835,30 @@ async function addVirtualKey() {
     });
     var data = await res.json();
     if (data.key) {
-      toast('Virtual key created: ' + data.key);
       closeModal('add-vk-modal');
       loadVirtualKeys();
+      showVkCreatedModal(data.key, name);
     } else {
       toast('Failed', 'error');
     }
   } catch(e) { toast('Failed', 'error'); }
+}
+
+function showVkCreatedModal(key, name) {
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay active';
+  overlay.innerHTML = '<div class="modal" style="max-width:500px">' +
+    '<h2>Virtual Key Created</h2>' +
+    '<p style="font-size:13px;color:#94a3b8;margin-bottom:12px">Copy this key now. It will be masked after this.</p>' +
+    '<div style="background:#0f172a;border:1px solid #1e293b;border-radius:8px;padding:12px;margin-bottom:12px;display:flex;align-items:center;gap:8px">' +
+    '<code id="vk-created-key" style="flex:1;font-size:13px;color:#60a5fa;word-break:break-all">' + escHtml(key) + '</code>' +
+    '<button class="btn btn-sm btn-primary" onclick="navigator.clipboard.writeText(document.getElementById(\'vk-created-key\').textContent).then(()=>this.textContent=\'Copied!\')">Copy</button>' +
+    '</div>' +
+    '<p style="font-size:11px;color:#f59e0b">Use this as your Bearer token in API calls.</p>' +
+    '<div class="modal-actions"><button class="btn btn-primary" onclick="this.closest(\'.modal-overlay\').remove()">Done</button></div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
 }
 
 async function toggleVirtualKey(id, enabled) {
@@ -2350,6 +2361,10 @@ async function doRoastLogs() {
   try {
     var res = await adminFetch('/admin/roast-logs', { method: 'POST', body: '{}' });
     var data = await res.json();
+    if (data.error) {
+      document.getElementById('roastlogs-result').innerHTML = '<div style="padding:12px;background:#1e1108;border:1px solid #f97316;border-radius:8px;color:#fb923c;font-size:13px">' + escHtml(data.error) + '</div>';
+      return;
+    }
     document.getElementById('roastlogs-result').innerHTML =
       '<div style="padding:12px;background:#1e1108;border:1px solid #f97316;border-radius:8px;color:#fb923c;font-size:13px"><strong>' + escHtml(data.provider) + ' says:</strong><br>' + escHtml(data.roast) + '</div>';
   } catch(e) { toast('Failed', 'error'); }
@@ -3220,12 +3235,9 @@ document.getElementById('btn-tournament').addEventListener('click', async functi
 async function doFortune() {
   try {
     const msg = document.getElementById('fortune-msg').value;
-    const res = await fetch(`${BASE_URL}/admin/fortune`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
-      body: JSON.stringify({message: msg})
-    });
+    const res = await adminFetch('/admin/fortune', { method: 'POST', body: JSON.stringify({message: msg}) });
     const data = await res.json();
+    if (data.error) { toast(data.error, 'error'); return; }
     document.getElementById('fortune-result').innerHTML = `<div class="section" style="margin:0"><p style="font-size:14px;color:#e2e8f0">${escHtml(data.fortune)}</p><p style="font-size:11px;color:#64748b;margin-top:8px">${escHtml(data.warning || '')}</p></div>`;
   } catch(e) { toast('Failed to get fortune', 'error'); }
 }
@@ -3235,12 +3247,9 @@ async function doProviderRoast() {
     const p1 = document.getElementById('roast-p1').value;
     const p2 = document.getElementById('roast-p2').value;
     document.getElementById('provider-roast-result').innerHTML = '<p style="color:#94a3b8">Loading roast battle...</p>';
-    const res = await fetch(`${BASE_URL}/admin/provider-roast`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
-      body: JSON.stringify({provider1: p1, provider2: p2})
-    });
+    const res = await adminFetch('/admin/provider-roast', { method: 'POST', body: JSON.stringify({provider1: p1, provider2: p2}) });
     const data = await res.json();
+    if (data.error) { document.getElementById('provider-roast-result').innerHTML = '<p style="color:#ef4444">' + escHtml(data.error) + '</p>'; return; }
     document.getElementById('provider-roast-result').innerHTML = `
       <div class="section" style="margin:0">
         <h3 style="color:#ef4444">${escHtml(data.provider_a)} 🔥</h3>
@@ -3258,12 +3267,9 @@ async function doDebugOracle() {
   try {
     const error = document.getElementById('debug-error').value;
     document.getElementById('debug-result').innerHTML = '<p style="color:#94a3b8">Consulting the oracle...</p>';
-    const res = await fetch(`${BASE_URL}/admin/debug-oracle`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
-      body: JSON.stringify({error: error})
-    });
+    const res = await adminFetch('/admin/debug-oracle', { method: 'POST', body: JSON.stringify({error: error}) });
     const data = await res.json();
+    if (data.error) { document.getElementById('debug-result').innerHTML = '<p style="color:#ef4444">' + escHtml(data.error) + '</p>'; return; }
     document.getElementById('debug-result').innerHTML = `<div class="section" style="margin:0"><pre style="font-size:13px;color:#e2e8f0;white-space:pre-wrap">${escHtml(data.oracle)}</pre><p style="font-size:11px;color:#64748b;margin-top:8px">Provider: ${escHtml(data.provider)} | Latency: ${data.latency_ms}ms</p></div>`;
   } catch(e) { toast('Failed to consult oracle', 'error'); }
 }
@@ -3273,12 +3279,9 @@ async function doCommitMsg() {
     const diff = document.getElementById('commit-diff').value;
     const style = document.getElementById('commit-style').value;
     document.getElementById('commit-result').innerHTML = '<p style="color:#94a3b8">Generating commit message...</p>';
-    const res = await fetch(`${BASE_URL}/admin/commit-msg`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
-      body: JSON.stringify({diff: diff, style: style})
-    });
+    const res = await adminFetch('/admin/commit-msg', { method: 'POST', body: JSON.stringify({diff: diff, style: style}) });
     const data = await res.json();
+    if (data.error) { document.getElementById('commit-result').innerHTML = '<p style="color:#ef4444">' + escHtml(data.error) + '</p>'; return; }
     document.getElementById('commit-result').innerHTML = `<div class="section" style="margin:0"><pre style="font-size:13px;color:#10b981;background:#0f172a;padding:12px;border-radius:6px">${escHtml(data.commit_message)}</pre><p style="font-size:11px;color:#64748b;margin-top:8px">Style: ${escHtml(data.style)} | Provider: ${escHtml(data.provider)}</p></div>`;
   } catch(e) { toast('Failed to generate commit message', 'error'); }
 }
@@ -3287,12 +3290,9 @@ async function doSmartRoute() {
   try {
     const msg = document.getElementById('smart-msg').value;
     const priority = document.getElementById('smart-priority').value;
-    const res = await fetch(`${BASE_URL}/admin/smart-route`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
-      body: JSON.stringify({message: msg, priority: priority})
-    });
+    const res = await adminFetch('/admin/smart-route', { method: 'POST', body: JSON.stringify({message: msg, priority: priority}) });
     const data = await res.json();
+    if (data.error) { document.getElementById('smart-result').innerHTML = '<p style="color:#ef4444">' + escHtml(data.error) + '</p>'; return; }
     document.getElementById('smart-result').innerHTML = `
       <div class="section" style="margin:0">
         <p style="font-size:13px;color:#10b981"><strong>Recommended:</strong> ${escHtml(data.recommended_provider)}/${escHtml(data.recommended_model)}</p>
@@ -3308,18 +3308,14 @@ async function addCostLimit() {
     const period = document.getElementById('cl-period').value;
     const cost = parseFloat(document.getElementById('cl-cost').value);
     const provider = document.getElementById('cl-provider').value;
-    await fetch(`${BASE_URL}/admin/cost-limiter`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
-      body: JSON.stringify({name, period, max_cost: cost, provider})
-    });
+    await adminFetch('/admin/cost-limiter', { method: 'POST', body: JSON.stringify({name, period, max_cost: cost, provider}) });
     loadCostLimits();
   } catch(e) { toast('Failed to add cost limit', 'error'); }
 }
 
 async function loadCostLimits() {
   try {
-    const res = await fetch(`${BASE_URL}/admin/cost-limiter`, {headers: {'Authorization': 'Bearer ' + ADMIN_PASS}});
+    const res = await adminFetch('/admin/cost-limiter');
     const data = await res.json();
     const limits = data.limits || [];
     document.getElementById('cost-limits-list').innerHTML = limits.length ? limits.map(l => `
@@ -3335,11 +3331,7 @@ async function loadCostLimits() {
 
 async function deleteCostLimit(id) {
   try {
-    await fetch(`${BASE_URL}/admin/cost-limiter`, {
-      method: 'DELETE',
-      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
-      body: JSON.stringify({id})
-    });
+    await adminFetch('/admin/cost-limiter', { method: 'DELETE', body: JSON.stringify({id}) });
     loadCostLimits();
   } catch(e) { toast('Failed to delete cost limit', 'error'); }
 }
@@ -3347,7 +3339,7 @@ async function deleteCostLimit(id) {
 async function loadUptime() {
   try {
     const days = document.getElementById('uptime-days').value;
-    const res = await fetch(`${BASE_URL}/admin/uptime?days=${days}`, {headers: {'Authorization': 'Bearer ' + ADMIN_PASS}});
+    const res = await adminFetch('/admin/uptime?days=' + days);
     const data = await res.json();
     const providers = data.providers || [];
     document.getElementById('uptime-results').innerHTML = providers.length ? providers.map(p => `
@@ -3363,7 +3355,7 @@ async function loadUptime() {
 
 async function loadReplayQueue() {
   try {
-    const res = await fetch(`${BASE_URL}/admin/replay-queue`, {headers: {'Authorization': 'Bearer ' + ADMIN_PASS}});
+    const res = await adminFetch('/admin/replay-queue');
     const data = await res.json();
     const failed = data.failed_requests || [];
     document.getElementById('replay-list').innerHTML = failed.length ? failed.slice(0, 20).map(l => `
@@ -3389,18 +3381,14 @@ async function addCustomModel() {
     const context = parseInt(document.getElementById('cm-context').value);
     const input = parseFloat(document.getElementById('cm-input').value);
     const output = parseFloat(document.getElementById('cm-output').value);
-    await fetch(`${BASE_URL}/admin/custom-models`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
-      body: JSON.stringify({name, provider, display_name: display, context_size: context, input_price: input, output_price: output})
-    });
+    await adminFetch('/admin/custom-models', { method: 'POST', body: JSON.stringify({name, provider, display_name: display, context_size: context, input_price: input, output_price: output}) });
     loadCustomModels();
   } catch(e) { toast('Failed to add custom model', 'error'); }
 }
 
 async function loadCustomModels() {
   try {
-    const res = await fetch(`${BASE_URL}/admin/custom-models`, {headers: {'Authorization': 'Bearer ' + ADMIN_PASS}});
+    const res = await adminFetch('/admin/custom-models');
     const data = await res.json();
     const models = data.models || [];
     document.getElementById('custom-models-list').innerHTML = models.length ? models.map(m => `
@@ -3416,11 +3404,7 @@ async function loadCustomModels() {
 
 async function deleteCustomModel(id) {
   try {
-    await fetch(`${BASE_URL}/admin/custom-models`, {
-      method: 'DELETE',
-      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
-      body: JSON.stringify({id})
-    });
+    await adminFetch('/admin/custom-models', { method: 'DELETE', body: JSON.stringify({id}) });
     loadCustomModels();
   } catch(e) { toast('Failed to delete custom model', 'error'); }
 }
@@ -3431,7 +3415,7 @@ const WIZARD_MODELS = {
   groq: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768'],
   openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini', 'o3', 'o4-mini'],
   anthropic: ['claude-sonnet-4-5', 'claude-haiku-4-5', 'claude-opus-4-5'],
-  gemini: ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-3.5-flash'],
+  gemini: ['gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-2.5-pro'],
   deepseek: ['deepseek-chat', 'deepseek-r1'],
   nvidia: ['nvidia/llama-3.1-nemotron-70b-instruct', 'nvidia/nemotron-3-nano-30b-a3b'],
   mistral: ['mistral-large-latest', 'codestral-latest'],
@@ -3471,20 +3455,12 @@ async function wizardAddKey() {
   status.innerHTML = '<span style="color:#94a3b8">Adding key...</span>';
   
   try {
-    const res = await fetch(`${BASE_URL}/admin/keys`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
-      body: JSON.stringify({name: name || provider + '-key', provider, key, model})
-    });
+    const res = await adminFetch('/admin/keys', { method: 'POST', body: JSON.stringify({name: name || provider + '-key', provider, key, model}) });
     const data = await res.json();
     
     if (data.id) {
       status.innerHTML = '<span style="color:#10b981">✓ Key added! Testing...</span>';
-      const testRes = await fetch(`${BASE_URL}/admin/test-key`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_PASS},
-        body: JSON.stringify({provider, key, model})
-      });
+      const testRes = await adminFetch('/admin/test-key', { method: 'POST', body: JSON.stringify({provider, key, model}) });
       const testData = await testRes.json();
       if (testData.success) {
         status.innerHTML = '<span style="color:#10b981">✓ Key added and verified!</span>';
@@ -3516,7 +3492,7 @@ function showWizard() {
 // Check if wizard should show
 function checkWizard() {
   if (localStorage.getItem('keyparty-wizard-done') === '1') return;
-  fetch(`${BASE_URL}/admin/stats`, {headers: {'Authorization': 'Bearer ' + ADMIN_PASS}})
+  adminFetch('/admin/stats')
     .then(r => r.json())
     .then(data => {
       if (data.provider_stats && data.provider_stats.length === 0) {
@@ -3526,8 +3502,17 @@ function checkWizard() {
     .catch(() => {});
 }
 
-askPassword().then(function(pass) {
-  ADMIN_PASS = pass;
+async function initDashboard() {
+  try {
+    const res = await fetch('/admin/stats', { headers: { 'Content-Type': 'application/json' } });
+    if (res.status === 401) {
+      const pass = await askPassword();
+      ADMIN_PASS = pass;
+    }
+  } catch(e) {
+    const pass = await askPassword();
+    ADMIN_PASS = pass;
+  }
   setBaseUrl();
   onProviderChange();
   loadUnifiedKey();
@@ -3536,7 +3521,9 @@ askPassword().then(function(pass) {
   loadStats();
   setInterval(loadStats, 5000);
   checkWizard();
-});
+}
+
+initDashboard();
 </script>
 
 <footer style="text-align:center;padding:24px;margin-top:40px;border-top:1px solid #1e293b;color:#475569;font-size:12px">

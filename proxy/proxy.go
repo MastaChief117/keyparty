@@ -1123,7 +1123,7 @@ func getDefaultModel(provider string) string {
 	defaults := map[string]string{
 		"openai":     "gpt-4.1-mini",
 		"anthropic":  "claude-sonnet-4-5",
-		"gemini":     "gemini-2.5-flash-preview-06-05",
+		"gemini":     "gemini-2.5-flash",
 		"mistral":    "mistral-small-latest",
 		"groq":       "llama-3.3-70b-versatile",
 		"together":   "meta-llama/Llama-3.3-70B-Instruct-Turbo",
@@ -1154,15 +1154,11 @@ func estimateCost(provider, model string, tokensIn, tokensOut int) float64 {
 			"claude-opus-4-5":   {15 / 1000000, 75 / 1000000},
 		},
 		"gemini": {
-			"gemini-3.6-flash":              {0.10 / 1000000, 0.40 / 1000000},
-			"gemini-3.5-flash":              {0.15 / 1000000, 0.60 / 1000000},
-			"gemini-3.5-flash-lite":         {0.075 / 1000000, 0.30 / 1000000},
-			"gemini-3.1-flash-lite":         {0.075 / 1000000, 0.30 / 1000000},
-			"gemini-3.1-pro-preview":        {2.00 / 1000000, 12.00 / 1000000},
-			"gemini-3-flash-preview":        {0.50 / 1000000, 3.00 / 1000000},
-			"gemini-2.5-pro":                {1.25 / 1000000, 10.00 / 1000000},
-			"gemini-2.5-flash":              {0.15 / 1000000, 0.60 / 1000000},
-			"gemini-2.5-flash-lite":         {0.075 / 1000000, 0.30 / 1000000},
+			"gemini-2.0-flash":       {0.10 / 1000000, 0.40 / 1000000},
+			"gemini-2.5-flash":       {0.15 / 1000000, 0.60 / 1000000},
+			"gemini-2.5-pro":         {1.25 / 1000000, 10.00 / 1000000},
+			"gemini-1.5-flash":       {0.075 / 1000000, 0.30 / 1000000},
+			"gemini-1.5-pro":         {1.25 / 1000000, 5.00 / 1000000},
 		},
 		"groq": {
 			"llama-3.3-70b-versatile": {0.59 / 1000000, 0.79 / 1000000},
@@ -1563,8 +1559,14 @@ func (p *Proxy) HandleRumble(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	modelA := getDefaultModel(nameA)
-	modelB := getDefaultModel(nameB)
+	modelA := keyA.Model
+	if modelA == "" {
+		modelA = getDefaultModel(nameA)
+	}
+	modelB := keyB.Model
+	if modelB == "" {
+		modelB = getDefaultModel(nameB)
+	}
 
 	flusher, ok := w.(http.Flusher)
 	if !ok {
