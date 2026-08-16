@@ -176,7 +176,7 @@ footer a{color:var(--accent)}
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-tag">open source &middot; MIT &middot; no catch</div>
+  <div class="hero-tag">open source &middot; Apache 2.0 &middot; no catch</div>
   <h1>One Endpoint.<br><span class="hl">Ten Providers.</span><br>Zero Budget.</h1>
   <p>You have 5 API keys, free tiers across 3 providers, and $4. KeyParty makes that work like a $400/month enterprise setup.</p>
   <div class="hero-btns">
@@ -216,13 +216,50 @@ footer a{color:var(--accent)}
     <div class="card"><div class="card-icon">&#128260;</div><h3>compaction failover</h3><p>provider dies? chat history gets summarized by a cheap model and rerouted. user never sees the 429.</p></div>
     <div class="card"><div class="card-icon">&#127922;</div><h3>provider race</h3><p>same prompt to 5 providers at once. first response wins. great for finding the fastest/cheapest.</p></div>
     <div class="card"><div class="card-icon">&#128100;</div><h3>virtual keys</h3><p>give each user their own key with budgets, rate limits, and model restrictions. no more shared key chaos.</p></div>
-    <div class="card"><div class="card-icon">&#128176;</div><h3>cost tracking</h3><p>see exactly how much you're spending per provider, per model, per day. no more surprise bills (there were no surprise bills, you have $4).</p></div>
-    <div class="card"><div class="card-icon">&#128274;</div><h3>encryption</h3><p>AES-256-GCM for all keys at rest. master key with 0600 perms. standard go crypto, not my own crypto.</p></div>
+    <div class="card"><div class="card-icon">&#128176;</div><h3>cost tracking</h3><p>see exactly how much you're spending per provider, per model, per day. no more surprise bills (you have $4).</p></div>
+    <div class="card"><div class="card-icon">&#128274;</div><h3>encryption</h3><p>AES-256-GCM for all keys at rest. standard go crypto, not my own crypto.</p></div>
     <div class="card"><div class="card-icon">&#128737;</div><h3>guardrails</h3><p>PII detection, prompt injection blocking, custom regex rules. keep your users safe-ish.</p></div>
     <div class="card"><div class="card-icon">&#128260;</div><h3>auto-rotate keys</h3><p>picks the healthiest key per provider automatically. one less thing to wake up at 3am for.</p></div>
-    <div class="card"><div class="card-icon">&#127916;</div><h3>ai rumble</h3><p>two providers roast each other in real-time via SSE. exactly as chaotic as it sounds.</p></div>
+    <div class="card"><div class="card-icon">&#128202;</div><h3>smart router</h3><p>AI recommends best provider based on cost/speed/quality priority. let the AI decide for once.</p></div>
+    <div class="card"><div class="card-icon">&#128176;</div><h3>cost limiter</h3><p>set daily/weekly/monthly spending caps per provider. because self-control is hard.</p></div>
+    <div class="card"><div class="card-icon">&#9201;</div><h3>provider uptime</h3><p>track provider reliability over time with stats. know who's flaky.</p></div>
+    <div class="card"><div class="card-icon">&#128260;</div><h3>replay queue</h3><p>retry failed requests with one click. second chances for your broken requests.</p></div>
+    <div class="card"><div class="card-icon">&#128196;</div><h3>export logs</h3><p>download logs as CSV or JSON. for when you need to prove something to someone.</p></div>
+    <div class="card"><div class="card-icon">&#128221;</div><h3>prompt builder</h3><p>build prompts with variables, optionally enhance with AI. LEGO but for prompts.</p></div>
+    <div class="card"><div class="card-icon">&#128196;</div><h3>weekly recap</h3><p>stats summary + AI-generated snarky reports. your AI week in review.</p></div>
+    <div class="card"><div class="card-icon">&#128200;</div><h3>cost analytics</h3><p>cost by provider/day/model with bar charts. pretty graphs for your wallet.</p></div>
+    <div class="card"><div class="card-icon">&#128276;</div><h3>webhooks</h3><p>notify URLs on events (request, error, failover). stay in the loop.</p></div>
+    <div class="card"><div class="card-icon">&#128209;</div><h3>prompt templates</h3><p>save and manage system prompts. build once, use forever.</p></div>
+    <div class="card"><div class="card-icon">&#128176;</div><h3>budget alerts</h3><p>threshold alerts per virtual key. we'll tell you when you're about to go broke.</p></div>
+    <div class="card"><div class="card-icon">&#128269;</div><h3>search logs</h3><p>filter by provider/model/status/virtual key. find that one request from last Tuesday.</p></div>
+    <div class="card"><div class="card-icon">&#128176;</div><h3>provider budgets</h3><p>set monthly token/cost budgets per provider. budgets you'll actually follow.</p></div>
+  </div>
+</div>
+</section>
+
+<!-- FUN ZONE -->
+<section class="alt" id="fun">
+<div class="sec-in">
+  <div class="sec-hdr">
+    <h2>fun zone. the chaotic good.</h2>
+    <p>because why should AI gateways be boring? exactly.</p>
+  </div>
+  <div class="grid grid-3 fi">
+    <div class="card"><div class="card-icon">&#127916;</div><h3>ai rumble</h3><p>two providers roast each other in real-time via SSE streaming. exactly as chaotic as it sounds.</p></div>
     <div class="card"><div class="card-icon">&#127927;</div><h3>rap battle</h3><p>two AIs drop bars with context memory across rounds. gpt-4 vs claude, who wins?</p></div>
-    <div class="card"><div class="card-icon">&#128172;</div><h3>model roulette</h3><p>picks a random provider for your message. live dangerously.</p></div>
+    <div class="card"><div class="card-icon">&#127921;</div><h3>model roulette</h3><p>picks a random provider for your message. live dangerously.</p></div>
+    <div class="card"><div class="card-icon">&#128519;</div><h3>ai therapist</h3><p>sarcastic therapy for when your code won't compile. "and how does that make you feel?"</p></div>
+    <div class="card"><div class="card-icon">&#128293;</div><h3>roast my logs</h3><p>AI roasts your API usage patterns. your coding habits are about to get judged.</p></div>
+    <div class="card"><div class="card-icon">&#128302;</div><h3>ai fortune teller</h3><p>dramatic predictions about your code's fate. spoiler: it's not great.</p></div>
+    <div class="card"><div class="card-icon">&#128172;</div><h3>provider roast</h3><p>two providers trash-talk each other's weaknesses. drama you actually want.</p></div>
+    <div class="card"><div class="card-icon">&#128566;</div><h3>debug oracle</h3><p>paste an error, get dramatic debugging advice. "have you tried turning it off and on again?"</p></div>
+    <div class="card"><div class="card-icon">&#128221;</div><h3>commit msg generator</h3><p>dramatic, meme, poetic, or professional commit messages. never write "fix stuff" again.</p></div>
+    <div class="card"><div class="card-icon">&#128172;</div><h3>vibe check</h3><p>get a random vibe rating for your message. are you a 10/10 or a 3/10?</p></div>
+    <div class="card"><div class="card-icon">&#128172;</div><h3>magic 8-ball</h3><p>ask the AI a question, get a dramatic answer. "outlook: not so good."</p></div>
+    <div class="card"><div class="card-icon">&#128141;</div><h3>provider shipper</h3><p>see how compatible two providers are. matchmaking for AI models.</p></div>
+    <div class="card"><div class="card-icon">&#128168;</div><h3>fun facts</h3><p>random facts about APIs and development. learn something while you wait for rate limits.</p></div>
+    <div class="card"><div class="card-icon">&#127942;</div><h3>leaderboard</h3><p>see which providers you use the most. no judgment.</p></div>
+    <div class="card"><div class="card-icon">&#128176;</div><h3>savings tracker</h3><p>track how much you've saved via caching and failover. your wallet will thank you.</p></div>
   </div>
 </div>
 </section>
@@ -249,38 +286,117 @@ footer a{color:var(--accent)}
 </div>
 </section>
 
-<!-- QUICK START -->
+<!-- INSTALL -->
 <section id="start">
 <div class="sec-in">
   <div class="sec-hdr">
-    <h2>get started. like, now.</h2>
-    <p>no docker. no npm. no kubernetes. just a binary.</p>
+    <h2>install. like, now.</h2>
+    <p>six ways to install. pick your poison.</p>
   </div>
 
   <div class="tabs">
-    <button class="tab on" onclick="stab(this,'t1')">install</button>
+    <button class="tab on" onclick="stab(this,'t1')">npm</button>
+    <button class="tab" onclick="stab(this,'t1b')">binaries</button>
+    <button class="tab" onclick="stab(this,'t1c')">docker</button>
+    <button class="tab" onclick="stab(this,'t1d')">docker compose</button>
+    <button class="tab" onclick="stab(this,'t1e')">shell script</button>
+    <button class="tab" onclick="stab(this,'t1f')">manual</button>
     <button class="tab" onclick="stab(this,'t2')">provider override</button>
     <button class="tab" onclick="stab(this,'t3')">failover</button>
     <button class="tab" onclick="stab(this,'t4')">virtual keys</button>
     <button class="tab" onclick="stab(this,'t5')">openai SDK</button>
   </div>
 
-  <div id="t1" class="tp on"><div class="codebox"><div class="codebar"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>terminal</div><div class="codepad"><span class="cm"># option 1: shell script (easiest)</span>
+  <div id="t1" class="tp on"><div class="codebox"><div class="codebar"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>npm (easiest)</div><div class="codepad"><span class="cm"># install globally</span>
+<span class="kw">npm install</span> -g @steelquill/keyparty
+<span class="fn">keyparty</span>
+
+<span class="cm"># that's it. the npm package:</span>
+<span class="cm"># - downloads the correct binary for your platform</span>
+<span class="cm"># - runs the setup wizard on first run</span>
+<span class="cm"># - auto-installs cloudflared for tunnel support</span>
+<span class="cm"># - just works</span></div></div></div>
+
+  <div id="t1b" class="tp"><div class="codebox"><div class="codebar"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>prebuilt binaries</div><div class="codepad"><span class="cm"># download from github releases</span>
+<span class="cm"># https://github.com/MastaChief117/keyparty/releases</span>
+
+<span class="cm"># linux/macOS</span>
+<span class="kw">chmod</span> +x keyparty-linux-amd64
+<span class="fn">./keyparty-linux-amd64</span> -port <span class="nu">8080</span>
+
+<span class="cm"># windows</span>
+<span class="fn">keyparty-windows-amd64.exe</span> -port <span class="nu">8080</span>
+
+<span class="cm"># platforms: linux (amd64/arm64), macOS (intel/apple silicon), windows</span></div></div></div>
+
+  <div id="t1c" class="tp"><div class="codebox"><div class="codebar"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>docker hub</div><div class="codepad"><span class="cm"># pull and run</span>
+<span class="kw">docker run</span> -d \
+  --name keyparty \
+  -p <span class="nu">8080</span>:<span class="nu">8080</span> \
+  -e ADMIN_PASSWORD=<span class="st">your-secret</span> \
+  -v keyparty-data:/app/data \
+  steelquill69/keyparty:latest
+
+<span class="cm"># or with a specific version</span>
+<span class="kw">docker run</span> -d -p <span class="nu">8080</span>:<span class="nu">8080</span> steelquill69/keyparty:<span class="nu">1.1.0</span>
+
+<span class="cm"># build from source</span>
 <span class="kw">git clone</span> https://github.com/MastaChief117/keyparty.git
+<span class="kw">cd</span> keyparty
+<span class="kw">docker build</span> -t keyparty .
+<span class="kw">docker run</span> -d -p <span class="nu">8080</span>:<span class="nu">8080</span> keyparty</div></div></div>
+
+  <div id="t1d" class="tp"><div class="codebox"><div class="codebar"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>docker compose</div><div class="codepad"><span class="cm"># docker-compose.yml</span>
+services:
+  keyparty:
+    image: steelquill69/keyparty:latest
+    ports:
+      - <span class="st">"8080:8080"</span>
+    volumes:
+      - keyparty-data:/app/data
+    environment:
+      - ADMIN_PASSWORD=<span class="st">${ADMIN_PASSWORD:-changeme}</span>
+    restart: unless-stopped
+
+<span class="cm"># run it</span>
+<span class="kw">echo</span> <span class="st">"ADMIN_PASSWORD=your-secret"</span> > .env
+<span class="fn">docker-compose up -d</span>
+
+<span class="cm"># commands:</span>
+<span class="fn">docker-compose up -d</span>          <span class="cm"># start</span>
+<span class="fn">docker-compose down</span>           <span class="cm"># stop</span>
+<span class="fn">docker-compose logs -f</span>        <span class="cm"># view logs</span>
+<span class="fn">docker-compose down -v</span>        <span class="cm"># reset everything (deletes data)</span></div></div></div>
+
+  <div id="t1e" class="tp"><div class="codebox"><div class="codebar"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>shell script</div><div class="codepad"><span class="kw">git clone</span> https://github.com/MastaChief117/keyparty.git
 <span class="kw">cd</span> keyparty
 <span class="kw">chmod</span> +x keyparty.sh
 <span class="fn">./keyparty.sh</span>
 
-<span class="cm"># option 2: docker</span>
-<span class="kw">docker build</span> -t keyparty .
-<span class="kw">docker run</span> -d -p 8080:8080 -e ADMIN_PASSWORD=secret keyparty
+<span class="cm"># the script:</span>
+<span class="cm"># - installs Go if not present</span>
+<span class="cm"># - builds the binary</span>
+<span class="cm"># - runs the setup wizard</span>
+<span class="cm"># - optionally sets up a cloudflare tunnel</span></div></div></div>
 
-<span class="cm"># option 3: manual</span>
+  <div id="t1f" class="tp"><div class="codebox"><div class="codebar"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>manual build (go 1.24+)</div><div class="codepad"><span class="kw">git clone</span> https://github.com/MastaChief117/keyparty.git
+<span class="kw">cd</span> keyparty
 <span class="kw">go build</span> -o keyparty .
-<span class="fn">./keyparty</span> -port <span class="nu">8080</span> -admin-pass <span class="st">your-password</span>
+<span class="fn">./keyparty</span> -port <span class="nu">8080</span>
 
 <span class="cm"># open dashboard: http://localhost:8080</span>
 <span class="cm"># add your API keys there. done.</span></div></div></div>
+
+  <div id="t6" class="tp"><div class="codebox"><div class="codebar"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>CLI flags</div><div class="codepad"><span class="fn">keyparty</span>                           <span class="cm"># interactive setup wizard</span>
+<span class="fn">keyparty</span> --port <span class="nu">8080</span>               <span class="cm"># start on custom port</span>
+<span class="fn">keyparty</span> --password <span class="st">mysecret</span>       <span class="cm"># set admin password</span>
+<span class="fn">keyparty</span> --tunnel                  <span class="cm"># enable cloudflare tunnel</span>
+<span class="fn">keyparty</span> --port <span class="nu">8080</span> --tunnel     <span class="cm"># port + tunnel</span>
+<span class="fn">keyparty</span> --version                 <span class="cm"># show version</span>
+<span class="fn">keyparty</span> --help                    <span class="cm"># show help</span>
+
+<span class="cm"># that's 7 ways to install + 7 CLI flags.</span>
+<span class="cm"># we covered our bases.</span></div></div></div>
 
   <div id="t2" class="tp"><div class="codebox"><div class="codebar"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>provider override</div><div class="codepad"><span class="cm"># force a specific provider (bypass auto-routing)</span>
 curl localhost:8080/v1/chat/completions \
@@ -413,7 +529,7 @@ resp = requests.post(
 <div class="sec-in">
   <div class="sec-hdr">
     <h2>vs the alternatives</h2>
-    <p>we're the broke dev's choice.</p>
+    <p>we're the broke dev's choice. and we're proud of it.</p>
   </div>
   <div style="overflow-x:auto" class="fi">
     <table class="tbl">
@@ -422,14 +538,19 @@ resp = requests.post(
         <tr><td>self-hosted</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td><td class="no">&#10007;</td></tr>
         <tr><td>free & open source</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td><td class="no">&#10007;</td></tr>
         <tr><td>single binary</td><td class="yes">&#10003;</td><td class="no">&#10007;</td><td class="no">&#10007;</td></tr>
+        <tr><td>npm install</td><td class="yes">&#10003;</td><td class="no">&#10007;</td><td class="no">&#10007;</td></tr>
         <tr><td>provider override header</td><td class="yes">&#10003;</td><td class="no">&#10007;</td><td class="no">&#10007;</td></tr>
         <tr><td>virtual keys + budgets</td><td class="yes">&#10003;</td><td class="no">&#10007;</td><td class="no">&#10007;</td></tr>
         <tr><td>ai rumble / rap battle</td><td class="yes">&#10003;</td><td class="no">&#10007;</td><td class="no">&#10007;</td></tr>
+        <tr><td>provider roast</td><td class="yes">&#10003;</td><td class="no">&#10007;</td><td class="no">&#10007;</td></tr>
+        <tr><td>fortune teller</td><td class="yes">&#10003;</td><td class="no">&#10007;</td><td class="no">&#10007;</td></tr>
+        <tr><td>smart router</td><td class="yes">&#10003;</td><td class="no">&#10007;</td><td class="no">&#10007;</td></tr>
+        <tr><td>cost limiter</td><td class="yes">&#10003;</td><td class="no">&#10007;</td><td class="no">&#10007;</td></tr>
         <tr><td>compaction failover</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td></tr>
         <tr><td>cost tracking</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td></tr>
         <tr><td>budget alerts</td><td class="yes">&#10003;</td><td class="no">&#10007;</td><td class="no">&#10007;</td></tr>
         <tr><td>auto-rotate keys</td><td class="yes">&#10003;</td><td class="no">&#10007;</td><td class="no">&#10007;</td></tr>
-        <tr><td>setup script</td><td class="yes">&#10003;</td><td class="no">&#10007;</td><td class="no">&#10007;</td></tr>
+        <tr><td>setup wizard</td><td class="yes">&#10003;</td><td class="no">&#10007;</td><td class="no">&#10007;</td></tr>
       </tbody>
     </table>
   </div>
@@ -463,13 +584,13 @@ resp = requests.post(
   </div>
   <div style="max-width:650px;margin:0 auto">
     <div class="faq"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">what is this thing?<span class="arr">&#9660;</span></div><div class="faq-a">an AI gateway for broke devs. one endpoint, ten providers, zero budget. you have 5 free tiers and no money. this makes them work together.</div></div>
-    <div class="faq"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">how much does it cost?<span class="arr">&#9660;</span></div><div class="faq-a">free. MIT license. no "enterprise tier." no "contact sales." you just pay for whatever API keys you use.</div></div>
+    <div class="faq"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">how much does it cost?<span class="arr">&#9660;</span></div><div class="faq-a">free. Apache 2.0 license. no "enterprise tier." no "contact sales." you just pay for whatever API keys you use.</div></div>
     <div class="faq"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">what happens when a provider dies?<span class="arr">&#9660;</span></div><div class="faq-a">it fails over. chat history gets summarized and rerouted. your user never sees the error. we're basically life support for your conversations.</div></div>
     <div class="faq"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">is my data safe?<span class="arr">&#9660;</span></div><div class="faq-a">AES-256-GCM encryption at rest. standard go crypto libraries. no hand-rolled crypto. gateway doesn't store your messages. see the security docs.</div></div>
     <div class="faq"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">does it work with cursor/claude code/etc?<span class="arr">&#9660;</span></div><div class="faq-a">yes. it's openai-compatible. point any tool that supports custom base URLs at the gateway.</div></div>
     <div class="faq"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">can i run this on a raspberry pi?<span class="arr">&#9660;</span></div><div class="faq-a">yes. it's a single 16MB binary. idle memory is 13MB. it'll run on a potato if the potato has go installed.</div></div>
     <div class="faq"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">can two AIs roast each other?<span class="arr">&#9660;</span></div><div class="faq-a">yes. AI Rumble and Rap Battle are built in. two providers go head-to-head via SSE streaming. it's as chaotic as it sounds.</div></div>
-    <div class="faq"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">what's the catch?<span class="arr">&#9660;</span></div><div class="faq-a">there is no catch. free, open source, MIT. we just vibes.</div></div>
+    <div class="faq"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">what's the catch?<span class="arr">&#9660;</span></div><div class="faq-a">there is no catch. free, open source, Apache 2.0. we just vibes.</div></div>
   </div>
 </div>
 </section>
@@ -496,7 +617,7 @@ resp = requests.post(
     <a href="routing.html">Routing</a>
     <a href="providers.html">Providers</a>
   </div>
-  <p>MIT &middot; made by <a href="https://github.com/MastaChief117">MastaChief117</a> &middot; one endpoint, ten providers, zero budget</p>
+  <p>Apache 2.0 &middot; made by <a href="https://github.com/MastaChief117">MastaChief117</a> &middot; one endpoint, ten providers, zero budget</p>
 </footer>
 
 <script>

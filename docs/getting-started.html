@@ -33,17 +33,88 @@
 <h2>What is KeyParty?</h2>
 <p>KeyParty is a single-binary AI gateway. You give it your API keys from 10+ providers (OpenAI, Anthropic, Gemini, Groq, NVIDIA, etc.), and it gives you <strong>one endpoint</strong> to rule them all. Your apps talk to KeyParty, KeyParty talks to the providers. If one provider dies, it fails over to another. Your users never see the 429.</p>
 
-<h2>Prerequisites</h2>
-<ul>
-<li>Go 1.24+ installed (<code>go version</code> to check) — or Docker</li>
-<li>At least one API key from a provider (Groq, Gemini, and NVIDIA have free tiers)</li>
-<li>A terminal (you know how to use one, right?)</li>
-</ul>
+<h2>Install</h2>
 
-<h2>Option A: Shell Script (easiest)</h2>
+<h3>npm (easiest)</h3>
 <div class="steps">
 <div class="step">
-<h4>Clone and run</h4>
+<pre><code>npm install -g @steelquill/keyparty
+keyparty</code></pre>
+<p>The npm package handles everything — downloads the correct binary for your platform, runs the setup wizard, auto-installs cloudflared for tunnel support. It just works.</p>
+</div>
+</div>
+
+<h3>Prebuilt Binaries</h3>
+<p>Download the latest release for your platform from <a href="https://github.com/MastaChief117/keyparty/releases">GitHub Releases</a>:</p>
+<div class="steps">
+<div class="step">
+<table class="tbl">
+  <thead><tr><th>Platform</th><th>Architecture</th><th>File</th></tr></thead>
+  <tbody>
+    <tr><td>Linux</td><td>amd64</td><td><code>keyparty-linux-amd64</code></td></tr>
+    <tr><td>Linux</td><td>arm64</td><td><code>keyparty-linux-arm64</code></td></tr>
+    <tr><td>macOS</td><td>amd64 (Intel)</td><td><code>keyparty-darwin-amd64</code></td></tr>
+    <tr><td>macOS</td><td>arm64 (Apple Silicon)</td><td><code>keyparty-darwin-arm64</code></td></tr>
+    <tr><td>Windows</td><td>amd64</td><td><code>keyparty-windows-amd64.exe</code></td></tr>
+  </tbody>
+</table>
+<pre><code># Linux/macOS
+chmod +x keyparty-linux-amd64
+./keyparty-linux-amd64 -port 8080
+
+# Windows
+keyparty-windows-amd64.exe -port 8080</code></pre>
+</div>
+</div>
+
+<h3>Docker Hub</h3>
+<div class="steps">
+<div class="step">
+<pre><code># Pull and run
+docker run -d \
+  --name keyparty \
+  -p 8080:8080 \
+  -e ADMIN_PASSWORD=your-secret \
+  -v keyparty-data:/app/data \
+  steelquill69/keyparty:latest
+
+# Or with a specific version
+docker run -d -p 8080:8080 steelquill69/keyparty:1.1.0</code></pre>
+<p>Pull from Docker Hub. No build needed. Just run it.</p>
+</div>
+</div>
+
+<h3>Docker (build from source)</h3>
+<div class="steps">
+<div class="step">
+<pre><code>git clone https://github.com/MastaChief117/keyparty.git
+cd keyparty
+docker build -t keyparty .
+docker run -d -p 8080:8080 keyparty</code></pre>
+</div>
+</div>
+
+<h3>Docker Compose</h3>
+<div class="steps">
+<div class="step">
+<pre><code>services:
+  keyparty:
+    image: steelquill69/keyparty:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - keyparty-data:/app/data
+    environment:
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-changeme}
+    restart: unless-stopped</code></pre>
+<pre><code>echo "ADMIN_PASSWORD=your-secret" > .env
+docker-compose up -d</code></pre>
+</div>
+</div>
+
+<h3>Shell Script</h3>
+<div class="steps">
+<div class="step">
 <pre><code>git clone https://github.com/MastaChief117/keyparty.git
 cd keyparty
 chmod +x keyparty.sh
@@ -52,60 +123,31 @@ chmod +x keyparty.sh
 </div>
 </div>
 
-<h2>Option B: Docker</h2>
+<h3>Manual Build (requires Go 1.24+)</h3>
 <div class="steps">
 <div class="step">
-<h4>Build the image</h4>
 <pre><code>git clone https://github.com/MastaChief117/keyparty.git
 cd keyparty
-docker build -t keyparty .</code></pre>
-</div>
-<div class="step">
-<h4>Run it</h4>
-<pre><code>docker run -d \
-  --name keyparty \
-  -p 8080:8080 \
-  -e ADMIN_PASSWORD=your-secret-password \
-  -v keyparty-data:/app/data \
-  keyparty</code></pre>
-<p>Or use docker-compose:</p>
-<pre><code>echo "ADMIN_PASSWORD=your-secret" > .env
-docker-compose up -d</code></pre>
-</div>
-</div>
-
-<div class="callout callout-info">
-<strong>Docker perks:</strong> No Go install needed. Persistent data via volumes. Health checks built in. ~20MB image.
-</div>
-
-<h2>Option C: Manual Build</h2>
-<div class="steps">
-<div class="step">
-<h4>Clone the repo</h4>
-<pre><code>git clone https://github.com/MastaChief117/keyparty.git
-cd keyparty</code></pre>
-</div>
-<div class="step">
-<h4>Build it</h4>
-<pre><code>go build -o keyparty .</code></pre>
+go build -o keyparty .
+./keyparty -port 8080</code></pre>
 <p>Takes about 10 seconds. Produces a ~16MB binary. No Docker. No npm. No node_modules. Just vibes.</p>
 </div>
-<div class="step">
-<h4>Run it</h4>
-<pre><code>./keyparty -port 8080 -admin-pass your-password</code></pre>
-<p>You'll see:</p>
-<pre><code>KeyParty running on http://localhost:8080
-Proxy endpoint: http://localhost:8080/v1/chat/completions
-Dashboard: http://localhost:8080
-Admin auth: enabled</code></pre>
 </div>
-</div>
+
+<h2>CLI Options</h2>
+<pre><code>keyparty                           # Interactive setup wizard
+keyparty --port 8080               # Start on custom port
+keyparty --password mysecret       # Set admin password
+keyparty --tunnel                  # Enable cloudflare tunnel
+keyparty --port 8080 --tunnel     # Port + tunnel
+keyparty --version                 # Show version
+keyparty --help                    # Show help</code></pre>
 
 <h2>Step 2: Open the Dashboard</h2>
 <p>Go to <a href="http://localhost:8080"><code>http://localhost:8080</code></a> in your browser. You'll see the dashboard. The first thing you'll notice is your <strong>Unified API Key</strong> — that's the key you'll use in your apps.</p>
 
 <div class="callout callout-info">
-<strong>Pro tip:</strong> Copy that unified key and save it somewhere. You'll need it in Step 4.
+<strong>Pro tip:</strong> Copy that unified key and save it somewhere safe. You'll need it in Step 4.
 </div>
 
 <h2>Step 3: Add Your API Keys</h2>
@@ -236,6 +278,18 @@ resp, _ := http.DefaultClient.Do(req)
 <h4>Vibe Check</h4>
 <p>Rate a message's vibe 1-10. Exactly as scientific as it sounds.</p>
 </div>
+<div class="card">
+<h4>Fortune Teller</h4>
+<p>Dramatic predictions about your code's fate. Spoiler: it's not great.</p>
+</div>
+<div class="card">
+<h4>Debug Oracle</h4>
+<p>Paste an error, get dramatic debugging advice. "Have you tried turning it off and on again?"</p>
+</div>
+<div class="card">
+<h4>Commit Message Generator</h4>
+<p>Dramatic, meme, poetic, or professional commit messages. Never write "fix stuff" again.</p>
+</div>
 </div>
 
 <h2>Step 9: Virtual Keys</h2>
@@ -289,7 +343,7 @@ resp, _ := http.DefaultClient.Do(req)
 </div>
 
 <footer>
-  <p>MIT &middot; made by <a href="https://github.com/MastaChief117">MastaChief117</a> &middot; one endpoint, ten providers, zero budget</p>
+  <p>Apache 2.0 &middot; made by <a href="https://github.com/MastaChief117">MastaChief117</a> &middot; one endpoint, ten providers, zero budget</p>
 </footer>
 
 <script>
