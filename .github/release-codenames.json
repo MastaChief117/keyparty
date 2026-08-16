@@ -1,0 +1,15 @@
+{
+  "v1.1.0": "nemotron-nuke",
+  "v1.2.0": "malloc-meltdown",
+  "v1.3.0": "segfault-surprise",
+  "v1.4.0": "null-pointer-nap",
+  "v1.5.0": "race-condition-rave",
+  "v2.0.0": "production-panic",
+  "v2.1.0": "cache-catastrophe",
+  "v2.2.0": "dependency-doom",
+  "v2.3.0": "kernel-panic-karaoke",
+  "v2.4.0": "stack-overflow-samba",
+  "v3.0.0": "it-works-on-my-machine",
+  "v0.0.1": "the-prototype-of-chaos",
+  "v0.1.0": "hello-world-but-broken"
+}

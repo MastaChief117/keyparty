@@ -446,6 +446,21 @@ A: Yes. Provider Uptime shows success rates, latency, and failure counts over ti
 
 ---
 
+## Versioning
+
+We don't do boring version numbers. Every release gets a codename that reflects the emotional state of the developer at the time.
+
+| Version | Codename | What happened |
+|---------|----------|---------------|
+| v0.1.0 | `hello-world-but-broken` | First commit, nothing worked |
+| v1.0.0 | `it-compiles-send-it` | First release, no tests |
+| v1.1.0 | `nemotron-nuke` | Fixed fun features, nvidia stopped leaking thoughts |
+| v1.2.0 | `malloc-meltdown` | Memory leak panic |
+| v2.0.0 | `production-panic` | We shipped to prod on a Friday |
+| v3.0.0 | `it-works-on-my-machine` | The ultimate release |
+
+---
+
 <div align="center">
 
 **[Star this repo](https://github.com/MastaChief117/keyparty)** or don't. I'll add features anyway because I have no self-control.
