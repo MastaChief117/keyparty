@@ -13,10 +13,51 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-go@v5
         with:
           go-version: '1.24'
+
+      - name: Extract version
+        id: version
+        run: echo "tag=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Get codename
+        id: codename
+        run: |
+          CODENAME=$(jq -r '.["v${{ steps.version.outputs.tag }}"] // "Unnamed Release"' .github/release-codenames.json)
+          echo "name=$CODENAME" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Get previous tag
+          PREV_TAG=$(git tag --sort=-v:refname | head -2 | tail -1)
+          if [ "$PREV_TAG" = "" ] || [ "$PREV_TAG" = "v${{ steps.version.outputs.tag }}" ]; then
+            COMMITS=$(git log --oneline --no-decorate | head -20)
+          else
+            COMMITS=$(git log --oneline --no-decorate ${PREV_TAG}..HEAD)
+          fi
+
+          # Build changelog
+          echo "## What's Changed" > changelog.md
+          echo "" >> changelog.md
+          while IFS= read -r line; do
+            HASH=$(echo "$line" | cut -d' ' -f1)
+            MSG=$(echo "$line" | cut -d' ' -f2-)
+            echo "- $MSG (\`$HASH\`)" >> changelog.md
+          done <<< "$COMMITS"
+
+          echo "" >> changelog.md
+          echo "---" >> changelog.md
+          echo "" >> changelog.md
+          echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREV_TAG}...v${{ steps.version.outputs.tag }}" >> changelog.md
+
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          cat changelog.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Build binaries
         run: |
@@ -30,10 +71,12 @@ jobs:
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
+          name: "v${{ steps.version.outputs.tag }} — ${{ steps.codename.outputs.name }}"
+          body: "${{ steps.changelog.outputs.changelog }}"
           files: |
             dist/keyparty-linux-amd64
             dist/keyparty-linux-arm64
             dist/keyparty-darwin-amd64
             dist/keyparty-darwin-arm64
             dist/keyparty-windows-amd64.exe
-          generate_release_notes: true
+          generate_release_notes: false
