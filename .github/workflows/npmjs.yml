@@ -34,6 +34,12 @@ jobs:
           cd packages/keyparty-npm
           cp package.json package.json.bak
           npm version ${{ steps.version.outputs.version }} --no-git-tag-version
+          node -e "
+            const pkg = require('./package.json');
+            pkg.name = '@steelquill/keyparty';
+            pkg.publishConfig = { access: 'public' };
+            require('fs').writeFileSync('./package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
 
       - name: Publish to npmjs
         run: cd packages/keyparty-npm && npm publish --access public
