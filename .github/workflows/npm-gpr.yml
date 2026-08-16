@@ -36,9 +36,16 @@ jobs:
           cd packages/keyparty-npm
           npm version ${{ steps.version.outputs.version }} --no-git-tag-version
 
-      - name: Publish to GitHub Packages
+      - name: Update package name for GitHub Packages
         run: |
           cd packages/keyparty-npm
-          npm publish
+          node -e "
+            const pkg = require('./package.json');
+            pkg.name = '@MastaChief117/keyparty';
+            require('fs').writeFileSync('./package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+
+      - name: Publish to GitHub Packages
+        run: cd packages/keyparty-npm && npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
