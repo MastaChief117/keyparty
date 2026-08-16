@@ -4,8 +4,8 @@
 
 **One endpoint. Ten providers. Zero budget.**
 
-[![npm](https://img.shields.io/npm/v/keyparty?style=flat-square)](https://www.npmjs.com/package/keyparty)
-[![license](https://img.shields.io/npm/l/keyparty?style=flat-square)](LICENSE)
+[![npm](https://img.shields.io/npm/v/@steelquill/keyparty?style=flat-square)](https://www.npmjs.com/package/@steelquill/keyparty)
+[![license](https://img.shields.io/npm/l/@steelquill/keyparty?style=flat-square)](LICENSE)
 
 *For the broke dev juggling free tiers at 3AM.*
 
@@ -16,11 +16,15 @@
 ## Install
 
 ```bash
-# Run instantly (no install needed)
-npx keyparty
+# npmjs (recommended)
+npm install -g @steelquill/keyparty
 
-# Or install globally
-npm install -g keyparty
+# GitHub Packages (needs registry flag)
+npm install --registry=https://npm.pkg.github.com @MastaChief117/keyparty
+```
+
+Then run:
+```bash
 keyparty
 ```
 
@@ -89,6 +93,16 @@ curl http://localhost:8080/v1/chat/completions \
 ```
 
 Works with OpenAI SDK, Anthropic SDK, Cursor, Claude Code, or any HTTP client.
+
+## Docker
+
+```bash
+# Docker Hub
+docker pull steelquill69/keyparty:latest
+
+# GitHub Container Registry
+docker pull ghcr.io/mastachief117/keyparty:latest
+```
 
 ## Docs
 
