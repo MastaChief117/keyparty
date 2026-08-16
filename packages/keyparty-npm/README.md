@@ -98,4 +98,4 @@ Works with OpenAI SDK, Anthropic SDK, Cursor, Claude Code, or any HTTP client.
 
 ## License
 
-MIT
+Apache-2.0
