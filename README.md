@@ -47,6 +47,11 @@ npm install -g @steelquill/keyparty
 keyparty
 ```
 
+Also available on GitHub Packages:
+```bash
+npm install --registry=https://npm.pkg.github.com @MastaChief117/keyparty
+```
+
 The npm package handles everything:
 - Downloads the correct binary for your platform (Linux/macOS/Windows, amd64/arm64)
 - Interactive setup wizard on first run
@@ -87,6 +92,26 @@ docker run -d \
 
 # Or with a specific version
 docker run -d -p 8080:8080 steelquill69/keyparty:1.1.0
+```
+
+### GitHub Container Registry
+
+```bash
+# Same image, different registry
+docker run -d \
+  --name keyparty \
+  -p 8080:8080 \
+  -e ADMIN_PASSWORD=your-secret \
+  -v keyparty-data:/app/data \
+  ghcr.io/mastachief117/keyparty:latest
+```
+
+### npm (GitHub Packages)
+
+```bash
+# Install from GitHub Packages
+npm install --registry=https://npm.pkg.github.com @MastaChief117/keyparty
+keyparty
 ```
 
 ### Docker (build from source)

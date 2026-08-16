@@ -1,0 +1,44 @@
+name: npm (GitHub Packages)
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@MastaChief117'
+
+      - name: Extract version
+        id: version
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          else
+            echo "version=0.0.0-dev" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update package.json version
+        run: |
+          cd packages/keyparty-npm
+          npm version ${{ steps.version.outputs.version }} --no-git-tag-version
+
+      - name: Publish to GitHub Packages
+        run: |
+          cd packages/keyparty-npm
+          npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
