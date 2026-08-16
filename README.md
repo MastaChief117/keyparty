@@ -450,14 +450,38 @@ A: Yes. Provider Uptime shows success rates, latency, and failure counts over ti
 
 We don't do boring version numbers. Every release gets a codename that reflects the emotional state of the developer at the time.
 
-| Version | Codename | What happened |
-|---------|----------|---------------|
-| v0.1.0 | `hello-world-but-broken` | First commit, nothing worked |
-| v1.0.0 | `it-compiles-send-it` | First release, no tests |
-| v1.1.0 | `nemotron-nuke` | Fixed fun features, nvidia stopped leaking thoughts |
-| v1.2.0 | `malloc-meltdown` | Memory leak panic |
-| v2.0.0 | `production-panic` | We shipped to prod on a Friday |
-| v3.0.0 | `it-works-on-my-machine` | The ultimate release |
+| Version | Codename |
+|---------|----------|
+| v0.0.1 | Hello World But Broken |
+| v0.1.0 | The Prototype of Chaos |
+| v1.0.0 | It Compiles, Send It |
+| v1.1.0 | Nemotron Nuke |
+| v1.2.0 | malloc(meltdown) |
+| v1.3.0 | Segfault Surprise |
+| v1.4.0 | Null Pointer Nap |
+| v1.5.0 | Race Condition Rave |
+| v1.6.0 | Cache Money |
+| v1.7.0 | sudo make me a sandwich |
+| v1.8.0 | rm -rf /sanity |
+| v1.9.0 | ctrl+alt+defeat |
+| v2.0.0 | Production Panic |
+| v2.1.0 | Wombo Combo |
+| v2.2.0 | Assignment: Gateway |
+| v2.3.0 | Skynet Controller |
+| v2.4.0 | It Works On My Machine |
+| v2.5.0 | The Gang Fixes Rate Limits |
+| v3.0.0 | One Endpoint to Rule Them All |
+| v3.1.0 | Hack the Planet |
+| v3.2.0 | Zero Budget, Zero Chill |
+| v3.3.0 | Have You Tried Turning It Off |
+| v4.0.0 | The Cake Is A Latency |
+| v4.1.0 | 429 Too Many Roasts |
+| v4.2.0 | Deploy On Friday I Dare You |
+| v5.0.0 | API Gone Wild |
+| v5.1.0 | Catch Me If You Can (Failover) |
+| v5.2.0 | Rage Against The Machine (Learning) |
+| v6.0.0 | The Last API Key |
+| v6.6.6 | Budget From Hell |
 
 ---
 
