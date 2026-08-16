@@ -11,8 +11,8 @@ permissions:
   packages: write
 
 env:
-  IMAGE_NAME: steelquill69/keyparty
-  GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/keyparty
+  DOCKERHUB_IMAGE: steelquill69/keyparty
+  GHCR_IMAGE: ghcr.io/mastachief117/keyparty
 
 jobs:
   docker:
@@ -55,8 +55,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ${{ env.IMAGE_NAME }}:latest
-            ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }}
+            ${{ env.DOCKERHUB_IMAGE }}:latest
+            ${{ env.DOCKERHUB_IMAGE }}:${{ steps.version.outputs.tag }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

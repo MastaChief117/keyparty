@@ -9,6 +9,7 @@
 [![GitHub Stars](https://img.shields.io/github/stars/MastaChief117/keyparty?style=flat-square&color=yellow)](https://github.com/MastaChief117/keyparty)
 [![Docker](https://img.shields.io/badge/docker-ready-2496ED?style=flat-square&logo=docker)](https://hub.docker.com/r/steelquill69/keyparty)
 [![npm](https://img.shields.io/badge/npm-@steelquill%2Fkeyparty-CB3837?style=flat-square&logo=npm)](https://www.npmjs.com/package/@steelquill/keyparty)
+[![GitHub Packages](https://img.shields.io/badge/GitHub-Packages-24292e?style=flat-square&logo=github)](https://github.com/MastaChief117/keyparty/packages)
 
 *For the broke dev juggling free tiers at 3AM.*
 

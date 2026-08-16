@@ -1,4 +1,4 @@
-name: npm (GitHub Packages)
+name: npm (npmjs)
 
 on:
   push:
@@ -8,7 +8,6 @@ on:
 
 permissions:
   contents: read
-  packages: write
 
 jobs:
   publish:
@@ -19,8 +18,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@MastaChief117'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Extract version
         id: version
@@ -36,17 +34,11 @@ jobs:
           cd packages/keyparty-npm
           cp package.json package.json.bak
           npm version ${{ steps.version.outputs.version }} --no-git-tag-version
-          node -e "
-            const pkg = require('./package.json');
-            pkg.name = '@MastaChief117/keyparty';
-            pkg.publishConfig = { registry: 'https://npm.pkg.github.com' };
-            require('fs').writeFileSync('./package.json', JSON.stringify(pkg, null, 2) + '\n');
-          "
 
-      - name: Publish to GitHub Packages
-        run: cd packages/keyparty-npm && npm publish
+      - name: Publish to npmjs
+        run: cd packages/keyparty-npm && npm publish --access public
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Restore package.json
         if: always()
