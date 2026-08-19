@@ -649,6 +649,8 @@ A: Yes. And it's exactly as ridiculous as you'd expect. "I'm the model with the 
 
 ## Roadmap
 
+### Done
+
 - [x] Gateway with multi-provider routing (the main quest)
 - [x] Failover with chat compaction (plan B, but fancy)
 - [x] AES-256-GCM encryption (your secrets are safe)
@@ -674,8 +676,37 @@ A: Yes. And it's exactly as ridiculous as you'd expect. "I'm the model with the 
 - [x] Docker Hub image (`steelquill69/keyparty`) (the container stuff)
 - [x] Provider fallback with automatic retry (the resilient stuff)
 - [x] Vibe Check, AI Therapist, Magic 8-Ball (the fun stuff)
-- [ ] MCP support (the future stuff)
-- [ ] Provider speed tests (the competitive stuff)
+
+### Coming Soon
+
+- [ ] Request replay with diff (before/after comparison)
+- [ ] Provider response time leaderboard (who's the fastest?)
+- [ ] Monthly cost report (auto-generated spending summary)
+- [ ] Model cost calculator (estimate costs before you send)
+- [ ] Custom guardrail regex (your rules, your way)
+- [ ] MCP support (Claude Desktop, tool integrations)
+- [ ] Prompt marketplace (save, share, rate community prompts)
+- [ ] Multi-user auth (separate logins, per-user tracking)
+- [ ] Request queue with priorities (VIP requests jump the line)
+- [ ] Semantic request search ("find all requests about Python debugging")
+
+### Big Brain Features
+
+- [ ] Provider speed tests (automated benchmarking, auto-update smart router)
+- [ ] Agent mode (tools: web search, code execution via function calling)
+- [ ] Federated gateway (multiple instances share keys and sync state)
+- [ ] Real-time cost dashboard (WebSocket-powered live spending feed)
+- [ ] Plugin system (custom middleware in Go or WASM)
+
+### Chaos Features
+
+- [ ] AI debate club (3+ providers argue, judge picks winner)
+- [ ] Provider tier list (auto-rankings based on your usage)
+- [ ] Code review mode (send PR diff to multiple providers, compare)
+- [ ] Roast my code (paste code, get roasted by the angriest provider)
+
+### The Dream
+
 - [ ] Take over the AI gateway market (one $4 coffee at a time)
 
 ---
@@ -691,6 +722,9 @@ We don't do boring version numbers. Every release gets a codename that reflects 
 | v1.0.0 | It Compiles, Send It | The moment of truth. It compiled. We cried. |
 | v1.1.0 | Nemotron Nuke | NVIDIA said "here's a free model" and we went wild. |
 | v1.2.0 | malloc(meltdown) | Memory issues. So many memory issues. |
+| v1.2.1 | The Readme Strikes Back | The docs fight back. |
+| v1.2.2 | Four Registries of the Apocalypse | Publishing to everything at once. |
+| v1.2.3 | The Changelogening | Changelogs finally exist. |
 | v1.3.0 | Segfault Surprise | The segfaults came from everywhere. |
 | v1.4.0 | Null Pointer Nap | We took a nap. The null pointers didn't. |
 | v1.5.0 | Race Condition Rave | Concurrency bugs. The party nobody wanted. |
@@ -701,7 +735,7 @@ We don't do boring version numbers. Every release gets a codename that reflects 
 | v2.0.0 | Production Panic | We put it in production. Nobody died. |
 | v2.1.0 | Wombo Combo | Multiple providers combined. It was beautiful chaos. |
 | v2.2.0 | Assignment: Gateway | "Just build a gateway," they said. "It'll be fun," they said. |
-| v2.3.0 | Skynet Controller | It started making decisions on its own. We're fine. |
+| v2.3.0 | It's ALIVE!!! Call John!!!! | It started making decisions on its own. We're fine. |
 | v2.4.0 | It Works On My Machine | The classic developer excuse. Now it's a feature. |
 | v2.5.0 | The Gang Fixes Rate Limits | Rate limits thought they could stop us. They were wrong. |
 | v3.0.0 | One Endpoint to Rule Them All | The One Ring of API gateways. |
